@@ -23,43 +23,60 @@ get '/' => sub {
 start;
 
 sub fetch {
-    my $data = decode_json `python3 tesla.py 1`;
+    my $data = decode_json `python3 tesla.py`;
 
-#    if ($data->{state} ne 'online') {
-#        return encode_json {};
-#    }
+    my ($state, $chg, $charging, $gear);
 
-    my $chg         = $data->{charge_state}{battery_level};
-    my $charging    = $data->{charge_state}{charging_state};
-    my $lat         = $data->{drive_state}{latitude};
-    my $lon         = $data->{drive_state}{longitude};
-    my $gear        = $data->{drive_state}{shift_state};
+    my $online = $data->{state} eq 'online' ? 1 : 0;
 
-    $charging = $charging eq 'Disconnected' ? 0 : 1;
+    if (! $online) {
+        print "Offline!\n";
+        
+        return encode_json {
+            online      => $online,
+            garage      => 0,
+            charge      => 0,
+            charging    => 0,
+            gear        => 0,
+        };
+    }
+    else {
     
-    $gear = 0 if $gear eq 'P';
-    $gear = 1 if $gear eq 'R';
-    $gear = 2 if $gear eq 'D';
+        $data = decode_json `python3 tesla.py 1`;
 
-    my %out_of_bounds;
+        $chg        = $data->{charge_state}{battery_level};
+        $charging   = $data->{charge_state}{charging_state};
+        my $lat     = $data->{drive_state}{latitude};
+        my $lon     = $data->{drive_state}{longitude};
+        $gear       = $data->{drive_state}{shift_state};
 
-    if (! deviation('lat', $lat)) {
-        $out_of_bounds{Latitude} = distance('lat', $lat);
+        $charging = $charging eq 'Disconnected' ? 0 : 1;
+        
+        $gear = 0 if $gear eq 'P';
+        $gear = 1 if $gear eq 'R';
+        $gear = 2 if $gear eq 'D';
+
+        my %out_of_bounds;
+
+        if (! deviation('lat', $lat)) {
+            $out_of_bounds{Latitude} = distance('lat', $lat);
+        }
+        if (! deviation('lon', $lon)) {
+            $out_of_bounds{Longitude} = distance('lon', $lon);
+        }
+
+        my $garage = keys %out_of_bounds ? 0 : 1;
+
+        my $json_data = {
+            online      => $online,
+            charge      => $chg,
+            charging    => $charging,
+            garage      => $garage,
+            gear        => int $gear,
+        };
+
+        return encode_json $json_data;
     }
-    if (! deviation('lon', $lon)) {
-        $out_of_bounds{Longitude} = distance('lon', $lon);
-    }
-
-    my $garage = keys %out_of_bounds ? 0 : 1;
-
-    my $json_data = {
-        charge      => $chg,
-        charging    => $charging,
-        garage      => $garage,
-        gear        => int $gear,
-    };
-
-    return encode_json $json_data;
 }
 sub deviation {
     die "Need lat|lon and coord" if @_ != 2;
