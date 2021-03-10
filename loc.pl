@@ -13,14 +13,17 @@ use constant {
     LON         => -119.3166,
 };
 
-my $data = decode_json `python3 tesla.py`;
+
+my $data = `python3 tesla.py`;
+$data = decode_json $data;
 
 if (! @ARGV && $data->{state} ne 'online') {
     print "Vehicle is offline\n";
     exit;
 }
 
-$data = decode_json `python3 tesla.py 1`;
+$data = `python3 tesla.py 1`;
+$data = decode_json $data;
 
 my $chg         = $data->{charge_state}{battery_level};
 my $charging    = $data->{charge_state}{charging_state};
