@@ -31,12 +31,14 @@ sub fetch {
     my ($chg, $charging, $gear);
 
     my $online = $data->{state} eq 'online' ? 1 : 0;
-    
+
+    print "Online: $online\n";
+
     if (! $online) {
         print "Offline!\n";
         
         return encode_json {
-            online      => $online,
+            online      => int $online,
             garage      => 0,
             charge      => 0,
             charging    => 0,
@@ -56,11 +58,7 @@ sub fetch {
         $gear       = $data->{drive_state}{shift_state};
 
         $charging = $charging eq 'Disconnected' ? 0 : 1;
-        
-        $gear = 0 if $gear eq 'P';
-        $gear = 1 if $gear eq 'R';
-        $gear = 2 if $gear eq 'D';
-
+ 
         if (! defined $gear) {
             return encode_json {
                 online      => 0,
@@ -71,6 +69,10 @@ sub fetch {
                 error       => 1,
             };
         }
+       
+        $gear = 0 if $gear eq 'P';
+        $gear = 1 if $gear eq 'R';
+        $gear = 2 if $gear eq 'D';
 
         my %out_of_bounds;
 
@@ -84,7 +86,7 @@ sub fetch {
         my $garage = keys %out_of_bounds ? 0 : 1;
 
         my $json_data = {
-            online      => $online,
+            online      => int $online,
             charge      => $chg,
             charging    => $charging,
             garage      => $garage,

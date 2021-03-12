@@ -15,15 +15,15 @@ use constant {
 };
 
 
-my $data = `python3 tesla.py`;
-$data = decode_json $data;
+my $status = `python3 tesla.py`;
+$status = decode_json $status;
 
-if (! @ARGV && $data->{state} ne 'online') {
+if (! @ARGV && $status->{state} ne 'online') {
     print "Vehicle is offline\n";
     exit;
 }
 
-$data = `python3 tesla.py 1`;
+my $data = `python3 tesla.py 1`;
 $data = decode_json $data;
 
 my $chg         = $data->{charge_state}{battery_level};
@@ -53,11 +53,11 @@ if (keys %out_of_bounds) {
     for (keys %out_of_bounds) {
         say "$_ out of bounds by: $out_of_bounds{$_}";
     }
-    say "Car is not in garage. Gear: $gear Charge: $chg Charging: $charging";
+    say "Car is not in garage. Online: $status->{state} Gear: $gear Charge: $chg Charging: $charging";
     exit;
 }
 
-say "Car is in the garage. Charge: $chg Gear: $gear Charging: $charging";
+say "Car is in the garage. Online: $status->{state} Charge: $chg Gear: $gear Charging: $charging";
 
 sub deviation {
     die "Need lat|lon and coord" if @_ != 2;
