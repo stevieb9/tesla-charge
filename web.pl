@@ -7,6 +7,8 @@ use Dancer2;
 use Data::Dumper;
 use JSON;
 
+set port         => 55556;
+
 use constant {
     DEBUG       => 0,
     ACCURACY    => 1e4,
@@ -23,12 +25,13 @@ get '/' => sub {
 start;
 
 sub fetch {
-    my $data = decode_json `python3 tesla.py`;
+    my $data = `python3 tesla.py`;
+    $data = decode_json $data;
 
-    my ($state, $chg, $charging, $gear);
+    my ($chg, $charging, $gear);
 
     my $online = $data->{state} eq 'online' ? 1 : 0;
-
+    
     if (! $online) {
         print "Offline!\n";
         
@@ -38,11 +41,13 @@ sub fetch {
             charge      => 0,
             charging    => 0,
             gear        => 0,
+            error       => 0,
         };
     }
     else {
     
-        $data = decode_json `python3 tesla.py 1`;
+        $data = `python3 tesla.py 1`;
+        $data = decode_json $data; 
 
         $chg        = $data->{charge_state}{battery_level};
         $charging   = $data->{charge_state}{charging_state};
@@ -55,6 +60,17 @@ sub fetch {
         $gear = 0 if $gear eq 'P';
         $gear = 1 if $gear eq 'R';
         $gear = 2 if $gear eq 'D';
+
+        if (! defined $gear) {
+            return encode_json {
+                online      => 0,
+                garage      => 0,
+                charge      => 0,
+                charging    => 0,
+                gear        => 0,
+                error       => 1,
+            };
+        }
 
         my %out_of_bounds;
 
@@ -73,6 +89,7 @@ sub fetch {
             charging    => $charging,
             garage      => $garage,
             gear        => int $gear,
+            error       => 0,
         };
 
         return encode_json $json_data;
