@@ -87,9 +87,9 @@ sub fetch {
 
         my $json_data = {
             online      => int $online,
-            charge      => $chg,
-            charging    => $charging,
-            garage      => $garage,
+            charge      => int $chg,
+            charging    => int $charging,
+            garage      => int $garage,
             gear        => int $gear,
             error       => 0,
         };
