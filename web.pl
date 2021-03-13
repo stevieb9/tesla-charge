@@ -19,7 +19,14 @@ use constant {
 
 get '/' => sub {
     content_type 'application/json';
-    return fetch();
+
+    my $data = -1;
+
+    until ($data ne 'request-error' && $data != -1) {
+        $data = fetch();
+        return $data if $data ne 'request-error';
+
+    }
 };
 
 start;
@@ -27,6 +34,10 @@ start;
 sub fetch {
     my $data = `python3 tesla.py`;
     $data = decode_json $data;
+
+    if ($data->{'request-error'}) {
+        return 'request-error';
+    }
 
     my ($chg, $charging, $gear);
 
