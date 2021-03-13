@@ -15,19 +15,23 @@ if __name__ == "__main__":
         exit()
 
     with Tesla(email, password) as tesla:
-        tesla.fetch_token()
-        selected = cars = tesla.vehicle_list()
-        car = selected[0]
+        try:
+            tesla.fetch_token()
+            selected = cars = tesla.vehicle_list()
+            car = selected[0]
 
-        if len(sys.argv) > 1 and int(sys.argv[1]) == 1:
-            car.sync_wake_up()
-            
-            chg = car.get_vehicle_data()['charge_state']['battery_level']
-            lon = car.get_vehicle_data()['drive_state']['longitude']
-            lat = car.get_vehicle_data()['drive_state']['latitude']
-            gear = car.get_vehicle_data()['drive_state']['shift_state']
+            if len(sys.argv) > 1 and int(sys.argv[1]) == 1:
+                car.sync_wake_up()
 
-            print(car.get_vehicle_data())
+                chg = car.get_vehicle_data()['charge_state']['battery_level']
+                lon = car.get_vehicle_data()['drive_state']['longitude']
+                lat = car.get_vehicle_data()['drive_state']['latitude']
+                gear = car.get_vehicle_data()['drive_state']['shift_state']
 
-        else:
-            print(car.get_vehicle_summary())
+                print(car.get_vehicle_data())
+
+            else:
+                print(car.get_vehicle_summary())
+
+        except:
+            print('{"request-error": 1}')
