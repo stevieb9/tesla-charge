@@ -90,8 +90,6 @@ class Tesla(requests.Session):
             except ValueError:
                 pass
 
-        raise requests.exception.HTTPError
-
         response.raise_for_status()  # Raise HTTPError, if one occurred
         # Deserialize response
         return response.json(object_hook=JsonDict)
