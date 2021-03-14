@@ -31,18 +31,9 @@ get '/' => sub {
 start;
 
 sub fetch {
-    my $data = `python3 tesla.py`;
-    $data = decode_json $data;
+    my ($data, $chg, $charging, $gear);
 
-    if ($data->{'request-error'}) {
-        return 'request-error';
-    }
-
-    my ($chg, $charging, $gear);
-
-    my $online = $data->{state} eq 'online' ? 1 : 0;
-
-    print "Online: $online\n";
+    my $online = 1;
 
     if (! $online) {
         print "Offline!\n";
@@ -106,7 +97,6 @@ sub fetch {
         };
 
         my $json = encode_json $json_data;
-        print ">$json<\n";
         return $json;
     }
 }
