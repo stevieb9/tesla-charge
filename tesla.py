@@ -20,7 +20,9 @@ if __name__ == "__main__":
             selected = cars = tesla.vehicle_list()
             car = selected[0]
 
-            if len(sys.argv) > 1 and int(sys.argv[1]) == 1:
+            state = car.get_vehicle_summary()['state']
+           
+            if state == "online":
                 car.sync_wake_up()
 
                 chg = car.get_vehicle_data()['charge_state']['battery_level']
@@ -30,8 +32,8 @@ if __name__ == "__main__":
 
                 print(car.get_vehicle_data())
 
-            else:
-                print(car.get_vehicle_summary())
+            else: 
+                print('{"online": 0}')
 
         except:
             print('{"request-error": 1}')

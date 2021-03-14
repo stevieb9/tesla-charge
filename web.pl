@@ -31,10 +31,18 @@ get '/' => sub {
 start;
 
 sub fetch {
-    my ($data, $chg, $charging, $gear);
+    my ($online, $chg, $charging, $gear);
 
-    my $online = 1;
+    my $data = `python3 tesla.py`;
+    $data = decode_json $data; 
 
+    if (defined $data->{online} && ! $data->{online}) {
+        $online = 0;
+    }
+    else {
+        $online = 1;
+    }
+    
     if (! $online) {
         print "Offline!\n";
         
@@ -48,10 +56,6 @@ sub fetch {
         };
     }
     else {
-    
-        $data = `python3 tesla.py 1`;
-        $data = decode_json $data; 
-
         $chg        = $data->{charge_state}{battery_level};
         $charging   = $data->{charge_state}{charging_state};
         my $lat     = $data->{drive_state}{latitude};
