@@ -17,7 +17,7 @@ use constant {
     LAT         => 50.25892,
     LON         => -119.3166,
 }; 
-get '/' => sub {
+get '/tesla' => sub {
     content_type 'application/json';
 
     my $data = -1;
