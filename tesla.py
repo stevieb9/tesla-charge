@@ -20,16 +20,12 @@ if __name__ == "__main__":
             selected = cars = tesla.vehicle_list()
             car = selected[0]
 
+#            if sys.argv[1] and sys.argv[1] == 1:
+#                car.sync_wake_up()
+
             state = car.get_vehicle_summary()['state']
            
             if state == "online":
-                car.sync_wake_up()
-
-                chg = car.get_vehicle_data()['charge_state']['battery_level']
-                lon = car.get_vehicle_data()['drive_state']['longitude']
-                lat = car.get_vehicle_data()['drive_state']['latitude']
-                gear = car.get_vehicle_data()['drive_state']['shift_state']
-
                 print(car.get_vehicle_data())
 
             else: 

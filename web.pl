@@ -17,7 +17,7 @@ use constant {
     LAT         => 50.25892,
     LON         => -119.3166,
 }; 
-get '/tesla' => sub {
+get '/' => sub {
     content_type 'application/json';
 
     my $data = -1;
@@ -67,7 +67,7 @@ sub fetch {
         $charging = $charging eq 'Disconnected' ? 0 : 1;
 
         if (! defined $gear) {
-            print "No gear!\n";
+            print "Error: No gear defined.\n";
             return encode_json {
                 online      => 0,
                 garage      => 0,
