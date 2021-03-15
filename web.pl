@@ -33,7 +33,7 @@ start;
 sub fetch {
     my ($online, $chg, $charging, $gear);
 
-    my $data = `python3 tesla.py`;
+    my $data = `python3 /home/pi/repos/tesla-charge/tesla.py`;
     $data = decode_json $data; 
 
     if (defined $data->{online} && ! $data->{online}) {
