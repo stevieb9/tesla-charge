@@ -2,6 +2,7 @@
 
 use warnings;
 use strict;
+use 5.10.0;
 
 use Dancer2;
 use Data::Dumper;
@@ -62,8 +63,9 @@ sub fetch {
         my $lon     = $data->{drive_state}{longitude};
         $gear       = $data->{drive_state}{shift_state};
 
+        $charging //= 'Disconnected';
         $charging = $charging eq 'Disconnected' ? 0 : 1;
- 
+
         if (! defined $gear) {
             print "No gear!\n";
             return encode_json {
