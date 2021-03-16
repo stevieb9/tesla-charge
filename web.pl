@@ -67,7 +67,7 @@ sub fetch {
         $charging = $charging eq 'Disconnected' ? 0 : 1;
 
         if (! defined $gear) {
-            print "Error: No gear defined.\n";
+            print "Error: Corrupt JSON data from Tesla API.\n";
             return encode_json {
                 online      => 0,
                 garage      => 0,
