@@ -81,6 +81,7 @@ sub fetch {
         $gear = 0 if $gear eq 'P';
         $gear = 1 if $gear eq 'R';
         $gear = 2 if $gear eq 'D';
+        $gear = 2 if $gear eq 'N';
 
         my %out_of_bounds;
 
