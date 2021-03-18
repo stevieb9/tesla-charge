@@ -16,7 +16,9 @@ use constant {
     RANGE       => 1.2,
     LAT         => 50.25892,
     LON         => -119.3166,
-}; 
+    DEBUG_JSON  => 'debug.json',
+};
+
 get '/' => sub {
     content_type 'application/json';
 
@@ -29,8 +31,24 @@ get '/' => sub {
     }
 };
 
+get '/debug' => sub {
+    content_type 'application/json';
+    return debug_data();
+};
+
 start;
 
+sub debug_data {
+    my $data;
+
+    {
+        local $/;
+        open my $fh, '<', DEBUG_JSON or die "Can't open debug JSON: $!";
+        $data = <$fh>;
+    }
+
+    return $data;
+}
 sub fetch {
     my ($online, $chg, $charging, $gear);
 
@@ -78,10 +96,7 @@ sub fetch {
             };
         }
        
-        $gear = 0 if $gear eq 'P';
-        $gear = 1 if $gear eq 'R';
-        $gear = 2 if $gear eq 'D';
-        $gear = 2 if $gear eq 'N';
+        $gear = gear($gear);
 
         my %out_of_bounds;
 
@@ -124,4 +139,11 @@ sub distance {
     $what eq 'lat'
         ? return abs(ACCURACY * (LAT - $coord))
         : return abs(ACCURACY * (LON - $coord));
+}
+sub gear {
+    my ($gear) = @_;
+    return 0 if $gear eq 'P';
+    return 1 if $gear eq 'R';
+    return 2 if $gear eq 'D';
+    return 2 if $gear eq 'N';
 }
