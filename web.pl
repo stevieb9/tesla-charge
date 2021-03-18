@@ -6,9 +6,10 @@ use 5.10.0;
 
 use Dancer2;
 use Data::Dumper;
+use FindBin;
 use JSON;
 
-set port         => 55556;
+set port        => 55556;
 
 use constant {
     DEBUG       => 0,
@@ -16,7 +17,7 @@ use constant {
     RANGE       => 1.2,
     LAT         => 50.25892,
     LON         => -119.3166,
-    DEBUG_JSON  => 'debug.json',
+    DEBUG_JSON  => "$FindBin::Bin/debug.json",
 };
 
 get '/' => sub {
