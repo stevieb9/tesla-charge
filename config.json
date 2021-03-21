@@ -1,6 +1,6 @@
 {
     "debug":    0,
-    "rainbow":  1,
+    "rainbow":  0,
     "debug_data": {
         "online":   0,
         "charge":   0,
