@@ -11,8 +11,9 @@ use JSON;
 
 set port        => 55556;
 
+my $debug = 0;
+
 use constant {
-    DEBUG       => 0,
     ACCURACY    => 1e4,
     RANGE       => 1.2,
     LAT         => 50.25892,
@@ -52,7 +53,10 @@ sub config {
         $conf = <$fh>;
     }
 
-    return decode_json $conf;
+    $conf = decode_json $conf;
+    $debug = 1 if $conf->{debug};
+
+    return $conf;
 }
 sub debug_data {
     my ($conf) = @_;
@@ -73,7 +77,7 @@ sub fetch {
     };
 
     if ($conf->{rainbow}) {
-        print "Rainbow!\n" if DEBUG;
+        print "Rainbow!\n" if $debug;
         $struct->{rainbow} = 1;
         return encode_json $struct;
     }
@@ -89,7 +93,7 @@ sub fetch {
     }
     
     if (! $online) {
-        print "Offline!\n" if DEBUG;
+        print "Offline!\n" if $debug;
         $struct->{online} = 0; 
         return encode_json $struct;
     }
