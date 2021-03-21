@@ -17,41 +17,66 @@ use constant {
     RANGE       => 1.2,
     LAT         => 50.25892,
     LON         => -119.3166,
-    DEBUG_JSON  => "$FindBin::Bin/debug.json",
+    CONFIG_JSON  => "$FindBin::Bin/config.json",
 };
 
-get '/' => sub {
-    content_type 'application/json';
 
+get '/' => sub {
+    my $conf = config();
+    
+    content_type 'application/json';
+    
     my $data = -1;
 
     until ($data ne 'request-error' && $data != -1) {
-        $data = fetch();
+        $data = fetch($conf);
         return $data if $data ne 'request-error';
 
     }
 };
 
 get '/debug' => sub {
+    my $conf = config();
     content_type 'application/json';
-    return debug_data();
+    return debug_data($conf);
 };
 
 start;
 
-sub debug_data {
-    my $data;
+sub config {
+    my $conf;
 
     {
         local $/;
-        open my $fh, '<', DEBUG_JSON or die "Can't open debug JSON: $!";
-        $data = <$fh>;
+        open my $fh, '<', CONFIG_JSON or die "Can't open config JSON file: $!";
+        $conf = <$fh>;
     }
 
-    return $data;
+    return decode_json $conf;
+}
+sub debug_data {
+    my ($conf) = @_;
+    return encode_json $conf->{debug_data};
 }
 sub fetch {
+    my ($conf) = @_;
     my ($online, $chg, $charging, $gear);
+
+    my $struct = {
+        online      => 0,
+        garage      => 0,
+        charge      => 0,
+        charging    => 0,
+        gear        => 0,
+        error       => 0,
+        rainbow     => 0,
+    };
+
+    if ($conf->{rainbow}) {
+        print "Rainbow!\n" if DEBUG;
+        $struct->{rainbow} = 1;
+        return encode_json $struct;
+    }
 
     my $data = `python3 /home/pi/repos/tesla-charge/tesla.py`;
     $data = decode_json $data; 
@@ -64,16 +89,9 @@ sub fetch {
     }
     
     if (! $online) {
-        print "Offline!\n";
-        
-        return encode_json {
-            online      => int $online,
-            garage      => 0,
-            charge      => 0,
-            charging    => 0,
-            gear        => 0,
-            error       => 0,
-        };
+        print "Offline!\n" if DEBUG;
+        $struct->{online} = 0; 
+        return encode_json $struct;
     }
     else {
         $chg        = $data->{charge_state}{battery_level};
@@ -87,14 +105,8 @@ sub fetch {
 
         if (! defined $gear) {
             print "Error: Corrupt JSON data from Tesla API.\n";
-            return encode_json {
-                online      => 0,
-                garage      => 0,
-                charge      => 0,
-                charging    => 0,
-                gear        => 0,
-                error       => 1,
-            };
+            $struct->{error} = 1;
+            return encode_json $struct;
         }
        
         $gear = gear($gear);
@@ -110,17 +122,13 @@ sub fetch {
 
         my $garage = keys %out_of_bounds ? 0 : 1;
 
-        my $json_data = {
-            online      => int $online,
-            charge      => int $chg,
-            charging    => int $charging,
-            garage      => int $garage,
-            gear        => int $gear,
-            error       => 0,
-        };
+        $struct->{online}       = int $online;
+        $struct->{charge}       = int $chg;
+        $struct->{charging}     = int $charging;
+        $struct->{garage}       = int $garage;
+        $struct->{gear}         = int $gear;
 
-        my $json = encode_json $json_data;
-        return $json;
+        return encode_json $struct;
     }
 }
 sub deviation {
