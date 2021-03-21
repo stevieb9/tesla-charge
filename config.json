@@ -1,0 +1,13 @@
+{
+    "debug":    0,
+    "rainbow":  0,
+    "debug_data": {
+        "online":   1,
+        "charge":   0,
+        "charging": 0,
+        "garage":   0,
+        "gear":     0,
+        "error":    0
+    }
+}
+
