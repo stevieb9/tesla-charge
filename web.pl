@@ -14,24 +14,32 @@ set port        => 55556;
 my $debug = 0;
 
 use constant {
-    ACCURACY    => 1e4,
-    RANGE       => 1.2,
-    LAT         => 50.25892,
-    LON         => -119.3166,
+    ACCURACY     => 1e4,
+    RANGE        => 1.2,
+    LAT          => 50.25892,
+    LON          => -119.3166,
     CONFIG_JSON  => "$FindBin::Bin/config.json",
 };
 
 
 get '/' => sub {
-    my $conf = config();
+    my $conf = config_load();
     
     content_type 'application/json';
     
     my $data = -1;
 
-    until ($data ne 'request-error' && $data != -1) {
+    until ($data != -1) {
         $data = fetch($conf);
-        return $data if $data ne 'request-error';
+        if ($data->{error} && $conf->{retry}) {
+            for (0..$conf->{retry} - 1) {
+                printf("Retry #%d\n", $_ + 1);
+                $data = fetch($conf);
+                last if ! $data->{error};
+            }
+        }
+
+        return encode_json $data;
 
     }
 };
@@ -44,7 +52,7 @@ get '/debug' => sub {
 
 start;
 
-sub config {
+sub config_load {
     my $conf;
 
     {
@@ -79,7 +87,7 @@ sub fetch {
     if ($conf->{rainbow}) {
         print "Rainbow!\n" if $debug;
         $struct->{rainbow} = 1;
-        return encode_json $struct;
+        return $struct;
     }
 
     my $data = `python3 /home/pi/repos/tesla-charge/tesla.py`;
@@ -95,7 +103,7 @@ sub fetch {
     if (! $online) {
         print "Offline!\n" if $debug;
         $struct->{online} = 0; 
-        return encode_json $struct;
+        return $struct;
     }
     else {
         $chg        = $data->{charge_state}{battery_level};
@@ -107,10 +115,10 @@ sub fetch {
         $charging //= 'Disconnected';
         $charging = $charging eq 'Disconnected' ? 0 : 1;
 
-        if (! defined $gear) {
+        if (! defined $gear || $data->{'request-error'}) {
             print "Error: Corrupt JSON data from Tesla API.\n";
             $struct->{error} = 1;
-            return encode_json $struct;
+            return $struct;
         }
        
         $gear = gear($gear);
@@ -132,7 +140,7 @@ sub fetch {
         $struct->{garage}       = int $garage;
         $struct->{gear}         = int $gear;
 
-        return encode_json $struct;
+        return $struct;
     }
 }
 sub deviation {

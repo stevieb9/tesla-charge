@@ -1,5 +1,6 @@
 {
     "debug":    0,
+    "retry":    3,
     "rainbow":  0,
     "debug_data": {
         "online":   0,
