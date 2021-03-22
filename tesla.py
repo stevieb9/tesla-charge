@@ -21,7 +21,7 @@ if __name__ == "__main__":
             car = selected[0]
 
 #            if sys.argv[1] and sys.argv[1] == 1:
-#                car.sync_wake_up()
+#            car.sync_wake_up()
 
             state = car.get_vehicle_summary()['state']
            
