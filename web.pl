@@ -24,9 +24,10 @@ use constant {
 
 get '/' => sub {
     my $conf = config_load();
-    
     content_type 'application/json';
-    
+   
+    print request->address . " connected to /\n" if $debug;
+
     my $data = -1;
 
     until ($data != -1) {
@@ -47,6 +48,7 @@ get '/' => sub {
 get '/debug' => sub {
     my $conf = config();
     content_type 'application/json';
+    print request->address . " connected to /debug\n";
     return debug_data($conf);
 };
 

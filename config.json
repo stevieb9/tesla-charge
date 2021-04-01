@@ -1,5 +1,5 @@
 {
-    "debug":    0,
+    "debug":    1,
     "retry":    3,
     "rainbow":  0,
     "debug_data": {
