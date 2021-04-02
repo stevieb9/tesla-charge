@@ -4,51 +4,67 @@ use warnings;
 use strict;
 use 5.10.0;
 
+use Async::Event::Interval;
 use Dancer2;
 use Data::Dumper;
 use FindBin;
+use IPC::Shareable;
 use JSON;
 
 set port        => 55556;
 
-my $debug = 0;
-
 use constant {
-    ACCURACY     => 1e4,
-    RANGE        => 1.2,
-    LAT          => 50.25892,
-    LON          => -119.3166,
-    CONFIG_JSON  => "$FindBin::Bin/config.json",
+    ACCURACY    => 1e4,
+    RANGE       => 1.2,
+    LAT         => 50.25892,
+    LON         => -119.3166,
+    CONFIG_JSON => "$FindBin::Bin/config.json",
+    DATA_EXPIRY => 10, # Seconds
 };
 
+my $debug = 0;
+my $conf;
+
+my $data;
+tie $data, 'IPC::Shareable', 'TSLA', {create => 1, destroy => 1, exclusive => 0};
+$data = '';
+
+my $last_conn_time = time;
+
+my $async = Async::Event::Interval->new(0, \&update);
+$async->start;
+
+print "System initialized...\n";
 
 get '/' => sub {
-    my $conf = config_load();
+    $conf = config_load();
+  
+    if (time - $last_conn_time > DATA_EXPIRY) { 
+        print "Expiring data\n" if $debug;
+        $data = '';
+    }
+
+    $last_conn_time = time;
+
+    $async->start if $async->status == -1 || ! $async->status;
+    
     content_type 'application/json';
-   
-    print request->address . " connected to /\n" if $debug;
+    print "\n" . request->address . " connected to /\n" if $debug;
 
-    my $data = -1;
-
-    until ($data != -1) {
-        $data = fetch($conf);
-        if ($data->{error} && $conf->{retry}) {
-            for (0..$conf->{retry} - 1) {
-                printf("Retry #%d\n", $_ + 1);
-                $data = fetch($conf);
-                last if ! $data->{error};
-            }
-        }
-
-        return encode_json $data;
-
+    if ($data) {
+        print "Returning data\n" if $debug;
+        return $data;
+    }
+    else {
+        print "Returning default data\n" if $debug;
+        return encode_json _default();
     }
 };
 
 get '/debug' => sub {
-    my $conf = config();
+    $conf = config_load();
     content_type 'application/json';
-    print request->address . " connected to /debug\n";
+    print "\n" . request->address . " connected to /debug\n";
     return debug_data($conf);
 };
 
@@ -71,6 +87,23 @@ sub config_load {
 sub debug_data {
     my ($conf) = @_;
     return encode_json $conf->{debug_data};
+}
+sub update {
+    print "Begin update data\n" if $debug;
+    my $local_data = -1;
+
+    until ($local_data != -1) {
+        $local_data = fetch($conf);
+        if ($local_data->{error} && $conf->{retry}) {
+            for (0..$conf->{retry} - 1) {
+                printf("Retry #%d\n", $_ + 1);
+                $local_data = fetch($conf);
+                last if ! $local_data->{error};
+            }
+        }
+        print "Data updated\n" if $debug;
+        $data = encode_json $local_data;
+    }
 }
 sub fetch {
     my ($conf) = @_;
@@ -169,4 +202,17 @@ sub gear {
     return 1 if $gear eq 'R';
     return 2 if $gear eq 'D';
     return 2 if $gear eq 'N';
+}
+sub _default {
+    my $struct = {
+        online      => 0,
+        garage      => 0,
+        charge      => 0,
+        charging    => 0,
+        gear        => 0,
+        error       => 1,
+        rainbow     => 0,
+    };
+
+    return $struct;
 }
