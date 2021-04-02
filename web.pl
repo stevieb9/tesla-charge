@@ -25,8 +25,7 @@ use constant {
 my $debug = 0;
 my $conf;
 
-my $data;
-tie $data, 'IPC::Shareable', 'TSLA', {create => 1, destroy => 1, exclusive => 0};
+tie my $data, 'IPC::Shareable', 'TSLA', {create => 1, destroy => 1};
 $data = '';
 
 my $last_conn_time = time;
@@ -34,13 +33,10 @@ my $last_conn_time = time;
 my $async = Async::Event::Interval->new(0, \&update);
 $async->start;
 
-print "System initialized...\n";
-
 get '/' => sub {
     $conf = config_load();
   
     if (time - $last_conn_time > DATA_EXPIRY) { 
-        print "Expiring data\n" if $debug;
         $data = '';
     }
 
@@ -49,16 +45,9 @@ get '/' => sub {
     $async->start if $async->status == -1 || ! $async->status;
     
     content_type 'application/json';
-    print "\n" . request->address . " connected to /\n" if $debug;
 
-    if ($data) {
-        print "Returning data\n" if $debug;
-        return $data;
-    }
-    else {
-        print "Returning default data\n" if $debug;
-        return encode_json _default();
-    }
+    return $data if $data;
+    return encode_json _default();
 };
 
 get '/debug' => sub {
@@ -89,19 +78,16 @@ sub debug_data {
     return encode_json $conf->{debug_data};
 }
 sub update {
-    print "Begin update data\n" if $debug;
     my $local_data = -1;
 
     until ($local_data != -1) {
         $local_data = fetch($conf);
         if ($local_data->{error} && $conf->{retry}) {
             for (0..$conf->{retry} - 1) {
-                printf("Retry #%d\n", $_ + 1);
                 $local_data = fetch($conf);
                 last if ! $local_data->{error};
             }
         }
-        print "Data updated\n" if $debug;
         $data = encode_json $local_data;
     }
 }
