@@ -30,8 +30,8 @@ $data = '';
 
 my $last_conn_time = time;
 
-my $async = Async::Event::Interval->new(0, \&update);
-$async->start;
+my $tesla_event = Async::Event::Interval->new(0, \&update);
+$tesla_event->start;
 
 get '/' => sub {
     $conf = config_load();
@@ -42,18 +42,17 @@ get '/' => sub {
 
     $last_conn_time = time;
 
-    $async->start if $async->status == -1 || ! $async->status;
+    $tesla_event->start if $tesla_event->waiting;
     
     content_type 'application/json';
-
+    
     return $data if $data;
-    return encode_json _default();
+    return encode_json _default_data();
 };
 
 get '/debug' => sub {
     $conf = config_load();
     content_type 'application/json';
-    print "\n" . request->address . " connected to /debug\n";
     return debug_data($conf);
 };
 
@@ -189,7 +188,7 @@ sub gear {
     return 2 if $gear eq 'D';
     return 2 if $gear eq 'N';
 }
-sub _default {
+sub _default_data {
     my $struct = {
         online      => 0,
         garage      => 0,
