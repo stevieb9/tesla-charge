@@ -34,8 +34,12 @@ my $tesla_event = Async::Event::Interval->new(0, \&update);
 $tesla_event->start;
 
 get '/' => sub {
+    content_type 'application/json';
+    
     $conf = config_load();
   
+    return debug_data($conf) if $conf->{debug_return};
+
     if (time - $last_conn_time > DATA_EXPIRY) { 
         $data = '';
     }
@@ -44,15 +48,14 @@ get '/' => sub {
 
     $tesla_event->start if $tesla_event->waiting;
     
-    content_type 'application/json';
     
     return $data if $data;
     return encode_json _default_data();
 };
 
 get '/debug' => sub {
-    $conf = config_load();
     content_type 'application/json';
+    $conf = config_load();
     return debug_data($conf);
 };
 
