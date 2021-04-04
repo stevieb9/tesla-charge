@@ -37,7 +37,7 @@ get '/' => sub {
     content_type 'application/json';
     
     $conf = config_load();
-  
+    
     return debug_data($conf) if $conf->{debug_return};
 
     if (time - $last_conn_time > DATA_EXPIRY) { 
@@ -47,7 +47,6 @@ get '/' => sub {
     $last_conn_time = time;
 
     $tesla_event->start if $tesla_event->waiting;
-    
     
     return $data if $data;
     return encode_json _default_data();
@@ -105,6 +104,7 @@ sub fetch {
         gear        => 0,
         error       => 0,
         rainbow     => 0,
+        fetching    => 0
     };
 
     if ($conf->{rainbow}) {
@@ -198,8 +198,9 @@ sub _default_data {
         charge      => 0,
         charging    => 0,
         gear        => 0,
-        error       => 1,
+        error       => 0,
         rainbow     => 0,
+        fetching    => 1,
     };
 
     return $struct;
