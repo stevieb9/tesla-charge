@@ -193,14 +193,14 @@ sub gear {
 }
 sub _default_data {
     my $struct = {
-        online      => 0,
-        garage      => 0,
-        charge      => 0,
-        charging    => 0,
-        gear        => 0,
-        error       => 0,
-        rainbow     => 0,
-        fetching    => 1,
+        online      => 0, # Vehicle is online
+        garage      => 0, # Vehicle is in the garage
+        charge      => 0, # Vehicle charge percent
+        charging    => 0, # Vehicle is being charged
+        gear        => 0, # Park: 0, Reverse: 1, Drive: 2
+        error       => 0, # Tesla API error
+        rainbow     => 0, # Rainbow LED mode
+        fetching    => 1, # Currently fetching data from Tesla
     };
 
     return $struct;
