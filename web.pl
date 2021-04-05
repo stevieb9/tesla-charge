@@ -34,6 +34,8 @@ my $tesla_event = Async::Event::Interval->new(0, \&update);
 $tesla_event->start;
 
 get '/' => sub {
+    return if ! security();
+
     content_type 'application/json';
     
     $conf = config_load();
@@ -53,6 +55,8 @@ get '/' => sub {
 };
 
 get '/debug' => sub {
+    return if ! security();
+    
     content_type 'application/json';
     $conf = config_load();
     return debug_data($conf);
@@ -60,6 +64,10 @@ get '/debug' => sub {
 
 start;
 
+sub security {
+    return if request->address !~ /^192\.168\.0\.\d+/;
+    return 1;
+}
 sub config_load {
     my $conf;
 
