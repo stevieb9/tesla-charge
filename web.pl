@@ -62,6 +62,13 @@ get '/debug' => sub {
     return debug_data($conf);
 };
 
+get '/wake' => sub {
+    return if ! security();
+
+    my $data = `python3 /home/pi/repos/tesla-charge/wake.py`;
+    return $data;
+};
+
 start;
 
 sub security {
