@@ -24,6 +24,7 @@ use constant {
 
 my $debug = 0;
 my $conf;
+my $garage_door_open = 0;
 
 tie my $data, 'IPC::Shareable', 'TSLA', {create => 1, destroy => 1};
 $data = '';
@@ -67,6 +68,16 @@ get '/wake' => sub {
 
     my $data = `python3 /home/pi/repos/tesla-charge/wake.py`;
     return $data;
+};
+
+get '/garage' => sub {
+    return if ! security();
+    return $garage_door_open;
+};
+
+get '/garage/:open' => sub {
+    return if ! security();
+    return $garage_door_open = params->{open};
 };
 
 start;
