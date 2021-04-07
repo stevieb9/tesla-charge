@@ -30,5 +30,6 @@
 
 #define DOOR_SENSOR_PIN     14 // Pin D5
 #define DOOR_RELAY_PIN      12 // Pin D6
+#define DOOR_OPEN_LED       13 // Pin D7
 
 #endif //TESLA_CHARGE_GARAGE_DOOR_H

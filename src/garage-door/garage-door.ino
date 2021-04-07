@@ -3,7 +3,7 @@
 unsigned long   doorCheckTime;
 bool            doorClosing = false;
 bool            gotData = false;
-uint8_t*        data;
+int8_t*         data;
 char*           url;
 enum            shiftState {P, R, D};
 enum            doorStatus {DOOR_CLOSED, DOOR_OPEN};
@@ -13,8 +13,12 @@ HTTPClient http;
 void setup() {
     pinMode(DOOR_RELAY_PIN, OUTPUT);
     digitalWrite(DOOR_RELAY_PIN, LOW);
-    pinMode(DOOR_SENSOR_PIN, INPUT_PULLUP);
 
+    pinMode(DOOR_SENSOR_PIN, INPUT_PULLUP);
+    
+    pinMode(DOOR_OPEN_LED, OUTPUT);
+    digitalWrite(DOOR_OPEN_LED, LOW);
+    
     Serial.begin(9600);
     wifiSetup();
 
@@ -36,42 +40,36 @@ void loop() {
     if (currentTime - doorCheckTime >= DOOR_CHECK_DELAY) {
         uint8_t door = doorState();
 
-        s(F("Door state: "));
-        spl(door);
-
         bool canCloseDoor = false;
 
         if (doorClosing) {
             canCloseDoor = true;
         }
         else if (door == DOOR_OPEN) {
+            digitalWrite(DOOR_OPEN_LED, HIGH);
             canCloseDoor = doorCloseCondition();
         }
-        
-        s(F("Can close: "));
+        else {
+            digitalWrite(DOOR_OPEN_LED, LOW);
+        }
+
+        s(F("canCloseDoor: "));
         spl(canCloseDoor);
-            
+        
         if (canCloseDoor) {
             doorClose();
         }
 
-        spl(F("\n"));
-        doorCheckTime = currentTime;
-        
+        doorCheckTime = currentTime;        
     }
 }
 
 bool doorCloseCondition () {
     data = fetchData();
-    uint8_t carInGarage = data[0];
-    uint8_t gear        = data[1];
+    int8_t carInGarage = data[0];
+    int8_t gear        = data[1];
 
-    s(F("Garage: "));
-    spl(carInGarage);
-    s(F("Gear: "));
-    spl(gear);
-
-    if (carInGarage && gear == P) {
+    if (! carInGarage && gear == P) {
         return true;
     }
     else {
@@ -108,12 +106,12 @@ void doorActivate () {
     digitalWrite(DOOR_RELAY_PIN, LOW);
 }
 
-uint8_t* fetchData () {
+int8_t* fetchData () {
 
     http.begin(url);
     http.setTimeout(8000);
 
-    static uint8_t data[2] = {0, 0};
+    static int8_t data[2] = {-1, -1};
 
     int httpCode = http.GET();
 
@@ -138,8 +136,6 @@ uint8_t* fetchData () {
     data[1] = json["gear"];
 
     http.end();
-
-    gotData = true;
 
     return data;
 }
