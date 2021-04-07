@@ -52,9 +52,6 @@ void loop() {
         else {
             digitalWrite(DOOR_OPEN_LED, LOW);
         }
-
-        s(F("canCloseDoor: "));
-        spl(canCloseDoor);
         
         if (canCloseDoor) {
             doorClose();
@@ -67,9 +64,8 @@ void loop() {
 bool doorCloseCondition () {
     data = fetchData();
     int8_t carInGarage = data[0];
-    int8_t gear        = data[1];
 
-    if (! carInGarage && gear == P) {
+    if (! carInGarage) {
         return true;
     }
     else {
@@ -87,15 +83,12 @@ void doorClose () {
     uint8_t door = doorState();
 
     if (door == DOOR_OPEN && ! doorClosing) {
-        spl(F("Open"));
         doorClosing = true;
         doorActivate();
     }
     else if (door == DOOR_OPEN && doorClosing) {
-        spl(F("Closing"));
     }
     else {
-        spl(F("Closed"));
         doorClosing = false;
     }
 }
@@ -111,7 +104,7 @@ int8_t* fetchData () {
     http.begin(url);
     http.setTimeout(8000);
 
-    static int8_t data[2] = {-1, -1};
+    static int8_t data[1] = {-1};
 
     int httpCode = http.GET();
 
@@ -133,7 +126,6 @@ int8_t* fetchData () {
     }
 
     data[0] = json["garage"];
-    data[1] = json["gear"];
 
     http.end();
 
