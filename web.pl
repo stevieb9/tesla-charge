@@ -26,9 +26,12 @@ use constant {
     DATA_EXPIRY => 10, # Seconds
 };
 
-my $debug = 0;
-my $conf;
+my $tesla_conf;
+my $tesla_debug = 0;
+
+my $garage_conf;
 my $garage_door_open = 0;
+my $garage_debug = 0;
 
 tie my $data, 'IPC::Shareable', 'TSLA', {create => 1, destroy => 1};
 $data = '';
@@ -43,9 +46,9 @@ get '/' => sub {
 
     content_type 'application/json';
     
-    $conf = config_load();
+    config_load();
     
-    return debug_data($conf) if $conf->{debug_return};
+    return debug_data() if $tesla_conf->{debug_return};
 
     if (time - $last_conn_time > DATA_EXPIRY) { 
         $data = '';
@@ -63,8 +66,8 @@ get '/debug' => sub {
     return if ! security();
    
     content_type 'application/json';
-    $conf = config_load();
-    return debug_data($conf);
+    config_load();
+    return debug_data();
 };
 
 get '/wake' => sub {
@@ -103,22 +106,24 @@ sub config_load {
     }
 
     $conf = decode_json $conf;
-    $debug = 1 if $conf->{debug};
-
-    return $conf;
+    
+    $tesla_conf  = $conf->{tesla_vehicle};
+    $garage_conf = $conf->{garage}; 
+    
+    $tesla_debug = 1 if $tesla_conf->{debug};
+    $garage_debug = 1 if $garage_conf->{debug};
 }
 sub debug_data {
-    my ($conf) = @_;
-    return encode_json $conf->{debug_data};
+    return encode_json $tesla_conf->{debug_data};
 }
 sub update {
     my $local_data = -1;
 
     until ($local_data != -1) {
-        $local_data = fetch($conf);
-        if ($local_data->{error} && $conf->{retry}) {
-            for (0..$conf->{retry} - 1) {
-                $local_data = fetch($conf);
+        $local_data = fetch($tesla_conf);
+        if ($local_data->{error} && $tesla_conf->{retry}) {
+            for (0..$tesla_conf->{retry} - 1) {
+                $local_data = fetch($tesla_conf);
                 last if ! $local_data->{error};
             }
         }
@@ -141,7 +146,7 @@ sub fetch {
     };
 
     if ($conf->{rainbow}) {
-        print "Rainbow!\n" if $debug;
+        print "Rainbow!\n" if $tesla_debug;
         $struct->{rainbow} = 1;
         return $struct;
     }
@@ -157,7 +162,7 @@ sub fetch {
     }
     
     if (! $online) {
-        print "Offline!\n" if $debug;
+        print "Offline!\n" if $tesla_debug;
         $struct->{online} = 0; 
         return $struct;
     }
