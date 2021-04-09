@@ -6,7 +6,7 @@ bool            gotData = false;
 int8_t*         data;
 char*           url;
 enum            shiftState {P, R, D};
-enum            doorStatus {DOOR_CLOSED, DOOR_OPEN};
+enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_MOVING};
 
 HTTPClient http;
 
@@ -14,11 +14,12 @@ void setup() {
     pinMode(DOOR_RELAY_PIN, OUTPUT);
     digitalWrite(DOOR_RELAY_PIN, LOW);
 
-    pinMode(DOOR_SENSOR_PIN, INPUT_PULLUP);
-    
+    pinMode(DOOR_OPEN_PIN, INPUT_PULLUP);
+    pinMode(DOOR_CLOSED_PIN, INPUT_PULLUP);
+
     pinMode(DOOR_OPEN_LED, OUTPUT);
     digitalWrite(DOOR_OPEN_LED, LOW);
-    
+
     Serial.begin(9600);
     wifiSetup();
 
@@ -35,33 +36,12 @@ void setup() {
 }
 
 void loop() {
-    unsigned long currentTime = millis();
-
-    if (currentTime - doorCheckTime >= DOOR_CHECK_DELAY) {
-        uint8_t door = doorState();
-
-        bool canCloseDoor = false;
-
-        if (doorClosing) {
-            canCloseDoor = true;
-        }
-        else if (door == DOOR_OPEN) {
-            digitalWrite(DOOR_OPEN_LED, HIGH);
-            canCloseDoor = doorCloseCondition();
-        }
-        else {
-            digitalWrite(DOOR_OPEN_LED, LOW);
-        }
-        
-        if (canCloseDoor) {
-            doorClose();
-        }
-
-        doorCheckTime = currentTime;        
-    }
+    uint8_t doorPosition = doorState();
+    
+    autoCloseDoor(doorPosition);
 }
 
-bool doorCloseCondition () {
+bool doorAutoCloseCondition () {
     data = fetchData();
     int8_t carInGarage = data[0];
 
@@ -74,21 +54,57 @@ bool doorCloseCondition () {
 }
 
 uint8_t doorState () {
-    uint8_t doorState = digitalRead(DOOR_SENSOR_PIN);
+    uint8_t doorOpen = ! digitalRead(DOOR_OPEN_PIN);
+    uint8_t doorClosed = ! digitalRead(DOOR_CLOSED_PIN);
+
+    uint8_t doorState;
+
+    if (doorOpen) {
+        doorState = DOOR_OPEN;
+        spl(F("Door open"));
+        digitalWrite(DOOR_OPEN_LED, HIGH);
+
+    }
+    else if (doorClosed) {
+        doorState = DOOR_CLOSED;
+        spl(F("Door closed"));
+        if (digitalRead(DOOR_OPEN_LED)) {
+            digitalWrite(DOOR_OPEN_LED, LOW);
+        }
+    }
+    else {
+        doorState = DOOR_MOVING;
+        spl(F("Door moving"));
+    }
+
     updateData(doorState);
     return doorState;
+}
+
+void autoCloseDoor (uint8_t doorState) {
+    unsigned long currentTime = millis();
+
+    if (currentTime - doorCheckTime >= DOOR_CHECK_DELAY) {
+        
+        bool canCloseDoor = doorAutoCloseCondition();
+
+        if (canCloseDoor) {
+            doorClose();
+        }
+        
+        doorCheckTime = currentTime;
+    }
 }
 
 void doorClose () {
     uint8_t door = doorState();
 
     if (door == DOOR_OPEN && ! doorClosing) {
+        spl(F("Closing door"));
         doorClosing = true;
         doorActivate();
     }
-    else if (door == DOOR_OPEN && doorClosing) {
-    }
-    else {
+    else if (door == DOOR_CLOSED) {
         doorClosing = false;
     }
 }
@@ -104,7 +120,7 @@ int8_t* fetchData () {
     http.begin(url);
     http.setTimeout(8000);
 
-    static int8_t data[1] = {-1};
+    static int8_t data[1] = { -1};
 
     int httpCode = http.GET();
 
