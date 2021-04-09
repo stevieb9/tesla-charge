@@ -7,11 +7,15 @@ use 5.10.0;
 use Async::Event::Interval;
 use Dancer2;
 use Data::Dumper;
+use Data::Dumper;
 use FindBin;
 use IPC::Shareable;
 use JSON;
 
+$| = 1;
+
 set port        => 55556;
+#set serializer => 'JSON';
 
 use constant {
     ACCURACY    => 1e4,
@@ -57,7 +61,7 @@ get '/' => sub {
 
 get '/debug' => sub {
     return if ! security();
-    
+   
     content_type 'application/json';
     $conf = config_load();
     return debug_data($conf);
@@ -72,15 +76,18 @@ get '/wake' => sub {
 
 get '/garage' => sub {
     return if ! security();
-    return $garage_door_open;
+    return int $garage_door_open;
 };
 
-get '/garage/:open' => sub {
+post '/garage' => sub {
     return if ! security();
-    return $garage_door_open = params->{open};
+    
+    my $data = decode_json request->body;
+    $garage_door_open = $data->{open};
+    return;
 };
 
-start;
+dance;
 
 sub security {
     return if request->address !~ /^192\.168\.0\.\d+/;
