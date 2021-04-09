@@ -108,7 +108,7 @@ sub config_load {
     $conf = decode_json $conf;
     
     $tesla_conf  = $conf->{tesla_vehicle};
-    $garage_conf = $conf->{garage}; 
+    $garage_conf = $conf->{garage_door}; 
     
     $tesla_debug = 1 if $tesla_conf->{debug};
     $garage_debug = 1 if $garage_conf->{debug};
