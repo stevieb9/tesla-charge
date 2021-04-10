@@ -30,8 +30,10 @@ my $tesla_conf;
 my $tesla_debug = 0;
 
 my $garage_conf;
-my $garage_door_open = 0;
-my $garage_debug = 0;
+my $garage_door_open    = 0;
+my $garage_door_action  = 0;
+my $garage_door_manual  = 0;
+my $garage_debug        = 0;
 
 tie my $data, 'IPC::Shareable', 'TSLA', {create => 1, destroy => 1};
 $data = '';
@@ -77,16 +79,110 @@ get '/wake' => sub {
     return $data;
 };
 
+# Get garage data (microcontroller)
+
+get '/garage_data' => sub {
+    return if ! security();
+
+    content_type 'application/json';
+    
+    config_load();
+    
+    $tesla_event->start if $tesla_event->waiting;
+   
+    my %garage_data =  %{ $garage_conf };
+
+    if ($data) {
+        my $data_ref = decode_json $data;
+        $garage_data{garage} = $data_ref->{garage};
+    }
+    else {
+        $garage_data{garage} = -1;
+    }
+
+    return encode_json \%garage_data;
+};
+
+# Main page (web)
+
 get '/garage' => sub {
+    return if ! security();
+    return template 'garage';
+};
+
+# Get door state
+
+get '/garage_door_state' => sub {
     return if ! security();
     return int $garage_door_open;
 };
 
-post '/garage' => sub {
+# Set door state (microcontroller JSON)
+
+post '/garage_door_state_set' => sub {
     return if ! security();
     
     my $data = decode_json request->body;
     $garage_door_open = $data->{open};
+    return;
+};
+
+# Toggle door state (web)
+
+get '/garage_door_toggle' => sub {
+    return if ! security();
+    if ($garage_door_open) {
+        $garage_door_open = 0;
+    }
+    else {
+        $garage_door_open = 1;
+    }
+};
+
+# Get door action pending
+
+get '/garage_door_action' => sub {
+    return if ! security();
+    return $garage_door_action;
+};
+
+# Fetch and reset door action pending
+
+get '/garage_door_action_get' => sub {
+    return if ! security();
+
+    my $action = $garage_door_action;
+    $garage_door_action = 0;
+    return $action;
+};
+
+# Set door action
+
+post '/garage_door_action_set' => sub {
+    return if ! security();
+    $garage_door_action = 1;
+    return;
+};
+
+# Get door manual mode
+
+get '/garage_door_manual' => sub {
+    return if ! security();
+    return $garage_door_manual;
+};
+
+# Set garage door manual mode
+
+get '/garage_door_manual_set' => sub {
+    return if ! security();
+
+    if ($garage_door_manual) {
+        $garage_door_manual = 0;
+    }
+    else {
+        $garage_door_manual = 1;
+    }
+
     return;
 };
 
@@ -242,4 +338,9 @@ sub _default_data {
     };
 
     return $struct;
+}
+sub _default_garage_data {
+    my %data = %{ $garage_conf };
+    $data{garage} = -1;
+    return \%data;
 }
