@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Garage Manipulator</title>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script src="js/core.js"></script>
+</head>
+
+<body>
+<input type="button" id="garage-door" value="Unavailable" disabled=true></button>
+<input type="button" id="manual-mode" value="Off"></button>
+</body>
+</html>

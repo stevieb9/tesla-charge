@@ -26,9 +26,14 @@ use constant {
     DATA_EXPIRY => 10, # Seconds
 };
 
-my $debug = 0;
-my $conf;
-my $garage_door_open = 0;
+my $tesla_conf;
+my $tesla_debug = 0;
+
+my $garage_conf;
+my $garage_door_open    = 0;
+my $garage_door_action  = 0;
+my $garage_door_manual  = 0;
+my $garage_debug        = 0;
 
 tie my $data, 'IPC::Shareable', 'TSLA', {create => 1, destroy => 1};
 $data = '';
@@ -43,9 +48,9 @@ get '/' => sub {
 
     content_type 'application/json';
     
-    $conf = config_load();
+    config_load();
     
-    return debug_data($conf) if $conf->{debug_return};
+    return debug_data() if $tesla_conf->{debug_return};
 
     if (time - $last_conn_time > DATA_EXPIRY) { 
         $data = '';
@@ -63,8 +68,8 @@ get '/debug' => sub {
     return if ! security();
    
     content_type 'application/json';
-    $conf = config_load();
-    return debug_data($conf);
+    config_load();
+    return debug_data();
 };
 
 get '/wake' => sub {
@@ -74,16 +79,110 @@ get '/wake' => sub {
     return $data;
 };
 
+# Get garage data (microcontroller)
+
+get '/garage_data' => sub {
+    return if ! security();
+
+    content_type 'application/json';
+    
+    config_load();
+    
+    $tesla_event->start if $tesla_event->waiting;
+   
+    my %garage_data =  %{ $garage_conf };
+
+    if ($data) {
+        my $data_ref = decode_json $data;
+        $garage_data{garage} = $data_ref->{garage};
+    }
+    else {
+        $garage_data{garage} = -1;
+    }
+
+    return encode_json \%garage_data;
+};
+
+# Main page (web)
+
 get '/garage' => sub {
+    return if ! security();
+    return template 'garage';
+};
+
+# Get door state
+
+get '/garage_door_state' => sub {
     return if ! security();
     return int $garage_door_open;
 };
 
-post '/garage' => sub {
+# Set door state (microcontroller JSON)
+
+post '/garage_door_state_set' => sub {
     return if ! security();
     
     my $data = decode_json request->body;
     $garage_door_open = $data->{open};
+    return;
+};
+
+# Toggle door state (web)
+
+get '/garage_door_toggle' => sub {
+    return if ! security();
+    if ($garage_door_open) {
+        $garage_door_open = 0;
+    }
+    else {
+        $garage_door_open = 1;
+    }
+};
+
+# Get door action pending
+
+get '/garage_door_action' => sub {
+    return if ! security();
+    return $garage_door_action;
+};
+
+# Fetch and reset door action pending
+
+get '/garage_door_action_get' => sub {
+    return if ! security();
+
+    my $action = $garage_door_action;
+    $garage_door_action = 0;
+    return $action;
+};
+
+# Set door action
+
+post '/garage_door_action_set' => sub {
+    return if ! security();
+    $garage_door_action = 1;
+    return;
+};
+
+# Get door manual mode
+
+get '/garage_door_manual' => sub {
+    return if ! security();
+    return $garage_door_manual;
+};
+
+# Set garage door manual mode
+
+get '/garage_door_manual_set' => sub {
+    return if ! security();
+
+    if ($garage_door_manual) {
+        $garage_door_manual = 0;
+    }
+    else {
+        $garage_door_manual = 1;
+    }
+
     return;
 };
 
@@ -103,22 +202,24 @@ sub config_load {
     }
 
     $conf = decode_json $conf;
-    $debug = 1 if $conf->{debug};
-
-    return $conf;
+    
+    $tesla_conf  = $conf->{tesla_vehicle};
+    $garage_conf = $conf->{garage_door}; 
+    
+    $tesla_debug = 1 if $tesla_conf->{debug};
+    $garage_debug = 1 if $garage_conf->{debug};
 }
 sub debug_data {
-    my ($conf) = @_;
-    return encode_json $conf->{debug_data};
+    return encode_json $tesla_conf->{debug_data};
 }
 sub update {
     my $local_data = -1;
 
     until ($local_data != -1) {
-        $local_data = fetch($conf);
-        if ($local_data->{error} && $conf->{retry}) {
-            for (0..$conf->{retry} - 1) {
-                $local_data = fetch($conf);
+        $local_data = fetch($tesla_conf);
+        if ($local_data->{error} && $tesla_conf->{retry}) {
+            for (0..$tesla_conf->{retry} - 1) {
+                $local_data = fetch($tesla_conf);
                 last if ! $local_data->{error};
             }
         }
@@ -141,7 +242,7 @@ sub fetch {
     };
 
     if ($conf->{rainbow}) {
-        print "Rainbow!\n" if $debug;
+        print "Rainbow!\n" if $tesla_debug;
         $struct->{rainbow} = 1;
         return $struct;
     }
@@ -157,7 +258,7 @@ sub fetch {
     }
     
     if (! $online) {
-        print "Offline!\n" if $debug;
+        print "Offline!\n" if $tesla_debug;
         $struct->{online} = 0; 
         return $struct;
     }
@@ -237,4 +338,9 @@ sub _default_data {
     };
 
     return $struct;
+}
+sub _default_garage_data {
+    my %data = %{ $garage_conf };
+    $data{garage} = -1;
+    return \%data;
 }
