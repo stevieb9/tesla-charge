@@ -1,6 +1,6 @@
 import sys
 from os import environ
-from teslapy import Tesla
+from teslapy import Tesla, Vehicle
 
 email     = environ.get('TESLA_EMAIL')
 password  = environ.get('TESLA_PASSWORD')
