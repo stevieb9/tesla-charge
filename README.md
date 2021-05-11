@@ -4,7 +4,17 @@ A Python implementation based on [unofficial documentation](https://tesla-api.ti
 
 ## Overview
 
-The single file module *teslapy* depends on Python [requests](https://pypi.org/project/requests/) and [requests_oauthlib](https://pypi.org/project/requests-oauthlib/). The `Tesla` class extends `requests.Session` and therefore inherits methods like `get()` and `post()` that can be used to perform API calls. It uses Tesla's new [OAuth 2](https://oauth.net/2/) Single Sign-On service with support for Multi-Factor Authentication (MFA) Time-based One-Time Passwords (TOTP) to acquire a JSON Web Token (JWT) bearer to access the Owner API that is cached to disk (*cache.json*) for reuse. The cache stores tokens of each authorized identity (email). Authentication is only needed when a new token is requested. The token is automatically refreshed when expired without the need to reauthenticate. An email registered in another region (e.g. auth.tesla.cn) is also supported. The constructor takes two arguments required for authentication (email and password) and four optional arguments: a passcode getter function, a factor selector function, a verify SSL certificate bool and a proxy server URL. The convenience method `api()` uses named endpoints listed in *endpoints.json* to perform calls, so the module does not require changes if the API is updated. Any error message returned by the API is raised as an `HTTPError` exception. Additionally, the class implements the following methods:
+This module depends on Python [requests](https://pypi.org/project/requests/) and [requests_oauthlib](https://pypi.org/project/requests-oauthlib/). The `Tesla` class extends `requests.Session` and therefore inherits methods like `get()` and `post()` that can be used to perform API calls. All calls to the Owner API are intercepted to add the JSON Web Token (JWT) bearer, which is acquired after authentication:
+
+* It implements Tesla's new [OAuth 2](https://oauth.net/2/) Single Sign-On service.
+* And supports Multi-Factor Authentication (MFA) Time-based One-Time Passwords (TOTP).
+* Acquired tokens are cached to disk (*cache.json*) for persistence.
+* The cache stores tokens of each authorized identity (email).
+* Authentication is only needed when a new token is requested.
+* The token is automatically refreshed when expired without the need to reauthenticate.
+* An email registered in another region (e.g. auth.tesla.cn) is also supported.
+
+The constructor takes two arguments required for authentication (email and password) and five optional arguments: a passcode getter function, a factor selector function, a verify SSL certificate bool, a proxy server URL, the maximum number of retries or an instance of the `teslapy.Retry` class and a User-Agent string. The convenience method `api()` uses named endpoints listed in *endpoints.json* to perform calls, so the module does not require changes if the API is updated. Any error message returned by the API is raised as an `HTTPError` exception. Additionally, the class implements the following methods:
 
 | Call | Description |
 | --- | --- |
@@ -19,18 +29,32 @@ The `Vehicle` class extends `dict` and stores vehicle data returned by the API. 
 | `api()` | performs an API call to named endpoint requiring vehicle_id with optional arguments |
 | `get_vehicle_summary()` | gets the state of the vehicle (online, asleep, offline) |
 | `sync_wake_up()` | wakes up and waits for the vehicle to come online |
-| `option_code_list()` | lists known descriptions of the vehicle option codes |
+| `option_code_list()` <sup>1</sup> | lists known descriptions (read from *option_codes.json*) of the vehicle option codes |
 | `get_vehicle_data()` | gets a rollup of all the data request endpoints plus vehicle config |
 | `get_nearby_charging_sites()` | lists nearby Tesla-operated charging stations |
 | `mobile_enabled()` | checks if mobile access is enabled in the vehicle |
-| `compose_image()` | composes a vehicle image based on vehicle option codes |
+| `compose_image()` <sup>2</sup> | composes a vehicle image based on vehicle option codes |
 | `dist_units()` | converts distance or speed units to GUI setting of the vehicle |
 | `temp_units()` | converts temperature units to GUI setting of the vehicle |
 | `decode_vin()` | decodes the vehicle identification number to a dict |
 | `remote_start_drive()` | enables keyless drive (requires password to be set) |
 | `command()` | wrapper around `api()` for vehicle command response error handling |
 
+<sup>1</sup> Option codes appear to be deprecated. Vehicles return a generic set of codes related to a Model 3.
+
+<sup>2</sup> Pass vehicle option codes to this method or the image may not be accurate.
+
 Only `get_vehicle_summary()`, `option_code_list()`, `compose_image()` and `decode_vin()` are available when the vehicle is asleep or offline. These methods will not prevent your vehicle from sleeping. Other methods and API calls require the vehicle to be brought online by using `sync_wake_up()` and can prevent your vehicle from sleeping if called with too short a period.
+
+The `Battery` class extends `dict` and stores Powerwall data returned by the API. Additionally, the class implements the following methods:
+
+| Call | Description |
+| --- | --- |
+| `api()` | performs an API call to named endpoint requiring battery_id or site_id with optional arguments |
+| `get_battery_data()` | Retrieve detailed state and configuration of the battery |
+| `command()` | wrapper around `api()` for battery command response error handling |
+| `set_operation()` | Set battery operation to self_consumption, backup or autonomous |
+| `set_backup_reserve_percent()` | Set the minimum backup reserve percent for that battery |
 
 ## Usage
 
@@ -58,7 +82,7 @@ Tesla allows you to enable more then one MFA device. In this case the constructo
 with teslapy.Tesla('elon@tesla.com', 'starship', lambda: '123456', lambda _: 'Device #1') as tesla:
 ```
 
-Take a look at *menu.py* or *gui.py* for examples of a passcode getter function and a factor selector function.
+Take a look at [menu.py](https://github.com/tdorssers/TeslaPy/blob/master/menu.py) or [gui.py](https://github.com/tdorssers/TeslaPy/blob/master/gui.py) for examples of a passcode getter function and a factor selector function.
 
 These are the major commands:
 
@@ -120,15 +144,18 @@ Additionally, `sync_wake_up()` raises `teslapy.VehicleError` when the vehicle do
 
 When you pass an empty string as passcode or factor to the constructor and your account has MFA enabled, then the module will cancel the transaction and this exception will be raised: `CustomOAuth2Error: (login_cancelled) User cancelled login`.
 
-:memo: If you get a `requests.exceptions.HTTPError: 400 Client Error: endpoint_deprecated:_please_update_your_app for url: https://owner-api.teslamotors.com/oauth/token` then it is time to update your local copy or sync your fork of this repository. As of January 29, 2021, Tesla updated this endpoint to follow [RFC 7523](https://tools.ietf.org/html/rfc7523) and requires the use of the SSO service (auth.tesla.com) for authentication.
+If you get a `requests.exceptions.HTTPError: 400 Client Error: endpoint_deprecated:_please_update_your_app for url: https://owner-api.teslamotors.com/oauth/token` then you are probably using an old version of this module. As of January 29, 2021, Tesla updated this endpoint to follow [RFC 7523](https://tools.ietf.org/html/rfc7523) and requires the use of the SSO service (auth.tesla.com) for authentication.
 
 ## Demo applications
 
-*cli.py* is a simple CLI application that can use almost all functionality of the TeslaPy module. The filter option allows you to select a vehicle if more than one vehicle is linked to your account. API output is JSON formatted:
+The source repository contains three demo applications.
+
+[cli.py](https://github.com/tdorssers/TeslaPy/blob/master/cli.py) is a simple CLI application that can use almost all functionality of the TeslaPy module. The filter option allows you to select a product if more than one product is linked to your account. API output is JSON formatted:
 
 ```
-usage: cli.py [-h] -e EMAIL [-p [PASSWORD]] [-t PASSCODE]  [-u FACTOR] [-f FILTER] [-a API]
-              [-k KEYVALUE] [-c COMMAND] [-l] [-o] [-v] [-w] [-g] [-n] [-m] [-s] [-d]
+usage: cli.py [-h] -e EMAIL [-p [PASSWORD]] [-t PASSCODE] [-u FACTOR]
+              [-f FILTER] [-a API] [-k KEYVALUE] [-c COMMAND] [-l] [-o] [-v]
+              [-w] [-g] [-b] [-n] [-m] [-s] [-d]
 
 Tesla Owner API CLI
 
@@ -141,29 +168,30 @@ optional arguments:
   -f FILTER      filter on id, vin, etc.
   -a API         API call endpoint name
   -k KEYVALUE    API parameter (key=value)
-  -c COMMAND     vehicle command endpoint
-  -l, --list     list all selected vehicles
+  -c COMMAND     product command endpoint
+  -l, --list     list all selected vehicles/batteries
   -o, --option   list vehicle option codes
   -v, --vin      vehicle identification number decode
   -w, --wake     wake up selected vehicle(s)
   -g, --get      get rollup of all vehicle data
+  -b, --battery  get detailed battery state and config
   -n, --nearby   list nearby charging sites
   -m, --mobile   get mobile enabled state
   -s, --start    remote start drive
   -d, --debug    set logging level to debug
 ```
 
-Example usage of *cli.py* using a cached token:
+Example usage of [cli.py](https://github.com/tdorssers/TeslaPy/blob/master/cli.py) using a cached token:
 
 `python cli.py -e elon@tesla.com -w -a ACTUATE_TRUNK -k which_trunk=front`
 
-*menu.py* is a menu-based console application that displays vehicle data in a tabular format. The application depends on [geopy](https://pypi.org/project/geopy/) to convert GPS coordinates to a human readable address:
+[menu.py](https://github.com/tdorssers/TeslaPy/blob/master/cli.py) is a menu-based console application that displays vehicle data in a tabular format. The application depends on [geopy](https://pypi.org/project/geopy/) to convert GPS coordinates to a human readable address:
 
-![](media/menu.png)
+![](https://raw.githubusercontent.com/tdorssers/TeslaPy/master/media/menu.png)
 
-*gui.py* is a graphical interface using `tkinter`. API calls are performed asynchronously using threading. The GUI also supports auto refreshing of the vehicle data and the GUI displays a composed vehicle image. Note that the vehicle will not go to sleep, if auto refresh is enabled. The application depends on [pillow](https://pypi.org/project/Pillow/) to display the vehicle image, if the Tcl/Tk GUI toolkit version of your Python installation is 8.5. Python 3.4+ should include Tcl/Tk 8.6, which natively supports PNG image format and therefore has no such dependency.
+[gui.py](https://github.com/tdorssers/TeslaPy/blob/master/cli.py) is a graphical interface using `tkinter`. API calls are performed asynchronously using threading. The GUI also supports auto refreshing of the vehicle data and the GUI displays a composed vehicle image. Note that the vehicle will not go to sleep, if auto refresh is enabled. The application depends on [pillow](https://pypi.org/project/Pillow/) to display the vehicle image, if the Tcl/Tk GUI toolkit version of your Python installation is 8.5. Python 3.4+ should include Tcl/Tk 8.6, which natively supports PNG image format and therefore has no such dependency.
 
-![](media/gui.png)
+![](https://raw.githubusercontent.com/tdorssers/TeslaPy/master/media/gui.png)
 
 ## Vehicle data
 
@@ -358,18 +386,84 @@ Example output of `get_vehicle_data()` or `python cli.py -e elon@tesla.com -w -g
 }
 ```
 
+## Powerwall data
+
+Example output of `get_battery_data()` or `python cli.py -e elon@tesla.com -b` below:
+
+```json
+{
+    "energy_site_id": 111110110110,
+    "resource_type": "battery",
+    "site_name": "Elon's House",
+    "id": "STE10110111-00101",
+    "gateway_id": "1111100-11-A--AAA11110A1A111",
+    "asset_site_id": "a1100111-1a11-1aaa-a111-1a0011aa1111",
+    "energy_left": 0,
+    "total_pack_energy": 13746,
+    "percentage_charged": 0,
+    "battery_type": "ac_powerwall",
+    "backup_capable": true,
+    "battery_power": 0,
+    "sync_grid_alert_enabled": false,
+    "breaker_alert_enabled": false,
+    "components": {
+        "solar": true,
+        "solar_type": "pv_panel",
+        "battery": true,
+        "grid": true,
+        "backup": true,
+        "gateway": "teg",
+        "load_meter": true,
+        "tou_capable": true,
+        "storm_mode_capable": true,
+        "flex_energy_request_capable": false,
+        "car_charging_data_supported": false,
+        "off_grid_vehicle_charging_reserve_supported": false,
+        "vehicle_charging_performance_view_enabled": false,
+        "vehicle_charging_solar_offset_view_enabled": false,
+        "battery_solar_offset_view_enabled": true,
+        "show_grid_import_battery_source_cards": true,
+        "battery_type": "ac_powerwall",
+        "configurable": false,
+        "grid_services_enabled": false
+    },
+    "grid_status": "Active",
+    "backup": {
+        "backup_reserve_percent": 0,
+        "events": null
+    },
+    "user_settings": {
+        "storm_mode_enabled": false,
+        "sync_grid_alert_enabled": false,
+        "breaker_alert_enabled": false
+    },
+    "default_real_mode": "self_consumption",
+    "operation": "self_consumption",
+    "installation_date": "2020-01-01T10:10:00+08:00",
+    "power_reading": [
+        {
+            "timestamp": "2021-02-24T04:25:39+08:00",
+            "load_power": 5275,
+            "solar_power": 3,
+            "grid_power": 5262,
+            "battery_power": 10,
+            "generator_power": 0
+        }
+    ],
+    "battery_count": 1
+}
+```
+
 ## Installation
 
-Make sure you have [Python](https://www.python.org/) 2.7+ or 3.5+ installed on your system. Install [requests](https://pypi.org/project/requests/) with [requests_oauthlib](https://pypi.org/project/requests-oauthlib/) and [geopy](https://pypi.org/project/geopy/) using [PIP](https://pypi.org/project/pip/) on Linux or macOS:
+TeslaPy is available on PyPI:
 
-`pip install requests_oauthlib geopy`
+`python -m pip install teslapy`
 
-or on Windows as follows:
+Make sure you have [Python](https://www.python.org/) 2.7+ or 3.5+ installed on your system. Alternatively, clone the repository to your machine and run demo application [cli.py](https://github.com/tdorssers/TeslaPy/blob/master/cli.py), [menu.py](https://github.com/tdorssers/TeslaPy/blob/master/cli.py) or [gui.py](https://github.com/tdorssers/TeslaPy/blob/master/cli.py) to get started, after installing [requests_oauthlib](https://pypi.org/project/requests-oauthlib/) and [geopy](https://pypi.org/project/geopy/) using [PIP](https://pypi.org/project/pip/) as follows:
 
 `python -m pip install requests_oauthlib geopy`
 
 or on Ubuntu as follows:
 
 `sudo apt-get install python3-requests-oauthlib python3-geopy`
-
-Copy directory *teslapy* and files *cli.py*, *menu.py* and *gui.py* to your machine and run *cli.py*, *menu.py* or *gui.py* to get started.

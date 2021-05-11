@@ -66,8 +66,8 @@ class SeatHeaterDialog(Dialog):
     def body(self, master):
         Label(master, text="Heater:").grid(row=0, sticky=E)
         Label(master, text="Level:").grid(row=1, sticky=E)
-        lst = ['0: Driver', '1: Passenger', '2: Rear left', '3: Rear center',
-               '4: Rear right']
+        lst = ['0: Front Left', '1: Front Right', '2: Rear left',
+               '3: Rear center', '4: Rear right']
         self.heater = StringVar(value=lst[0])
         OptionMenu(master, self.heater, *lst).grid(row=0, column=1, sticky=W)
         self.level = IntVar(value=0)
@@ -313,8 +313,8 @@ class Dashboard(Frame):
         self.fp.text(window.get(ve.get('fp_window')))
         self.rd.text(window.get(ve.get('rd_window')))
         self.rp.text(window.get(ve.get('rp_window')))
-        self.ft.text(door[ve['ft']])
-        self.rt.text(door[ve['rt']])
+        self.ft.text(door[bool(ve['ft'])])
+        self.rt.text(door[bool(ve['rt'])])
         self.remote_start.text(str(ve['remote_start']))
         self.user_present.text(str(ve['is_user_present']))
         self.speed_limit.text(str(ve['speed_limit_mode']['active']))
@@ -483,7 +483,8 @@ class App(Tk):
         except (NoSectionError, NoOptionError, ParsingError):
             pass
         # Initialize logging
-        logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
+        default_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        logging.basicConfig(format=default_format)
         self.set_log()
 
     def add_cmd_args(self, endpoint):
@@ -520,8 +521,10 @@ class App(Tk):
         if dlg.result:
             self.email, self.password = dlg.result
             self.status.text('Logging in...')
+            retry = teslapy.Retry(total=2,
+                                  status_forcelist=(408, 500, 502, 503, 504))
             tesla = teslapy.Tesla(self.email, self.password, self.get_passcode,
-                                  self.select_factor)
+                                  self.select_factor, retry=retry)
             # Create and start login thread. Check thread status after 100 ms
             self.login_thread = LoginThread(tesla)
             self.login_thread.start()
@@ -795,8 +798,9 @@ class App(Tk):
             self.cmd('CHANGE_CHARGE_LIMIT', percent=limit)
 
     def open_close_charge_port(self):
-        """ Open or close charging port """
-        if self.vehicle['charge_state']['charge_port_door_open']:
+        """ Open, unlock or close charging port """
+        if (self.vehicle['charge_state']['charge_port_door_open'] and
+                self.vehicle['charge_state']['charge_port_latch'] != 'Engaged'):
             self.cmd('CHARGE_PORT_DOOR_CLOSE')
         else:
             self.cmd('CHARGE_PORT_DOOR_OPEN')
