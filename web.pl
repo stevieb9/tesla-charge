@@ -79,6 +79,13 @@ get '/wake' => sub {
     return $data;
 };
 
+# Main page (web)
+
+get '/garage' => sub {
+    return if ! security();
+    return template 'garage';
+};
+
 # Get garage data (microcontroller)
 
 get '/garage_data' => sub {
@@ -101,13 +108,6 @@ get '/garage_data' => sub {
     }
 
     return encode_json \%garage_data;
-};
-
-# Main page (web)
-
-get '/garage' => sub {
-    return if ! security();
-    return template 'garage';
 };
 
 # Get door state
@@ -146,7 +146,7 @@ get '/garage_door_action' => sub {
     return $garage_door_action;
 };
 
-# Fetch and reset door action pending
+# Fetch and reset door action pending (microcontroller)
 
 get '/garage_door_action_get' => sub {
     return if ! security();
@@ -156,7 +156,7 @@ get '/garage_door_action_get' => sub {
     return $action;
 };
 
-# Set door action
+# Set door action (web)
 
 post '/garage_door_action_set' => sub {
     return if ! security();
@@ -171,7 +171,7 @@ get '/garage_door_manual' => sub {
     return $garage_door_manual;
 };
 
-# Set garage door manual mode
+# Set garage door manual mode (web)
 
 get '/garage_door_manual_set' => sub {
     return if ! security();
