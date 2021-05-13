@@ -15,18 +15,18 @@ if __name__ == "__main__":
         exit()
 
     with Tesla(email, password) as tesla:
-#        try:
-        tesla.fetch_token()
-        selected = cars = tesla.vehicle_list()
-        car = selected[0]
+        try:
+            tesla.fetch_token()
+            selected = cars = tesla.vehicle_list()
+            car = selected[0]
 
-        state = car.get_vehicle_summary()['state']
-       
-        if state == "online":
-            print(car.get_vehicle_data())
+            state = car.get_vehicle_summary()['state']
+           
+            if state == "online":
+                print(car.get_vehicle_data())
 
-        else: 
-            print('{"online": 0}')
+            else: 
+                print('{"online": 0}')
 
-#        except:
-#            print('{"request-error": 1}')
+        except:
+            print('{"request-error": 1}')
