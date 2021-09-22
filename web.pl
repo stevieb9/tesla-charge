@@ -193,7 +193,7 @@ get '/garage_door_manual_set' => sub {
 dance;
 
 sub security {
-    return if request->address !~ /^192\.168\.0\.\d+/;
+    return if request->address !~ /^192\.168\.1\.\d+/;
     return 1;
 }
 sub config_load {
