@@ -2,11 +2,25 @@
 
 # Author: Tim Dorssers
 
+import ssl
 import time
 import logging
 import threading
+import webbrowser
+import multiprocessing
+import geopy.geocoders  # 1.14.0 or higher required
 from geopy.geocoders import Nominatim
 from geopy.exc import *
+try:
+    import webview  # Optional pywebview 3.0 or higher
+except ImportError:
+    webview = None
+try:
+    from selenium import webdriver  # Optional selenium 3.13.0 or higher
+    from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.support.ui import WebDriverWait
+except ImportError:
+    webdriver = None
 try:
     from Tkinter import *
     from tkSimpleDialog import *
@@ -16,27 +30,6 @@ except ImportError:
     from tkinter.simpledialog import *
     from configparser import *
 import teslapy
-
-class LoginDialog(Dialog):
-    """ Display dialog box to enter email and password """
-
-    def __init__(self, master):
-        Dialog.__init__(self, master, title='Login')
-
-    def body(self, master):
-        Label(master, text="Email:").grid(row=0, sticky=W)
-        Label(master, text="Password:").grid(row=1, sticky=W)
-        self.email = Entry(master)
-        self.email.grid(row=0, column=1)
-        # Set previously entered email as default value
-        if hasattr(self.master, 'email'):
-            self.email.insert(0, self.master.email)
-        self.password = Entry(master, show='*')
-        self.password.grid(row=1, column=1)
-        return self.email
-
-    def apply(self):
-        self.result = (self.email.get(), self.password.get())
 
 class LabelGridDialog(Dialog):
     """ Display dialog box with table without cancel button """
@@ -93,21 +86,135 @@ class ControlDialog(Dialog):
     def apply(self):
         self.result = self.state.get()
 
-class SelectFactorDialog(Dialog):
-    """ Display dialog box to select authorization factor """
+class ChargingDialog(Dialog):
+    """ Display dialog box to get scheduled charging parameters """
 
-    def __init__(self, master, title=None, factors=None):
-        self.factors = factors or []
+    def __init__(self, master, title='Scheduled charging'):
         Dialog.__init__(self, master, title)
 
     def body(self, master):
-        self.state = IntVar(value=0)
-        for i, factor in enumerate(self.factors):
-            Radiobutton(master, text=factor['name'], variable=self.state,
-                        value=i).pack(anchor=W)
+        self.enable = BooleanVar()
+        Checkbutton(master, text='Enable', variable=self.enable).pack()
+        self.time = StringVar()
+        self.time.set('0:00')
+        Label(master, text='Time:').pack(side=LEFT)
+        Entry(master, textvariable=self.time).pack(side=LEFT)
 
     def apply(self):
-        self.result = self.factors[self.state.get()]
+        parts = self.time.get().split(':')
+        self.result = {'enable': self.enable.get(),
+                       'time': int(parts[0]) * 60 + int(parts[1])}
+
+class DepartureDialog(Dialog):
+    """ Display dialog box to get scheduled departure parameters """
+
+    def __init__(self, master, title='Scheduled departure'):
+        Dialog.__init__(self, master, title)
+
+    def body(self, master):
+        self.depart_time = StringVar()
+        self.depart_time.set('8:00')
+        Label(master, text='Departure Time:').grid()
+        Entry(master, textvariable=self.depart_time).grid(row=0, column=1)
+        self.enable = BooleanVar()
+        Checkbutton(master, text='Enable', variable=self.enable).grid(row=0, column=2)
+        group = LabelFrame(master, text='Preconditioning')
+        self.hvac = BooleanVar()
+        Checkbutton(group, text='Enable', variable=self.hvac).pack(side=LEFT)
+        self.hvac_weekdays = BooleanVar()
+        Checkbutton(group, text='Weekdays',
+                    variable=self.hvac_weekdays).pack(side=RIGHT)
+        group.grid(columnspan=3, sticky=EW, padx=5)
+        group = LabelFrame(master, text='Off Peak Charging')
+        self.off_peak = BooleanVar()
+        Checkbutton(group, text='Enable', variable=self.off_peak).grid(sticky=W)
+        self.off_peak_weekdays = BooleanVar()
+        Checkbutton(group, text='Weekdays',
+                    variable=self.off_peak_weekdays).grid(row=0, column=1, sticky=E)
+        self.end_time = StringVar()
+        self.end_time.set('6:00')
+        Label(group, text='Off Peak End Time:').grid()
+        Entry(group, textvariable=self.end_time).grid(row=1, column=1, padx=5, pady=5)
+        group.grid(columnspan=3, sticky=EW, padx=5)
+
+    def apply(self):
+        depart = self.depart_time.get().split(':')
+        end = self.end_time.get().split(':')
+        self.result = {'enable': self.enable.get(),
+                       'departure_time': int(depart[0]) * 60 + int(depart[1]),
+                       'preconditioning_enabled': self.hvac.get(),
+                       'preconditioning_weekdays_only': self.hvac_weekdays.get(),
+                       'off_peak_charging_enabled': self.off_peak.get(),
+                       'off_peak_charging_weekdays_only': self.off_peak_weekdays.get(),
+                       'end_off_peak_time': int(end[0]) * 60 + int(end[1])}
+
+class ChargeHistoryDialog(Dialog):
+    """ Display dialog box with charging history graph """
+
+    def __init__(self, master, data):
+        self.data = data
+        Dialog.__init__(self, master, title='Charging History')
+
+    def body(self, master):
+        Label(master, text=self.data['screen_title'],
+              font=('TkTextFont', 12)).pack()
+        Label(master, text=self.data['total_charged']['title'],
+              anchor=W).pack(fill=X)
+        text = '%s %s' % (self.data['total_charged']['value'],
+                          self.data['total_charged']['after_adornment'])
+        Label(master, text=text, anchor=W,
+              font=('TkTextFont', 12, 'bold')).pack(fill=X)
+        # Draw graph
+        canvas = Canvas(master, width=440, height=410)
+        scale = self.data['charging_history_graph']['y_range_max'] / 320
+        for y in self.data['charging_history_graph']['horizontal_grid_lines']:
+            y_scaled = 335 - y / scale
+            canvas.create_line(5, y_scaled, 403, y_scaled, dash=(2, 2))
+        for x in self.data['charging_history_graph']['vertical_grid_lines']:
+            canvas.create_line(14 + x * 13, 15, 14 + x * 13, 335, dash=(2, 2))
+        for label in self.data['charging_history_graph']['x_labels']:
+            canvas.create_text(14 + label['raw_value'] * 13, 335,
+                               text=label['value'], anchor=NE)
+        for label in self.data['charging_history_graph']['y_labels']:
+            text = label['value'] + '\n' + label.get('after_adornment', '')
+            canvas.create_text(408, 335 - label.get('raw_value', 0) / scale,
+                               text=text.strip(), anchor=W)
+        # Stacked bars
+        x = 8
+        for point in self.data['charging_history_graph']['data_points']:
+            y = 335
+            for idx, value in enumerate(point['values']):
+                if idx == 0:
+                    if value.get('raw_value', 0) <= 0:
+                        canvas.create_line(x, y, x, y - 2, width=7)
+                    continue
+                color = {1: 'blue', 2: 'red', 3: 'grey'}.get(idx)
+                y_new = y - value.get('raw_value', 0) / scale
+                canvas.create_line(x, y, x, y_new, width=7, fill=color)
+                y = y_new - 1
+            x += 13
+        # Breakdown
+        x = 5
+        for idx, key in enumerate(self.data['total_charged_breakdown']):
+            color = {'home': 'blue', 'super_charger': 'red',
+                     'other': 'grey'}.get(key)
+            canvas.create_oval(10 + idx * 165, 370, 20 + idx * 165, 380,
+                               fill=color, outline=color)
+            item = self.data['total_charged_breakdown'][key]
+            text = '%s%s\n%s' % (item['value'], item['after_adornment'],
+                                 item['sub_title'])
+            canvas.create_text(25 + idx * 165, 375, text=text, anchor=W)
+            x_new = x + item.get('raw_value', 0) * 4.1
+            canvas.create_line(x, 400, x_new, 400, width=7, fill=color)
+            x = x_new + 1
+        canvas.pack()
+
+    def buttonbox(self):
+        box = Frame(self)
+        w = Button(box, text="OK", width=10, command=self.ok, default=ACTIVE)
+        w.pack(side=LEFT, padx=5, pady=5)
+        self.bind("<Return>", self.ok)
+        box.pack()
 
 class StatusBar(Frame):
     """ Status bar widget with transient and permanent status messages """
@@ -164,121 +271,102 @@ class Dashboard(Frame):
         self.vehicle_image = Label(right)
         self.vehicle_image.pack()
         # Climate state on left frame
-        group = LabelFrame(left, text='Climate State', padx=5, pady=5)
-        group.pack(padx=5, pady=5, fill=X)
-        lst = ['Outside Temperature:', 'Inside Temperature:',
-               'Driver Temperature Setting:', 'Passenger Temperature Setting:',
-               'Is Climate On:', 'Fan Speed:', 'Driver Seat Heater:',
-               'Passenger Seat Heater:', 'Is Front Defroster On:',
-               'Is Rear Defroster On:']
-        for i, t in enumerate(lst):
-            Label(group, text=t).grid(row=i // 2, column=i % 2 * 2, sticky=E)
-        self.outside_temp = LabelVarGrid(group, row=0, column=1, sticky=W)
-        self.inside_temp = LabelVarGrid(group, row=0, column=3, sticky=W)
-        self.driver_temp = LabelVarGrid(group, row=1, column=1, sticky=W)
-        self.passenger_temp = LabelVarGrid(group, row=1, column=3, sticky=W)
-        self.is_climate_on = LabelVarGrid(group, row=2, column=1, sticky=W)
-        self.fan_status = LabelVarGrid(group, row=2, column=3, sticky=W)
-        self.driver_heater = LabelVarGrid(group, row=3, column=1, sticky=W)
-        self.passenger_heater = LabelVarGrid(group, row=3, column=3, sticky=W)
-        self.front_defroster = LabelVarGrid(group, row=4, column=1, sticky=W)
-        self.rear_defroster = LabelVarGrid(group, row=4, column=3, sticky=W)
+        self.layout(left, 'Climate State',
+                    [('outside_temp', 'Outside Temperature:'),
+                     ('inside_temp', 'Inside Temperature:'),
+                     ('driver_temp', 'Driver Temperature Setting:'),
+                     ('passenger_temp', 'Passenger Temperature Setting:'),
+                     ('is_climate_on', 'Is Climate On:'),
+                     ('fan_status', 'Fan Speed:'),
+                     ('driver_heater', 'Driver Seat Heater:'),
+                     ('passenger_heater', 'Passenger Seat Heater:'),
+                     ('front_defroster', 'Is Front Defroster On:'),
+                     ('rear_defroster', 'Is Rear Defroster On:')])
         # Vehicle state on left frame
-        group = LabelFrame(left, text='Vehicle State', padx=5, pady=5)
-        group.pack(padx=5, pady=5, fill=X)
-        lst = ['Vehicle Name:', 'Odometer:', 'Car Version:', 'Locked:',
-               'Driver Front Door:', 'Passenger Front Door:',
-               'Driver Rear Door:', 'Passenger Rear Door:',
-               'Driver Front Window:', 'Passenger Front Window:',
-               'Driver Rear Window:', 'Passenger Rear Window:', 'Front Trunk:',
-               'Rear Trunk:', 'Remote Start:', 'Is User Present:',
-               'Speed Limit Mode:', 'Current Limit:', 'Speed Limit Pin Set:',
-               'Sentry Mode:', 'Valet Mode:', 'Valet Pin Set:',
-               'Software Update:', 'Expected Duration:', 'Update Version:',
-               'Install Percentage:']
-        for i, t in enumerate(lst):
-            Label(group, text=t).grid(row=i // 2, column=i % 2 * 2, sticky=E)
-        self.vehicle_name = LabelVarGrid(group, row=0, column=1, sticky=W)
-        self.odometer = LabelVarGrid(group, row=0, column=3, sticky=W)
-        self.car_version = LabelVarGrid(group, row=1, column=1, sticky=W)
-        self.locked = LabelVarGrid(group, row=1, column=3, sticky=W)
-        self.df = LabelVarGrid(group, row=2, column=1, sticky=W)
-        self.pf = LabelVarGrid(group, row=2, column=3, sticky=W)
-        self.dr = LabelVarGrid(group, row=3, column=1, sticky=W)
-        self.pr = LabelVarGrid(group, row=3, column=3, sticky=W)
-        self.fd = LabelVarGrid(group, row=4, column=1, sticky=W)
-        self.fp = LabelVarGrid(group, row=4, column=3, sticky=W)
-        self.rd = LabelVarGrid(group, row=5, column=1, sticky=W)
-        self.rp = LabelVarGrid(group, row=5, column=3, sticky=W)
-        self.ft = LabelVarGrid(group, row=6, column=1, sticky=W)
-        self.rt = LabelVarGrid(group, row=6, column=3, sticky=W)
-        self.remote_start = LabelVarGrid(group, row=7, column=1, sticky=W)
-        self.user_present = LabelVarGrid(group, row=7, column=3, sticky=W)
-        self.speed_limit = LabelVarGrid(group, row=8, column=1, sticky=W)
-        self.current_limit = LabelVarGrid(group, row=8, column=3, sticky=W)
-        self.speed_limit_pin = LabelVarGrid(group, row=9, column=1, sticky=W)
-        self.sentry_mode = LabelVarGrid(group, row=9, column=3, sticky=W)
-        self.valet_mode = LabelVarGrid(group, row=10, column=1, sticky=W)
-        self.valet_pin = LabelVarGrid(group, row=10, column=3, sticky=W)
-        self.sw_update = LabelVarGrid(group, row=11, column=1, sticky=W)
-        self.sw_duration = LabelVarGrid(group, row=11, column=3, sticky=W)
-        self.update_ver = LabelVarGrid(group, row=12, column=1, sticky=W)
-        self.inst_perc = LabelVarGrid(group, row=12, column=3, sticky=W)
+        self.layout(left, 'Vehicle State',
+                    [('vehicle_name', 'Vehicle Name:'),
+                     ('odometer', 'Odometer:'),
+                     ('car_version', 'Car Version:'),
+                     ('locked', 'Locked:'),
+                     ('df', 'Driver Front Door:'),
+                     ('pf', 'Passenger Front Door:'),
+                     ('dr', 'Driver Rear Door:'),
+                     ('pr', 'Passenger Rear Door:'),
+                     ('fd', 'Driver Front Window:'),
+                     ('fp', 'Passenger Front Window:'),
+                     ('rd', 'Driver Rear Window:'),
+                     ('rp', 'Passenger Rear Window:'),
+                     ('ft', 'Front Trunk:'),
+                     ('rt', 'Rear Trunk:'),
+                     ('remote_start', 'Remote Start:'),
+                     ('user_present', 'Is User Present:'),
+                     ('speed_limit', 'Speed Limit Mode:'),
+                     ('current_limit', 'Current Limit:'),
+                     ('speed_limit_pin', 'Speed Limit Pin Set:'),
+                     ('sentry_mode', 'Sentry Mode:'),
+                     ('valet_mode', 'Valet Mode:'),
+                     ('valet_pin', 'Valet Pin Set:'),
+                     ('sw_update', 'Software Update:'),
+                     ('sw_duration', 'Expected Duration:'),
+                     ('update_ver', 'Update Version:'),
+                     ('inst_perc', 'Install Percentage:')])
         # Drive state on right frame
-        group = LabelFrame(right, text='Drive State', padx=5, pady=5)
-        group.pack(padx=5, pady=5, fill=X)
-        lst = ['Power:', 'Speed:', 'Shift State:', 'Heading:', 'GPS:']
-        for i, t in enumerate(lst):
-            Label(group, text=t).grid(row=i // 2, column=i % 2 * 2, sticky=E)
-        self.power = LabelVarGrid(group, row=0, column=1, sticky=W)
-        self.speed = LabelVarGrid(group, row=0, column=3, sticky=W)
-        self.shift_state = LabelVarGrid(group, row=1, column=1, sticky=W)
-        self.heading = LabelVarGrid(group, row=1, column=3, sticky=W)
+        group = self.layout(right, 'Drive State',
+                            [('power', 'Power:'),
+                             ('speed', 'Speed:'),
+                             ('shift_state', 'Shift State:'),
+                             ('heading', 'Heading:')])
+        Label(group, text='GPS:').grid(row=2, column=0, sticky=E)
         self.gps = LabelVarGrid(group, row=2, column=1, columnspan=3, sticky=W)
         self.gps.config(wraplength=330, justify=LEFT)
         # Charging state on right frame
-        group = LabelFrame(right, text='Charging State', padx=5, pady=5)
-        group.pack(padx=5, pady=5, fill=X)
-        lst = ['Charging State:', 'Time To Full Charge:', 'Charger Voltage:',
-               'Charger Actual Current:', 'Charger Power:', 'Charge Rate:',
-               'Battery Level:', 'Battery Range:', 'Charge Energy Added:',
-               'Charge Range Added:', 'Charge Limit SOC:',
-               'Estimated Battery Range:', 'Charge Port Door Open:',
-               'Charge Port Latch:', 'Fast Charger:', 'Trip Charging:',
-               'Scheduled Charging:', 'Charging Start Time:']
-        for i, t in enumerate(lst):
-            Label(group, text=t).grid(row=i // 2, column=i % 2 * 2, sticky=E)
-        self.charging_state = LabelVarGrid(group, row=0, column=1, sticky=W)
-        self.time_to_full = LabelVarGrid(group, row=0, column=3, sticky=W)
-        self.charger_voltage = LabelVarGrid(group, row=1, column=1, sticky=W)
-        self.charger_current = LabelVarGrid(group, row=1, column=3, sticky=W)
-        self.charger_power = LabelVarGrid(group, row=2, column=1, sticky=W)
-        self.charge_rate = LabelVarGrid(group, row=2, column=3, sticky=W)
-        self.battery_level = LabelVarGrid(group, row=3, column=1, sticky=W)
-        self.battery_range = LabelVarGrid(group, row=3, column=3, sticky=W)
-        self.energy_added = LabelVarGrid(group, row=4, column=1, sticky=W)
-        self.range_added = LabelVarGrid(group, row=4, column=3, sticky=W)
-        self.charge_limit_soc = LabelVarGrid(group, row=5, column=1, sticky=W)
-        self.est_battery_range = LabelVarGrid(group, row=5, column=3, sticky=W)
-        self.charge_port_door = LabelVarGrid(group, row=6, column=1, sticky=W)
-        self.charge_port_latch = LabelVarGrid(group, row=6, column=3, sticky=W)
-        self.fast_charger = LabelVarGrid(group, row=7, column=1, sticky=W)
-        self.trip_charging = LabelVarGrid(group, row=7, column=3, sticky=W)
-        self.charging_pending = LabelVarGrid(group, row=8, column=1, sticky=W)
-        self.charging_start = LabelVarGrid(group, row=8, column=3, sticky=W)
+        self.layout(right, 'Charging State',
+                    [('charging_state', 'Charging State:'),
+                     ('time_to_full', 'Time To Full Charge:'),
+                     ('charger_voltage', 'Charger Voltage:'),
+                     ('charger_request', 'Requested Current:'),
+                     ('charger_current', 'Charger Actual Current:'),
+                     ('charger_power', 'Charger Power:'),
+                     ('battery_level', 'Battery Level:'),
+                     ('charge_rate', 'Charge Rate:'),
+                     ('battery_range', 'Battery Range:'),
+                     ('energy_added', 'Charge Energy Added:'),
+                     ('range_added', 'Charge Range Added:'),
+                     ('charge_limit_soc', 'Charge Limit SOC:'),
+                     ('est_battery_range', 'Estimated Battery Range:'),
+                     ('charge_port_door', 'Charge Port Door Open:'),
+                     ('charge_port_latch', 'Charge Port Latch:'),
+                     ('fast_charger', 'Fast Charger:'),
+                     ('trip_charging', 'Trip Charging:'),
+                     ('charging_pending', 'Scheduled Charging:'),
+                     ('charging_start', 'Charging Start Time:'),
+                     ('scheduled_charging', 'Scheduled Charging Mode:'),
+                     ('departure_time', 'Scheduled Departure:'),
+                     ('off_peak_charge', 'Off Peak Charging:'),
+                     ('off_peak_times', 'Off Peak Charging Times:'),
+                     ('off_peak_end_time', 'Off Peak End Time:'),
+                     ('preconditioning', 'Preconditioning:'),
+                     ('preconditioning_times', 'Preconditioning Times:')])
         # Vehicle config on left frame
-        group = LabelFrame(left, text='Vehicle Config', padx=5, pady=5)
+        self.layout(left, 'Vehicle Config',
+                    [('car_type', 'Car Type:'),
+                     ('exterior_color', 'Exterior Color:'),
+                     ('wheel_type', 'Wheel Type:'),
+                     ('spoiler_type', 'Spoiler Type:'),
+                     ('roof_color', 'Roof Color:'),
+                     ('charge_port_type', 'Charge Port Type:')])
+        # Service on left frame
+        self.layout(left, 'Service', [('next_appt', 'Next appointment:')])
+
+    def layout(self, master, text, labels):
+        """ Group four columns of widgets from list of tupels """
+        group = LabelFrame(master, text=text, padx=5, pady=5)
         group.pack(padx=5, pady=5, fill=X)
-        lst = ['Car Type:', 'Exterior Color:', 'Wheel Type:', 'Spoiler Type:',
-               'Roof Color:', 'Charge Port Type:']
-        for i, t in enumerate(lst):
-            Label(group, text=t).grid(row=i // 2, column=i % 2 * 2, sticky=E)
-        self.car_type = LabelVarGrid(group, row=0, column=1, sticky=W)
-        self.exterior_color = LabelVarGrid(group, row=0, column=3, sticky=W)
-        self.wheel_type = LabelVarGrid(group, row=1, column=1, sticky=W)
-        self.spoiler_type = LabelVarGrid(group, row=1, column=3, sticky=W)
-        self.roof_color = LabelVarGrid(group, row=2, column=1, sticky=W)
-        self.charge_port_type = LabelVarGrid(group, row=2, column=3, sticky=W)
+        for i, (name, txt) in enumerate(labels):
+            Label(group, text=txt).grid(row=i // 2, column=i % 2 * 2, sticky=E)
+            w = LabelVarGrid(group, row=i // 2, column=i % 2 * 2 + 1, sticky=W)
+            setattr(self, name, w)  # Set named widget to dashboard
+        return group
 
     def update_widgets(self):
         """ Set values of dashboard widgets """
@@ -287,6 +375,7 @@ class Dashboard(Frame):
         dr = app.vehicle['drive_state']
         ch = app.vehicle['charge_state']
         co = app.vehicle['vehicle_config']
+        # pylint: disable=E1101
         # Climate state
         self.outside_temp.text(app.vehicle.temp_units(cl['outside_temp']))
         self.inside_temp.text(app.vehicle.temp_units(cl['inside_temp']))
@@ -321,7 +410,7 @@ class Dashboard(Frame):
         limit = ve['speed_limit_mode']['current_limit_mph']
         self.current_limit.text(app.vehicle.dist_units(limit, True))
         self.speed_limit_pin.text(str(ve['speed_limit_mode']['pin_code_set']))
-        self.sentry_mode.text(str(ve['sentry_mode']))
+        self.sentry_mode.text(str(ve.get('sentry_mode')))
         self.valet_mode.text(str(ve['valet_mode']))
         self.valet_pin.text(str(not 'valet_pin_needed' in ve))
         status = ve['software_update']['status'] or 'unavailable'
@@ -339,24 +428,25 @@ class Dashboard(Frame):
         self.speed.text(app.vehicle.dist_units(speed, True))
         self.shift_state.text(str(dr['shift_state']))
         self.heading.text(self._heading_to_str(dr['heading']))
-        self.gps.text(app.update_thread.location.address)
+        self.gps.text(app.update_thread.location)
         # Charging state
         self.charging_state.text(ch['charging_state'])
         ttfc = divmod(ch['time_to_full_charge'] * 60, 60)
         self.time_to_full.text('{:02.0f}:{:02.0f}'.format(*ttfc))
         volt = 0 if ch['charger_voltage'] is None else ch['charger_voltage']
         self.charger_voltage.text('%d V' % volt)
+        self.charger_request.text('%d A' % ch['charge_current_request'])
         ph = '3 x ' if ch['charger_phases'] == 2 else ''
         amps = 0 if ch['charger_actual_current'] is None else ch['charger_actual_current']
         self.charger_current.text('%s%d A' % (ph, amps))
         charger_power = 0 if ch['charger_power'] is None else ch['charger_power']
         self.charger_power.text('%d kW' % charger_power)
-        self.charge_rate.text(app.vehicle.dist_units(ch['charge_rate'], True))
         if ch['usable_battery_level'] < ch['battery_level']:
             usable = ' (%d %% usable)' % ch['usable_battery_level']
         else:
             usable = ''
         self.battery_level.text('%d %%%s' % (ch['battery_level'], usable))
+        self.charge_rate.text(app.vehicle.dist_units(ch['charge_rate'], True))
         self.battery_range.text(app.vehicle.dist_units(ch['battery_range']))
         self.energy_added.text('%.1f kWh' % ch['charge_energy_added'])
         self.range_added.text(app.vehicle.dist_units(ch['charge_miles_added_rated']))
@@ -372,6 +462,21 @@ class Dashboard(Frame):
             self.charging_start.text(time.strftime('%X', st))
         else:
             self.charging_start.text(None)
+        self.scheduled_charging.text(ch.get('scheduled_charging_mode'))
+        if ch.get('scheduled_departure_time'):
+            dt = time.localtime(ch['scheduled_departure_time'])
+            self.departure_time.text(time.strftime('%X', dt))
+        else:
+            self.departure_time.text(None)
+        self.off_peak_charge.text(str(ch.get('off_peak_charging_enabled')))
+        self.off_peak_times.text(ch.get('off_peak_charging_times'))
+        if 'off_peak_hours_end_time' in ch:
+            ophet = divmod(ch['off_peak_hours_end_time'], 60)
+            self.off_peak_end_time.text('{:02.0f}:{:02.0f}'.format(*ophet))
+        else:
+            self.off_peak_end_time.text(None)
+        self.preconditioning.text(str(ch.get('preconditioning_enabled')))
+        self.preconditioning_times.text(ch.get('preconditioning_times'))
         # Vehicle config
         self.car_type.text(co['car_type'])
         self.exterior_color.text(co['exterior_color'])
@@ -383,9 +488,21 @@ class Dashboard(Frame):
     @staticmethod
     def _heading_to_str(deg):
         """ Convert heading in degrees to a direction string """
-        lst = ['NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW',
-               'WSW', 'W', 'WNW', 'NW', 'NNW', 'N']
-        return lst[int(abs((deg - 11.25) % 360) / 22.5)]
+        return ['NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+                'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW',
+                'NNW', 'N'][int(abs((deg - 11.25) % 360) / 22.5)]
+
+def show_webview(url):
+    """ Shows the SSO page in a webview and returns the redirected URL """
+    result = ['']
+    window = webview.create_window('Login', url)
+    def on_loaded():
+        result[0] = window.get_current_url()
+        if 'void/callback' in result[0].split('?')[0]:
+            window.destroy()
+    window.loaded += on_loaded
+    webview.start()  # Blocks the main thread until webview is closed
+    return result[0]
 
 class App(Tk):
     """ Main application class """
@@ -398,6 +515,7 @@ class App(Tk):
         menu = Menu(self)
         app_menu = Menu(menu, tearoff=0)
         app_menu.add_command(label='Login', command=self.login)
+        app_menu.add_command(label='Logout', command=self.logout)
         app_menu.add_separator()
         app_menu.add_command(label='Exit', command=self.save_and_quit)
         menu.add_cascade(label='App', menu=app_menu)
@@ -406,6 +524,8 @@ class App(Tk):
                                       command=self.option_codes)
         self.vehicle_menu.add_command(label='Decode VIN', state=DISABLED,
                                       command=self.decode_vin)
+        self.vehicle_menu.add_command(label='Charge history', state=DISABLED,
+                                      command=self.charge_history)
         self.vehicle_menu.add_separator()
         menu.add_cascade(label='Vehicle', menu=self.vehicle_menu)
         self.cmd_menu = Menu(menu, tearoff=0)
@@ -426,7 +546,7 @@ class App(Tk):
         self.cmd_menu.add_command(label='Actuate trunk', state=DISABLED,
                                   command=lambda: self.actuate_trunk('rear'))
         self.cmd_menu.add_command(label='Remote start drive', state=DISABLED,
-                                  command=self.remote_start_drive)
+                                  command=lambda: self.cmd('REMOTE_START'))
         self.cmd_menu.add_command(label='Set charge limit', state=DISABLED,
                                   command=self.set_charge_limit)
         self.cmd_menu.add_command(label='Open/close charge port', state=DISABLED,
@@ -452,16 +572,37 @@ class App(Tk):
                                   command=self.window_control)
         self.cmd_menu.add_command(label='Max defrost', state=DISABLED,
                                   command=self.max_defrost)
+        self.cmd_menu.add_command(label='Set charge amps', state=DISABLED,
+                                  command=self.charging_amps)
+        self.cmd_menu.add_command(label='Scheduled charging', state=DISABLED,
+                                  command=self.scheduled_charging)
+        self.cmd_menu.add_command(label='Scheduled departure', state=DISABLED,
+                                  command=self.scheduled_departure)
         menu.add_cascade(label='Command', menu=self.cmd_menu)
-        display_menu = Menu(menu, tearoff=0)
+        opt_menu = Menu(menu, tearoff=0)
         self.auto_refresh = BooleanVar()
-        display_menu.add_checkbutton(label='Auto refresh',
-                                     variable=self.auto_refresh,
-                                     command=self.update_dashboard)
+        opt_menu.add_checkbutton(label='Auto refresh',
+                                 variable=self.auto_refresh,
+                                 command=self.update_dashboard)
         self.debug = BooleanVar()
-        display_menu.add_checkbutton(label='Console debugging',
-                                     variable=self.debug, command=self.set_log)
-        menu.add_cascade(label='Display', menu=display_menu)
+        opt_menu.add_checkbutton(label='Console debugging', variable=self.debug,
+                                 command=self.apply_settings)
+        self.verify = BooleanVar()
+        self.verify.set(1)
+        opt_menu.add_checkbutton(label='Verify SSL', variable=self.verify,
+                                 command=self.apply_settings)
+        opt_menu.add_command(label='Set proxy URL', command=self.set_proxy)
+        web_menu = Menu(menu, tearoff=0)
+        opt_menu.add_cascade(label='Web browser', menu=web_menu,
+                             state=NORMAL if webdriver else DISABLED)
+        self.browser = IntVar()
+        for v, l in enumerate(('Chrome', 'Edge', 'Firefox', 'Opera', 'Safari')):
+            web_menu.add_radiobutton(label=l, value=v, variable=self.browser)
+        self.selenium = BooleanVar()
+        opt_menu.add_checkbutton(label='Use selenium', variable=self.selenium,
+                                 state=NORMAL if webdriver else DISABLED,
+                                 command=self.apply_settings)
+        menu.add_cascade(label='Options', menu=opt_menu)
         help_menu = Menu(menu, tearoff=0)
         help_menu.add_command(label='About', command=self.about)
         menu.add_cascade(label='Help', menu=help_menu)
@@ -475,9 +616,15 @@ class App(Tk):
         self.status.text('Not logged in')
         # Read config
         config = RawConfigParser()
+        self.email = ''
+        self.proxy = ''
         try:
             config.read('gui.ini')
             self.email = config.get('app', 'email')
+            self.verify.set(config.get('app', 'verify'))
+            self.proxy = config.get('app', 'proxy')
+            self.browser.set(config.get('app', 'browser'))
+            self.selenium.set(config.get('app', 'selenium'))
             self.auto_refresh.set(config.get('display', 'auto_refresh'))
             self.debug.set(config.get('display', 'debug'))
         except (NoSectionError, NoOptionError, ParsingError):
@@ -485,46 +632,54 @@ class App(Tk):
         # Initialize logging
         default_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         logging.basicConfig(format=default_format)
-        self.set_log()
+        self.apply_settings()
 
     def add_cmd_args(self, endpoint):
         """ Return add_command arguments for given named endpoint """
         return {'label': endpoint.capitalize().replace('_', ' '),
                 'state': DISABLED, 'command': lambda: self.cmd(endpoint)}
 
-    def get_passcode(self):
-        """ Ask user for passcode string in new dialog """
-        result = ['not_set']
+    def custom_auth(self, url):
+        """ Automated or manual authentication """
+        # Use pywebview if available and selenium not selected
+        if webview and not self.selenium.get():
+            return pool.apply(show_webview, (url, ))  # Run in separate process
+        # Use selenium if available and selected
+        if webdriver and self.selenium.get():
+            with [webdriver.Chrome, webdriver.Edge,
+                  webdriver.Firefox, webdriver.Opera,
+                  webdriver.Safari][self.browser.get()]() as browser:
+                browser.get(url)
+                wait = WebDriverWait(browser, 300)
+                wait.until(EC.url_contains('void/callback'))
+                return browser.current_url
+        # Fallback to manual authentication
+        webbrowser.open(url)
+        # Ask user for callback URL in new dialog
+        result = [None]
+        event = threading.Event()
         def show_dialog():
-            """ Inner function to show dialog """
-            result[0] = askstring('Login', 'Passcode:')
+            """ Inner function to show dialog from main thread """
+            result[0] = askstring('Login', 'URL after authentication:')
+            event.set()  # Signal completion
         self.after_idle(show_dialog)  # Start from main thread
-        while result[0] == 'not_set':
-            time.sleep(0.1)  # Block login thread until passcode is entered
-        return result[0]
-
-    def select_factor(self, factors):
-        """ Let user select authorization factor """
-        result = [{}]
-        def show_dialog():
-            """ Inner function to show dialog """
-            dlg = SelectFactorDialog(self, 'Select factor', factors)
-            result[0] = dlg.result
-        self.after_idle(show_dialog)  # Start from main thread
-        while result[0] == {}:
-            time.sleep(0.1)  # Block login thread until passcode is entered
+        event.wait()  # Block login thread until URL is entered
         return result[0]
 
     def login(self):
         """ Display login dialog and start new thread to get vehicle list """
-        dlg = LoginDialog(self)
-        if dlg.result:
-            self.email, self.password = dlg.result
+        prompt = 'Email:' if (webdriver and self.selenium.get()) or \
+                 (webview and not self.selenium.get()) else 'Use browser' \
+                 ' to login.\nPage Not Found will be shown at success.\n\nEmail:'
+        result = askstring('Login', prompt, initialvalue=self.email)
+        if result:
+            self.email = result
             self.status.text('Logging in...')
             retry = teslapy.Retry(total=2,
-                                  status_forcelist=(408, 500, 502, 503, 504))
-            tesla = teslapy.Tesla(self.email, self.password, self.get_passcode,
-                                  self.select_factor, retry=retry)
+                                  status_forcelist=(500, 502, 503, 504))
+            tesla = teslapy.Tesla(self.email, authenticator=self.custom_auth,
+                                  verify=self.verify.get(), proxy=self.proxy,
+                                  retry=retry)
             # Create and start login thread. Check thread status after 100 ms
             self.login_thread = LoginThread(tesla)
             self.login_thread.start()
@@ -539,7 +694,7 @@ class App(Tk):
             self.status.text(self.login_thread.exception)
         else:
             # Remove vehicles from menu
-            self.vehicle_menu.delete(3, END)
+            self.vehicle_menu.delete(4, END)
             # Add to menu and select first vehicle
             self.selected = IntVar(value=0)
             for i, vehicle in enumerate(self.login_thread.vehicles):
@@ -549,12 +704,38 @@ class App(Tk):
                                                   command=self.select)
             if self.login_thread.vehicles:
                 # Enable show option codes and wake up command
-                for i in range(0, 2):
+                for i in range(0, 3):
                     self.vehicle_menu.entryconfig(i, state=NORMAL)
                 self.cmd_menu.entryconfig(0, state=NORMAL)
                 self.select()
             else:
                 self.status.text('No vehicles')
+
+    def logout(self):
+        """ Sign out and redraw dashboard """
+        if not hasattr(self, 'login_thread'):
+            return
+        # Use pywebview if available and selenium not selected
+        if webview and not self.selenium.get():
+            # Run in separate process
+            pool.apply(show_webview, (self.login_thread.tesla.logout(), ))
+        # Do not sign out if selenium is available and selected
+        self.login_thread.tesla.logout(not (webdriver and self.selenium.get()))
+        del self.vehicle
+        # Redraw dashboard
+        self.dashboard.pack_forget()
+        self.dashboard = Dashboard(self)
+        self.dashboard.pack(pady=5, fill=X)
+        # Remove vehicles from menu
+        self.vehicle_menu.delete(4, END)
+        # Disable commands
+        for i in range(0, 3):
+            self.vehicle_menu.entryconfig(i, state=DISABLED)
+        for i in range(0, self.cmd_menu.index(END) + 1):
+            self.cmd_menu.entryconfig(i, state=DISABLED)
+        for i in range(0, self.media_menu.index(END) + 1):
+            self.media_menu.entryconfig(i, state=DISABLED)
+        self.status.text('Not logged in')
 
     def select(self):
         """ Select vehicle and start new thread to get vehicle image """
@@ -563,6 +744,10 @@ class App(Tk):
         self.image_thread = ImageThread(self.vehicle)
         self.image_thread.start()
         self.after(100, self.process_select)
+        # Create and start service thread. Check thread status after 100 ms
+        self.service_thread = ServiceThread(self.vehicle)
+        self.service_thread.start()
+        self.after(100, self.process_service)
         # Start status thread only once
         if not hasattr(self, 'status_thread'):
             self.update_status()
@@ -579,6 +764,20 @@ class App(Tk):
         else:
             # Display vehicle image
             self.dashboard.vehicle_image.config(image=self.image_thread.photo)
+
+    def process_service(self):
+        """ Waits for thread to finish and displays service data """
+        if self.service_thread.is_alive():
+            # Check again after 100 ms
+            self.after(100, self.process_service)
+        elif self.service_thread.exception:
+            # Handle errors
+            self.status.text(self.service_thread.exception)
+        else:
+            # Display service data
+            nat = self.service_thread.data.get('next_appt_timestamp')
+            # pylint: disable=E1101
+            self.dashboard.next_appt.text(nat)
 
     def show_status(self):
         """ Display vehicle state """
@@ -621,6 +820,7 @@ class App(Tk):
             self.update_scheduled = False
         if hasattr(self, 'vehicle') and self.vehicle['state'] != 'online':
             return
+        # pylint: disable=E0203
         if hasattr(self, 'update_thread') and self.update_thread.is_alive():
             return
         if hasattr(self, 'vehicle') and not self.update_scheduled:
@@ -740,6 +940,23 @@ class App(Tk):
                 r += 1
             LabelGridDialog(self, 'Nearby Charging Sites', table)
 
+    def charge_history(self):
+        """ Creates a new thread to get charging history """
+        self.status.text('Please wait...')
+        self.charge_history_thread = ChargeHistoryThread(self.vehicle)
+        self.charge_history_thread.start()
+        self.after(100, self.process_charge_history)
+        
+    def process_charge_history(self):
+        """ Waits for thread to finish and displays history in a dialog box """
+        if self.charge_history_thread.is_alive():
+            self.after(100, self.process_charge_history)
+        elif self.charge_history_thread.exception:
+            self.status.text(self.charge_history_thread.exception)
+        else:
+            self.show_status()
+            ChargeHistoryDialog(self, self.charge_history_thread.result)
+
     def cmd(self, name, **kwargs):
         """ Creates a new thread to command vehicle """
         self.status.text('Please wait...')
@@ -783,13 +1000,6 @@ class App(Tk):
     def actuate_trunk(self, which_trunk):
         """ Actuate trunk or frunk """
         self.cmd('ACTUATE_TRUNK', which_trunk=which_trunk)
-
-    def remote_start_drive(self):
-        """ Trigger remote start drive """
-        if self.password:
-            self.cmd('REMOTE_START', password=self.password)
-        else:
-            self.status.text('Password required')
 
     def set_charge_limit(self):
         """ Set charging limit """
@@ -845,19 +1055,54 @@ class App(Tk):
         except KeyError:
             pass
 
-    def set_log(self):
-        """ Set logging level """
+    def charging_amps(self):
+        """ Set charging amps """
+        # Get user input using a simple dialog box
+        temp = askinteger('Set', 'Amperage')
+        if temp:
+            self.cmd('CHARGING_AMPS', charging_amps=temp)
+
+    def scheduled_charging(self):
+        """ Set scheduled charging """
+        dlg = ChargingDialog(self)
+        if dlg.result:
+            self.cmd('SCHEDULED_CHARGING', **dlg.result)
+
+    def scheduled_departure(self):
+        """ Set scheduled departure """
+        dlg = DepartureDialog(self)
+        if dlg.result:
+            self.cmd('SCHEDULED_DEPARTURE', **dlg.result)
+
+    def apply_settings(self):
+        """ Set logging level and SSL context """
         level = logging.DEBUG if self.debug.get() else logging.WARNING
         logging.getLogger().setLevel(level)
+        # Set Nominatim SSL verify
+        if self.verify.get():
+            geopy.geocoders.options.default_ssl_context = None
+        else:
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            geopy.geocoders.options.default_ssl_context = ctx
+
+    def set_proxy(self):
+        """ Set proxy server URL """
+        temp = askstring('Set', 'Proxy URL', initialvalue=self.proxy)
+        self.proxy = '' if temp is None else temp
 
     def save_and_quit(self):
         """ Save settings to file and quit app """
         config = RawConfigParser()
         config.add_section('app')
         config.add_section('display')
-        if hasattr(self, 'email'):
-            config.set('app', 'email', self.email)
         try:
+            config.set('app', 'email', self.email)
+            config.set('app', 'proxy', self.proxy)
+            config.set('app', 'verify', self.verify.get())
+            config.set('app', 'browser', self.browser.get())
+            config.set('app', 'selenium', self.selenium.get())
             config.set('display', 'auto_refresh', self.auto_refresh.get())
             config.set('display', 'debug', self.debug.get())
             with open('gui.ini', 'w') as configfile:
@@ -883,6 +1128,11 @@ class UpdateThread(threading.Thread):
         try:
             self.vehicle.get_vehicle_data()
         except (teslapy.RequestException, ValueError) as e:
+            # Detect if vehicle went to sleep
+            try:
+                self.vehicle.get_vehicle_summary()
+            except (teslapy.RequestException, ValueError) as e:
+                pass
             UpdateThread.fail_cnt += 1  # Increase for consecutive errors
             self.exception = e
         else:
@@ -895,8 +1145,9 @@ class UpdateThread(threading.Thread):
                 self.location = coords
                 try:
                     # Lookup address at coordinates
-                    osm = Nominatim(user_agent='TeslaPy')
-                    self.location = osm.reverse(coords)
+                    osm = Nominatim(user_agent='TeslaPy',
+                                    proxies=self.vehicle.tesla.proxies)
+                    self.location = osm.reverse(coords).address
                 except GeocoderTimedOut:
                     UpdateThread._coords = None  # Force lookup
                 except GeopyError as e:
@@ -958,8 +1209,8 @@ class LoginThread(threading.Thread):
         try:
             self.tesla.fetch_token()
             self.vehicles = self.tesla.vehicle_list()
-        except (teslapy.RequestException, teslapy.OAuth2Error, ValueError) as e:
-            self.exception = e
+        except Exception as e:
+            self.exception = str(e).replace('\n', '')
 
 class StatusThread(threading.Thread):
     """ Retrieve vehicle status summary """
@@ -1006,7 +1257,38 @@ class NearbySitesThread(threading.Thread):
         except (teslapy.RequestException, ValueError) as e:
             self.exception = e
 
+class ServiceThread(threading.Thread):
+    """ Retrieve next service appointment """
+
+    def __init__(self, vehicle):
+        threading.Thread.__init__(self)
+        self.vehicle = vehicle
+        self.exception = None
+        self.data = None
+
+    def run(self):
+        try:
+            self.data = self.vehicle.get_service_scheduling_data()
+        except (teslapy.RequestException, ValueError) as e:
+            self.exception = e
+
+class ChargeHistoryThread(threading.Thread):
+    """ Retrieve charging history """
+
+    def __init__(self, vehicle):
+        threading.Thread.__init__(self)
+        self.vehicle = vehicle
+        self.exception = None
+        self.result = None
+
+    def run(self):
+        try:
+            self.result = self.vehicle.get_charge_history()
+        except (teslapy.RequestException, ValueError) as e:
+            self.exception = e
+
 if __name__ == "__main__":
+    pool = multiprocessing.Pool(1)
     app = App()
     app.mainloop()
     app.destroy()
