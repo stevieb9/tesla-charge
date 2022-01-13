@@ -80,7 +80,12 @@ get '/wake' => sub {
     return if ! security();
 
     my $data = `python3 /home/pi/repos/tesla-charge/wake.py`;
-    return $data;
+
+    if ($data == -1) {
+        return "<html><body>Error code -1: Failed to wake the car</body></html>";
+    }
+
+    redirect '/';
 };
 
 # Main page (web)

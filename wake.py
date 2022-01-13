@@ -1,6 +1,6 @@
 import sys
 from os import environ
-from teslapy import Tesla
+import teslapy
 
 email     = environ.get('TESLA_EMAIL')
 password  = environ.get('TESLA_PASSWORD')
@@ -14,9 +14,8 @@ if __name__ == "__main__":
         print("Tesla account password env var not set")
         exit()
 
-    with Tesla(email, password) as tesla:
+    with teslapy.Tesla(email) as tesla:
         try:
-            tesla.fetch_token()
             selected = cars = tesla.vehicle_list()
             car = selected[0]
 
