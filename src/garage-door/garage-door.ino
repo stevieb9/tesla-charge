@@ -148,7 +148,7 @@ int8_t* fetchData () {
     return data;
 }
 
-void updateData (bool doorOpen) {
+void updateData (bool doorState) {
 
     http.begin(url);
     http.setTimeout(8000);
@@ -156,7 +156,7 @@ void updateData (bool doorOpen) {
 
     DynamicJsonDocument jsonDoc(128);
 
-    jsonDoc["open"] = doorOpen;
+    jsonDoc["state"] = doorOpen;
 
     char jsonData[192];
     serializeJson(jsonDoc, jsonData);

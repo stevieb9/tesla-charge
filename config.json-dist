@@ -1,4 +1,9 @@
 {
+    "system": {
+        "script_path":  "/Users/steve/repos/tesla-charge",
+        "secure_ip":    0,
+        "secure_auth":  0
+    },
     "tesla_vehicle": {
         "debug":        0,
         "debug_return": 0,

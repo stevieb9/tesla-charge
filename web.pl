@@ -19,25 +19,30 @@ use JSON;
 $| = 1;
 
 set port        => 55556;
-#set serializer => 'JSON';
 
 use constant {
-    ACCURACY    => 1e4,
-    RANGE       => 1.2,
-    LAT         => 50.25892,
-    LON         => -119.3166,
-    CONFIG_JSON => "$FindBin::Bin/config.json",
-    DATA_EXPIRY => 10, # Seconds
+    ACCURACY        => 1e4,
+    RANGE           => 1.2,
+    LAT             => 50.25892,
+    LON             => -119.3166,
+    GARAGE_OPEN     => 1,
+    GARAGE_CLOSED   => 0,
+    CONFIG_JSON     => "$FindBin::Bin/config.json",
+    DATA_EXPIRY     => 10, # Seconds
 };
+
+my $system_conf;
 
 my $tesla_conf;
 my $tesla_debug = 0;
 
 my $garage_conf;
-my $garage_door_open    = 0;
+my $garage_door_state   = 0;
 my $garage_door_action  = 0;
 my $garage_door_manual  = 0;
 my $garage_debug        = 0;
+
+config_load();
 
 tie my $data, 'IPC::Shareable', 'TSLA', {create => 1, destroy => 1};
 $data = '';
@@ -51,9 +56,9 @@ get '/' => sub {
     return if ! security();
 
     content_type 'application/json';
-    
+
     config_load();
-    
+
     return debug_data() if $tesla_conf->{debug_return};
 
     if (time - $last_conn_time > DATA_EXPIRY) { 
@@ -79,7 +84,8 @@ get '/debug' => sub {
 get '/wake' => sub {
     return if ! security();
 
-    my $data = `python3 /home/pi/repos/tesla-charge/wake.py`;
+    my $data = `python3 $system_conf->{script_path}/wake.py`;
+
 
     if ($data == -1) {
         return "<html><body>Error code -1: Failed to wake the car</body></html>";
@@ -123,7 +129,7 @@ get '/garage_data' => sub {
 
 get '/garage_door_state' => sub {
     return if ! security();
-    return int $garage_door_open;
+    return int $garage_door_state;
 };
 
 # Set door state (microcontroller JSON)
@@ -132,7 +138,7 @@ post '/garage_door_state_set' => sub {
     return if ! security();
     
     my $data = decode_json request->body;
-    $garage_door_open = $data->{open};
+    $garage_door_state = $data->{state};
     return;
 };
 
@@ -140,11 +146,11 @@ post '/garage_door_state_set' => sub {
 
 get '/garage_door_toggle' => sub {
     return if ! security();
-    if ($garage_door_open) {
-        $garage_door_open = 0;
+    if ($garage_door_state) {
+        $garage_door_state = GARAGE_OPEN;
     }
     else {
-        $garage_door_open = 1;
+        $garage_door_state = GARAGE_CLOSED;
     }
 };
 
@@ -198,7 +204,9 @@ get '/garage_door_manual_set' => sub {
 dance;
 
 sub security {
-    return if request->address !~ /^192\.168\.1\.\d+/;
+    if ($system_conf->{secure_ip}) {
+        return if request->address !~ /^192\.168\.1\.\d+/;
+    }
     return 1;
 }
 sub config_load {
@@ -211,7 +219,8 @@ sub config_load {
     }
 
     $conf = decode_json $conf;
-    
+
+    $system_conf = $conf->{system};
     $tesla_conf  = $conf->{tesla_vehicle};
     $garage_conf = $conf->{garage_door}; 
     
@@ -239,16 +248,8 @@ sub fetch {
     my ($conf) = @_;
     my ($online, $chg, $charging, $gear);
 
-    my $struct = {
-        online      => 0,
-        garage      => 0,
-        charge      => 0,
-        charging    => 0,
-        gear        => 0,
-        error       => 0,
-        rainbow     => 0,
-        fetching    => 0
-    };
+    my $struct = _default_data();
+    $struct->{fetching} = 0;
 
     if ($conf->{rainbow}) {
         print "Rainbow!\n" if $tesla_debug;
@@ -256,8 +257,9 @@ sub fetch {
         return $struct;
     }
 
-    my $data = `python3 /home/pi/repos/tesla-charge/tesla.py`;
-    $data = decode_json $data; 
+    my $data = `python3 $system_conf->{script_path}/tesla.py`;
+
+    $data = decode_json $data;
 
     if (defined $data->{online} && ! $data->{online}) {
         $online = 0;
