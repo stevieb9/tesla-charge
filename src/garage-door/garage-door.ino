@@ -156,7 +156,7 @@ void updateData (bool doorState) {
 
     DynamicJsonDocument jsonDoc(128);
 
-    jsonDoc["state"] = doorOpen;
+    jsonDoc["door_state"] = doorOpen;
 
     char jsonData[192];
     serializeJson(jsonDoc, jsonData);

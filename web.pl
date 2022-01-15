@@ -81,6 +81,16 @@ get '/debug' => sub {
     return debug_data();
 };
 
+get '/debug_garage' => sub {
+    return if ! security();
+
+    content_type 'application/json';
+    config_load();
+    return debug_garage_data();
+};
+
+# Wake up the Tesla
+
 get '/wake' => sub {
     return if ! security();
 
@@ -122,6 +132,9 @@ get '/garage_data' => sub {
         $garage_data{garage} = -1;
     }
 
+    $garage_data{door_state} = $garage_door_state;
+
+    print Dumper \%garage_data;
     return encode_json \%garage_data;
 };
 
@@ -138,7 +151,7 @@ post '/garage_door_state_set' => sub {
     return if ! security();
     
     my $data = decode_json request->body;
-    $garage_door_state = $data->{state};
+    $garage_door_state = $data->{door_state};
     return;
 };
 
@@ -229,6 +242,9 @@ sub config_load {
 }
 sub debug_data {
     return encode_json $tesla_conf->{debug_data};
+}
+sub debug_garage_data {
+    return encode_json $garage_conf->{debug_data};
 }
 sub update {
     my $local_data = -1;
@@ -351,7 +367,10 @@ sub _default_data {
     return $struct;
 }
 sub _default_garage_data {
-    my %data = %{ $garage_conf };
-    $data{garage} = -1;
-    return \%data;
+    my $struct = {
+        door_state => 0,
+        garage     => -1,
+    };
+
+    return $struct;
 }
