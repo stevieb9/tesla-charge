@@ -26,9 +26,8 @@
         "remote_enable":    0,
         "auto_close":       0,
         "enable_relay":     0,
-        "door_state":       0,
         "debug_data": {
-            "door_state":   0,
+            "door_state":   -1,
             "garage":       -1
         }
     }

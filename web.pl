@@ -1,8 +1,10 @@
 #!/usr/bin/env perl
 
 # Crontab entry
-
 # @reboot sleep 10; cd /home/pi/repos/tesla-charge; /home/pi/perl5/perlbrew/perls/perl-5.30.1/bin/perl /home/pi/repos/tesla-charge/web.pl > /tmp/tesla_web.log 2>&1
+
+# Auto-reloading plack command
+# plackup -p 55556 -r -R . web.pl
 
 use warnings;
 use strict;
@@ -37,20 +39,21 @@ my $tesla_conf;
 my $tesla_debug = 0;
 
 my $garage_conf;
-my $garage_door_state   = 0;
-my $garage_door_action  = 0;
-my $garage_door_manual  = 0;
 my $garage_debug        = 0;
 
 config_load();
 
-tie my $data, 'IPC::Shareable', 'TSLA', {create => 1, destroy => 1};
-$data = '';
+# Tesla data
+tie my $tesla_data, 'IPC::Shareable', 'TSLA', {create => 1, destroy => 1};
+$tesla_data = '';
 
-my $last_conn_time = time;
+# Garage data
+my $garage_data = _default_garage_data();
 
 my $tesla_event = Async::Event::Interval->new(0, \&update);
 $tesla_event->start;
+
+my $last_conn_time = time;
 
 get '/' => sub {
     return if ! security();
@@ -62,14 +65,14 @@ get '/' => sub {
     return debug_data() if $tesla_conf->{debug_return};
 
     if (time - $last_conn_time > DATA_EXPIRY) { 
-        $data = '';
+        $tesla_data = '';
     }
 
     $last_conn_time = time;
 
     $tesla_event->start if $tesla_event->waiting;
     
-    return $data if $data;
+    return $tesla_data if $tesla_data;
     return encode_json _default_data();
 };
 
@@ -96,7 +99,6 @@ get '/wake' => sub {
 
     my $data = `python3 $system_conf->{script_path}/wake.py`;
 
-
     if ($data == -1) {
         return "<html><body>Error code -1: Failed to wake the car</body></html>";
     }
@@ -104,7 +106,7 @@ get '/wake' => sub {
     redirect '/';
 };
 
-# Main page (web)
+# Main garage page (web)
 
 get '/garage' => sub {
     return if ! security();
@@ -121,37 +123,32 @@ get '/garage_data' => sub {
     config_load();
     
     $tesla_event->start if $tesla_event->waiting;
-   
-    my %garage_data =  %{ $garage_conf };
 
-    if ($data) {
-        my $data_ref = decode_json $data;
-        $garage_data{garage} = $data_ref->{garage};
+    if ($tesla_data) {
+        my $tesla_data_ref = decode_json $tesla_data;
+        $garage_data->{garage} = $tesla_data_ref->{garage};
     }
     else {
-        $garage_data{garage} = -1;
+        $garage_data->{garage} = -1;
     }
 
-    $garage_data{door_state} = $garage_door_state;
-
-    print Dumper \%garage_data;
-    return encode_json \%garage_data;
+    return encode_json $garage_data if $garage_data;
 };
 
-# Get door state
+# Get garage door state
 
 get '/garage_door_state' => sub {
     return if ! security();
-    return int $garage_door_state;
+    return int $garage_data->{garage_door_state};
 };
 
-# Set door state (microcontroller JSON)
+# Set garage door state (microcontroller JSON)
 
 post '/garage_door_state_set' => sub {
     return if ! security();
-    
+
     my $data = decode_json request->body;
-    $garage_door_state = $data->{door_state};
+    $garage_data->{garage_door_state} = $data->{door_state};
     return;
 };
 
@@ -159,58 +156,24 @@ post '/garage_door_state_set' => sub {
 
 get '/garage_door_toggle' => sub {
     return if ! security();
-    if ($garage_door_state) {
-        $garage_door_state = GARAGE_OPEN;
-    }
-    else {
-        $garage_door_state = GARAGE_CLOSED;
-    }
 };
 
-# Get door action pending
+# Get garage activity pending
 
-get '/garage_door_action' => sub {
+get '/garage_activity' => sub {
     return if ! security();
-    return $garage_door_action;
+    print "*** $garage_data->{activity}\n";
+    return $garage_data->{activity};
 };
 
-# Fetch and reset door action pending (microcontroller)
+# Fetch and reset garage activity pending (microcontroller)
 
-get '/garage_door_action_get' => sub {
+get '/garage_activity_set' => sub {
     return if ! security();
 
-    my $action = $garage_door_action;
-    $garage_door_action = 0;
-    return $action;
-};
+    my $data = decode_json request->body;
 
-# Set door action (web)
-
-post '/garage_door_action_set' => sub {
-    return if ! security();
-    $garage_door_action = 1;
-    return;
-};
-
-# Get door manual mode
-
-get '/garage_door_manual' => sub {
-    return if ! security();
-    return $garage_door_manual;
-};
-
-# Set garage door manual mode (web)
-
-get '/garage_door_manual_set' => sub {
-    return if ! security();
-
-    if ($garage_door_manual) {
-        $garage_door_manual = 0;
-    }
-    else {
-        $garage_door_manual = 1;
-    }
-
+    $garage_data->{activity} = $data->{activity};
     return;
 };
 
@@ -236,7 +199,7 @@ sub config_load {
     $system_conf = $conf->{system};
     $tesla_conf  = $conf->{tesla_vehicle};
     $garage_conf = $conf->{garage_door}; 
-    
+
     $tesla_debug = 1 if $tesla_conf->{debug};
     $garage_debug = 1 if $garage_conf->{debug};
 }
@@ -257,7 +220,7 @@ sub update {
                 last if ! $local_data->{error};
             }
         }
-        $data = encode_json $local_data;
+        $tesla_data = encode_json $local_data;
     }
 }
 sub fetch {
@@ -368,8 +331,9 @@ sub _default_data {
 }
 sub _default_garage_data {
     my $struct = {
-        door_state => 0,
-        garage     => -1,
+        door_state  => -1,  # 0 = Closed, 1 = Open, 2 = Moving, -1 = Unknown
+        garage      => -1,  # 1 = Tesla in garage, 0 = Tesla not in garage
+        activity    => 0,   # 0 = None, 1 = Close, 2 = Open, 3 = Toggle
     };
 
     return $struct;
