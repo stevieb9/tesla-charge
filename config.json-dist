@@ -1,6 +1,6 @@
 {
     "system": {
-        "script_path":  "/Users/steve/repos/tesla-charge",
+        "script_path":  "/Users/steve/repos/tesla-charge/TeslaPy",
         "secure_ip":    0,
         "secure_auth":  0
     },
