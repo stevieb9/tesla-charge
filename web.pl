@@ -4,7 +4,7 @@
 # @reboot sleep 10; cd /home/pi/repos/tesla-charge; /home/pi/perl5/perlbrew/perls/perl-5.30.1/bin/perl /home/pi/repos/tesla-charge/web.pl > /tmp/tesla_web.log 2>&1
 
 # Auto-reloading plack command
-# plackup -p 55556 -r -R . web.pl
+# plackup --access-logs /dev/null -p 55556 -r -R . web.pl
 
 use warnings;
 use strict;
@@ -12,7 +12,6 @@ use 5.10.0;
 
 use Async::Event::Interval;
 use Dancer2;
-use Data::Dumper;
 use Data::Dumper;
 use FindBin;
 use IPC::Shareable;
@@ -33,12 +32,11 @@ use constant {
 };
 
 my $system_conf;
-
 my $tesla_conf;
-my $tesla_debug = 0;
-
 my $garage_conf;
-my $garage_debug        = 0;
+
+my $tesla_debug = 0;
+my $garage_debug = 0;
 
 config_load();
 
