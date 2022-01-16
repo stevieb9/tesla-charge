@@ -72,7 +72,6 @@ get '/' => sub {
     return $tesla_data if $tesla_data;
     return encode_json _default_data();
 };
-
 get '/debug' => sub {
     return if ! security();
    
@@ -80,7 +79,6 @@ get '/debug' => sub {
     config_load();
     return debug_data();
 };
-
 get '/debug_garage' => sub {
     return if ! security();
 
@@ -88,10 +86,8 @@ get '/debug_garage' => sub {
     config_load();
     return debug_garage_data();
 };
-
-# Wake up the Tesla
-
 get '/wake' => sub {
+    # Wake up the Tesla
     return if ! security();
 
     my $data = `python3 $system_conf->{script_path}/wake.py`;
@@ -102,17 +98,13 @@ get '/wake' => sub {
 
     redirect '/';
 };
-
-# Main garage page (web)
-
 get '/garage' => sub {
+    # Main garage page (web)
     return if ! security();
     return template 'garage';
 };
-
-# Get garage data (microcontroller)
-
 get '/garage_data' => sub {
+    # Get garage data (microcontroller)
     return if ! security();
 
     content_type 'application/json';
@@ -131,41 +123,31 @@ get '/garage_data' => sub {
 
     return encode_json $garage_data if $garage_data;
 };
-
-# Get garage door state
-
 get '/garage_door_state' => sub {
+    # Get garage door state
     return if ! security();
     return int $garage_data->{garage_door_state};
 };
-
-# Set garage door state (microcontroller JSON)
-
-post '/garage_door_state_set' => sub {
+post '/garage_update' => sub {
+    # Update garage data (microcontroller JSON)
     return if ! security();
 
     my $data = decode_json request->body;
     $garage_data->{garage_door_state} = $data->{door_state};
     return;
 };
-
-# Toggle door state (web)
-
 get '/garage_door_toggle' => sub {
+    # Toggle door state (web)
     return if ! security();
 };
-
-# Get garage activity pending
-
 get '/garage_activity' => sub {
+    # Get garage activity pending
     return if ! security();
     print "*** $garage_data->{activity}\n";
     return $garage_data->{activity};
 };
-
-# Fetch and reset garage activity pending (microcontroller)
-
 get '/garage_activity_set' => sub {
+    # Fetch and reset garage activity pending (microcontroller)
     return if ! security();
 
     my $data = decode_json request->body;

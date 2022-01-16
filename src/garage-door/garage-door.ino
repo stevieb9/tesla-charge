@@ -9,6 +9,7 @@ enum            shiftState {P, R, D};
 enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_MOVING};
 
 HTTPClient http;
+WiFiClient wifi;
 
 void setup() {
     pinMode(DOOR_RELAY_PIN, OUTPUT);
@@ -38,7 +39,7 @@ void setup() {
 void loop() {
     uint8_t doorPosition = doorState();
     
-    autoCloseDoor(doorPosition);
+    // autoCloseDoor(doorPosition);
 }
 
 bool doorAutoCloseCondition () {
@@ -117,7 +118,7 @@ void doorActivate () {
 
 int8_t* fetchData () {
 
-    http.begin(url);
+    http.begin(wifi, url);
     http.setTimeout(8000);
 
     static int8_t data[1] = { -1};
@@ -150,7 +151,7 @@ int8_t* fetchData () {
 
 void updateData (bool doorState) {
 
-    http.begin(url);
+    http.begin(wifi, url);
     http.setTimeout(8000);
     http.addHeader("Content-Type", "application/json");
 

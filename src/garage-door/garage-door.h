@@ -11,9 +11,9 @@
 
 #define SERIAL_DEBUG        /* Serial output (comment to disable) */
 
-#define DEBUG_URL       1   /* Call the debug data HTTP URL */
-#define URL             "http://192.168.0.250:55556"
-#define URL_DEBUG       "http://192.168.0.250:55556/debug"
+#define DEBUG_URL       0   /* Call the debug data HTTP URL */
+#define URL             "http://192.168.1.5:55556/garage_update"
+#define URL_DEBUG       "http://192.168.1.5:55556/debug"
 
 #define DOOR_CHECK_DELAY    1000
 #define DOOR_CLOSE_TIME     3000
