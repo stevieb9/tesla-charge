@@ -4,7 +4,7 @@
 # @reboot sleep 10; cd /home/pi/repos/tesla-charge; /home/pi/perl5/perlbrew/perls/perl-5.30.1/bin/perl /home/pi/repos/tesla-charge/web.pl > /tmp/tesla_web.log 2>&1
 
 # Auto-reloading plack command
-# plackup --access-logs /dev/null -p 55556 -r -R . web.pl
+# plackup --access-log /dev/null -p 55556 -r -R . web.pl
 
 use warnings;
 use strict;
