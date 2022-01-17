@@ -5,8 +5,10 @@ bool            doorClosing = false;
 bool            gotData = false;
 int8_t*         data;
 char*           url;
+uint8_t         doorMovement;
 enum            shiftState {P, R, D};
-enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_MOVING};
+enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_OPENING, DOOR_CLOSING};
+enum            doorMoving {MOVING_OPEN, MOVING_CLOSED};
 
 HTTPClient http;
 WiFiClient wifi;
@@ -70,7 +72,6 @@ uint8_t doorState () {
         doorState = DOOR_OPEN;
         spl(F("Door open"));
         digitalWrite(DOOR_OPEN_LED, HIGH);
-
     }
     else if (doorClosed) {
         doorState = DOOR_CLOSED;
@@ -110,13 +111,15 @@ void autoCloseDoor (uint8_t doorState) {
 void doorOperate () {
     uint8_t door = doorState();
 
-    if (door == DOOR_OPEN && ! doorClosing) {
+    if (door == DOOR_OPEN) {
         spl(F("Closing door"));
-        doorClosing = true;
         doorActivate();
+        doorMoving = MOVING_OPEN;
     }
     else if (door == DOOR_CLOSED) {
-        doorClosing = false;
+        spl(F("Opening door"));
+        doorActivate();
+        doorMoving = MOVING_CLOSED;
     }
 }
 
