@@ -1,5 +1,5 @@
-#ifndef TESLA_CHARGE_GARAGE_DOOR_H
-#define TESLA_CHARGE_GARAGE_DOOR_H
+#ifndef TESLA_CHARGE_GARAGE_H
+#define TESLA_CHARGE_GARAGE_H
 
 #include <Arduino.h>
 #include <EEPROM.h>
@@ -33,4 +33,4 @@
 #define DOOR_RELAY_PIN      12 // Pin D6
 #define DOOR_OPEN_LED       13 // Pin D7
 
-#endif //TESLA_CHARGE_GARAGE_DOOR_H
+#endif //TESLA_CHARGE_GARAGE_H

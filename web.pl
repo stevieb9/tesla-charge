@@ -144,7 +144,6 @@ get '/garage_door_toggle' => sub {
 get '/garage_activity' => sub {
     # Get garage activity pending
     return if ! security();
-    print "*** $garage_data->{activity}\n";
     return $garage_data->{activity};
 };
 get '/garage_activity_set' => sub {
@@ -311,9 +310,9 @@ sub _default_data {
 }
 sub _default_garage_data {
     my $struct = {
-        door_state  => -1,  # 0 = Closed, 1 = Open, 2 = Moving, -1 = Unknown
-        garage      => -1,  # 1 = Tesla in garage, 0 = Tesla not in garage
-        activity    => 0,   # 0 = None, 1 = Close, 2 = Open, 3 = Toggle
+        garage_door_state   => -1,  # 0 = Closed, 1 = Open, 2 = Moving, -1 = Unknown
+        tesla_in_garage     => -1,  # 1 = Tesla in garage, 0 = Tesla not in garage
+        activity            => 0,   # 0 = None, 1 = Close, 2 = Open, 3 = Toggle
     };
 
     return $struct;

@@ -1,4 +1,4 @@
-#include "garage-door.h"
+#include "garage.h"
 
 unsigned long   doorCheckTime;
 bool            doorClosing = false;
@@ -152,7 +152,7 @@ int8_t* fetchData () {
         return data;
     }
 
-    data[0] = json["garage"];
+    data[0] = json["tesla_in_garage"];
 
     http.end();
 

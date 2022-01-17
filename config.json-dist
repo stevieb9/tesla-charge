@@ -27,8 +27,8 @@
         "auto_close":       0,
         "enable_relay":     0,
         "debug_data": {
-            "door_state":   -1,
-            "garage":       -1
+            "garage_door_state":    -1,
+            "tesla_in_garage":      -1
         }
     }
 }
