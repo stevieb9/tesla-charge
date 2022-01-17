@@ -177,7 +177,7 @@ sub config_load {
 
     $system_conf = $conf->{system};
     $tesla_conf  = $conf->{tesla_vehicle};
-    $garage_conf = $conf->{garage_door}; 
+    $garage_conf = $conf->{garage};
 
     $tesla_debug = 1 if $tesla_conf->{debug};
     $garage_debug = 1 if $garage_conf->{debug};

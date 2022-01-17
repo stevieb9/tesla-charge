@@ -20,7 +20,7 @@
             "fetching": 0
         }
     },
-    "garage_door": {
+    "garage": {
         "debug":            0,
         "debug_return":     0,
         "remote_enable":    0,
@@ -28,7 +28,8 @@
         "enable_relay":     0,
         "debug_data": {
             "garage_door_state":    -1,
-            "tesla_in_garage":      -1
+            "tesla_in_garage":      -1,
+            "activity":             0
         }
     }
 }
