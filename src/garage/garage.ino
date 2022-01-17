@@ -47,8 +47,8 @@ bool doorAutoCloseCondition () {
      int8_t* data = fetchData();
 
      while (data[0] == -1) {
+        delay(TESLA_API_DELAY);
         data = fetchData();
-        delay(1000);
      }
 
     int8_t carInGarage = data[0];

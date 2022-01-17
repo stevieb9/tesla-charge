@@ -17,6 +17,7 @@
 
 #define DOOR_CHECK_DELAY    1000
 #define DOOR_CLOSE_TIME     3000
+#define TESLA_API_DELAY     2000
 
 #define JSON_SIZE           192
 
