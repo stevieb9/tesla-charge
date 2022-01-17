@@ -133,6 +133,7 @@ post '/garage_update' => sub {
     return if ! security();
 
     my $data = decode_json request->body;
+
     $garage_data->{garage_door_state} = $data->{door_state};
     return;
 };

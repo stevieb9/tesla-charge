@@ -37,21 +37,27 @@ void setup() {
 }
 
 void loop() {
-    uint8_t doorPosition = doorState();
-    
-    // autoCloseDoor(doorPosition);
+    uint8_t garageDoorState = doorState();
 }
 
 bool doorAutoCloseCondition () {
-    data = fetchData();
+    // - check that the relay is enabled
+    // - check that auto-close is enabled
+
+     int8_t* data = fetchData();
+
+     while (data[0] == -1) {
+        data = fetchData();
+        delay(1000);
+     }
+
     int8_t carInGarage = data[0];
 
-    if (! carInGarage) {
+    if (! carInGarage && doorState() == DOOR_OPEN) {
         return true;
     }
-    else {
-        return false;
-    }
+
+    return false;
 }
 
 uint8_t doorState () {
@@ -83,21 +89,25 @@ uint8_t doorState () {
 }
 
 void autoCloseDoor (uint8_t doorState) {
-    unsigned long currentTime = millis();
 
-    if (currentTime - doorCheckTime >= DOOR_CHECK_DELAY) {
-        
-        bool canCloseDoor = doorAutoCloseCondition();
+    if (doorState == DOOR_OPEN) {
+        // - save door open time, increment each loop
 
-        if (canCloseDoor) {
-            doorClose();
-        }
-        
-        doorCheckTime = currentTime;
+        // - if door open time > 5 mins
+
+        // bool canCloseDoor = doorAutoCloseCondition();
+        //
+        // if (canCloseDoor) {
+        //     doorOperate();
+        // }
+
+    }
+    else if (doorState == DOOR_CLOSED){
+        // - if door open time > 0, reset it to 0
     }
 }
 
-void doorClose () {
+void doorOperate () {
     uint8_t door = doorState();
 
     if (door == DOOR_OPEN && ! doorClosing) {
@@ -149,7 +159,7 @@ int8_t* fetchData () {
     return data;
 }
 
-void updateData (bool doorState) {
+void updateData (uint8_t doorState) {
 
     http.begin(wifi, url);
     http.setTimeout(8000);
