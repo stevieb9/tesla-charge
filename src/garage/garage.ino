@@ -1,14 +1,13 @@
 #include "garage.h"
 
 unsigned long   doorCheckTime;
-bool            doorClosing = false;
 bool            gotData = false;
 int8_t*         data;
-char*           url;
-uint8_t         doorMovement;
+char*           url_update;
+char*           url_fetch;
+uint8_t         lastDoorPosition;
 enum            shiftState {P, R, D};
 enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_OPENING, DOOR_CLOSING};
-enum            doorMoving {MOVING_OPEN, MOVING_CLOSED};
 
 HTTPClient http;
 WiFiClient wifi;
@@ -27,10 +26,12 @@ void setup() {
     wifiSetup();
 
     if (DEBUG_URL) {
-        url = URL_DEBUG;
+        url_update = URL_UPDATE;
+        url_fetch = URL_FETCH;
     }
     else {
-        url = URL;
+        url_update = URL_UPDATE;
+        url_fetch = URL_FETCH;
     }
 
     doorCheckTime = millis();
@@ -40,6 +41,7 @@ void setup() {
 
 void loop() {
     uint8_t garageDoorState = doorState();
+    spl(garageDoorState);
 }
 
 bool doorAutoCloseCondition () {
@@ -52,6 +54,8 @@ bool doorAutoCloseCondition () {
         delay(TESLA_API_DELAY);
         data = fetchData();
      }
+
+    spl(data);
 
     int8_t carInGarage = data[0];
 
@@ -71,18 +75,30 @@ uint8_t doorState () {
     if (doorOpen) {
         doorState = DOOR_OPEN;
         spl(F("Door open"));
+        lastDoorPosition = DOOR_OPEN;
         digitalWrite(DOOR_OPEN_LED, HIGH);
     }
     else if (doorClosed) {
         doorState = DOOR_CLOSED;
         spl(F("Door closed"));
+        lastDoorPosition = DOOR_CLOSED;
         if (digitalRead(DOOR_OPEN_LED)) {
             digitalWrite(DOOR_OPEN_LED, LOW);
         }
     }
     else {
-        doorState = DOOR_MOVING;
-        spl(F("Door moving"));
+        if (lastDoorPosition == DOOR_OPEN) {
+            spl(F("Door closing"));
+            doorState = DOOR_CLOSING;
+        }
+        else if (lastDoorPosition == DOOR_CLOSED) {
+            spl(F("Door opening"));
+            doorState = DOOR_OPENING;
+        }
+        else {
+            spl(F("Door is in an unknown state"));
+            doorState = -1;
+        }
     }
 
     updateData(doorState);
@@ -114,12 +130,10 @@ void doorOperate () {
     if (door == DOOR_OPEN) {
         spl(F("Closing door"));
         doorActivate();
-        doorMoving = MOVING_OPEN;
     }
     else if (door == DOOR_CLOSED) {
         spl(F("Opening door"));
         doorActivate();
-        doorMoving = MOVING_CLOSED;
     }
 }
 
@@ -131,7 +145,7 @@ void doorActivate () {
 
 int8_t* fetchData () {
 
-    http.begin(wifi, url);
+    http.begin(wifi, url_fetch);
     http.setTimeout(8000);
 
     static int8_t data[1] = { -1};
@@ -164,7 +178,7 @@ int8_t* fetchData () {
 
 void updateData (uint8_t doorState) {
 
-    http.begin(wifi, url);
+    http.begin(wifi, url_update);
     http.setTimeout(8000);
     http.addHeader("Content-Type", "application/json");
 
