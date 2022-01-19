@@ -298,7 +298,7 @@ void updateData (uint8_t doorState) {
     DynamicJsonDocument jsonDoc(128);
 
     jsonDoc["door_state"] = doorState;
-    jsonDoc["activity"] = garageState.activity;
+    jsonDoc["activity"] = garageStruct.activity;
 
     char jsonData[192];
     serializeJson(jsonDoc, jsonData);
