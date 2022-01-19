@@ -45,8 +45,9 @@ void loop() {
 }
 
 bool doorAutoCloseCondition () {
-    // - check that the relay is enabled
-    // - check that auto-close is enabled
+
+    // - check that auto-close is enabled (/garage_data)
+     // get / (tesla) data separately (separate out from /garage_data)
 
      int8_t* data = fetchData();
 
@@ -138,6 +139,7 @@ void doorOperate () {
 }
 
 void doorActivate () {
+    // check if relay is enabled (/garage_data)
     digitalWrite(DOOR_RELAY_PIN, HIGH);
     delay(250);
     digitalWrite(DOOR_RELAY_PIN, LOW);
@@ -148,7 +150,7 @@ int8_t* fetchData () {
     http.begin(wifi, url_fetch);
     http.setTimeout(8000);
 
-    static int8_t data[1] = { -1};
+    static int8_t data[5];
 
     int httpCode = http.GET();
 
@@ -169,7 +171,11 @@ int8_t* fetchData () {
         return data;
     }
 
-    data[0] = json["tesla_in_garage"];
+    data[0] = json["garage_door_state"];
+    data[1] = json["tesla_in_garage"];
+    data[2] = json["activity"];
+    data[3] = json["enable_relay"];
+    data[4] = json["auto_close"];
 
     http.end();
 

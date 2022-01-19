@@ -18,7 +18,7 @@ use IPC::Shareable;
 
 $| = 1;
 
-set port        => 55556;
+set port => 55556;
 
 use constant {
     ACCURACY        => 1e4,
@@ -150,6 +150,7 @@ get '/garage_activity_set' => sub {
     # Fetch and reset garage activity pending (microcontroller)
     return if ! security();
 
+    # Check if remote_enabled is set
     my $data = decode_json request->body;
 
     $garage_data->{activity} = $data->{activity};
@@ -313,6 +314,8 @@ sub _default_garage_data {
         garage_door_state   => -1,  # 0 = Closed, 1 = Open, 2 = Opening, 3 = Closing, -1 = Unknown
         tesla_in_garage     => -1,  # 1 = Tesla in garage, 0 = Tesla not in garage
         activity            => 0,   # 0 = None, 1 = Close, 2 = Open, 3 = Toggle
+        enable_relay        => 0,   # Bool: Enable/disable the door relay
+        auto_close          => 0,   # Bool: Enable/disable garage door auto-close
     };
 
     return $struct;
