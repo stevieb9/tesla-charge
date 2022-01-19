@@ -194,7 +194,7 @@ int8_t* fetchGarageData () {
     http.begin(wifi, url_garage);
     http.setTimeout(8000);
 
-    static int8_t data[5];
+    static int8_t data[6];
 
     int httpCode = http.GET();
 
@@ -218,8 +218,9 @@ int8_t* fetchGarageData () {
     data[0] = json["garage_door_state"];
     data[1] = json["tesla_in_garage"];
     data[2] = json["activity"];
-    data[3] = json["enable_relay"];
-    data[4] = json["auto_close"];
+    data[3] = json["relay_enabled"];
+    data[4] = json["app_enabled"];
+    data[5] = json["auto_close_enabled"];
 
     http.end();
 

@@ -23,9 +23,9 @@
     "garage": {
         "debug":            0,
         "debug_return":     0,
-        "remote_enable":    0,
-        "auto_close":       0,
-        "enable_relay":     0,
+        "app_enabled":      0,
+        "relay_enabled":    0,
+        "auto_close_enabled": 0,
         "debug_data": {
             "garage_door_state":    -1,
             "tesla_in_garage":      -1,
