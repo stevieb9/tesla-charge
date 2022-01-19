@@ -171,6 +171,11 @@ void pendingOperations () {
     if (garageStruct.appEnabled) {
         int8_t activity = garageStruct.activity;
 
+        if (activity > 0) {
+            // Reset pending activity flag
+            garageStruct.activity = 0;
+        }
+
         if (activity == OPERATE_DOOR) {
             spl("Manually operating garage door");
             doorOperate();
@@ -179,6 +184,8 @@ void pendingOperations () {
     else {
         spl("App is disabled; can't perform action");
     }
+
+    // reset pending
 }
 
 void doorOperate () {
@@ -291,6 +298,7 @@ void updateData (uint8_t doorState) {
     DynamicJsonDocument jsonDoc(128);
 
     jsonDoc["door_state"] = doorState;
+    jsonDoc["activity"] = garageState.activity;
 
     char jsonData[192];
     serializeJson(jsonDoc, jsonData);

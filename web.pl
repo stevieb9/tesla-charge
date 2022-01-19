@@ -129,26 +129,13 @@ post '/garage_update' => sub {
     my $data = decode_json request->body;
 
     $garage_data->{garage_door_state} = $data->{door_state};
+    $garage_data->{activity} = $data->{activity};
+
     return;
 };
 get '/garage_door_toggle' => sub {
     # Toggle door state (web)
     return if ! security();
-};
-get '/garage_activity' => sub {
-    # Get garage activity pending
-    return if ! security();
-    return $garage_data->{activity};
-};
-get '/garage_activity_set' => sub {
-    # Fetch and reset garage activity pending (microcontroller)
-    return if ! security();
-
-    # Check if remote_enabled is set
-    my $data = decode_json request->body;
-
-    $garage_data->{activity} = $data->{activity};
-    return;
 };
 
 dance;
