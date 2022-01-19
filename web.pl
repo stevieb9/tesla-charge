@@ -112,8 +112,8 @@ get '/garage_data' => sub {
     config_load();
 
     $garage_data->{relay_enabled} = $garage_conf->{relay_enabled};
-    $garage_data->{auto_close_enabled} = $garage_conf->{auto_close_enabled};
     $garage_data->{app_enabled} = $garage_conf->{app_enabled};
+    $garage_data->{auto_close_enabled} = $garage_conf->{auto_close_enabled};
 
     return encode_json $garage_data if $garage_data;
 };
@@ -307,7 +307,7 @@ sub _default_garage_data {
     my $struct = {
         garage_door_state   => -1,  # 0 = Closed, 1 = Open, 2 = Opening, 3 = Closing, -1 = Unknown
         tesla_in_garage     => -1,  # 1 = Tesla in garage, 0 = Tesla not in garage
-        activity            => 0,   # 0 = None, 1 = Close, 2 = Open, 3 = Toggle
+        activity            => 0,   # 0 = None, 1 = Door
         relay_enabled       => 0,   # Bool: Enable/disable the door relay
         app_enabled         => 0,   # Bool: Disable front-end API
         auto_close_enabled  => 0,   # Bool: Enable/disable garage door auto-close

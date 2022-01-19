@@ -38,4 +38,13 @@
 #define DOOR_RELAY_PIN      12 // Pin D6
 #define DOOR_OPEN_LED       13 // Pin D7
 
+class garageData {
+    public :
+        int8_t garageDoorState;
+        int8_t teslaInGarage;
+        int8_t activity;
+        int8_t relayEnabled;
+        int8_t appEnabled;
+        int8_t autoCloseEnabled;
+};
 #endif //TESLA_CHARGE_GARAGE_H

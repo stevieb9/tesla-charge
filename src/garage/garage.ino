@@ -9,6 +9,9 @@ char*           url_update;
 uint8_t         lastDoorPosition;
 enum            shiftState {P, R, D};
 enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_OPENING, DOOR_CLOSING};
+enum            operation {NONE, OPERATE_DOOR};
+
+garageData garageStruct;
 
 HTTPClient http;
 WiFiClient wifi;
@@ -43,12 +46,20 @@ void setup() {
 }
 
 void loop() {
+    int apiResult = fetchGarageData();
+
+    if (apiResult < 0) {
+        spl("Error retrieving API data");
+        delay(1000);
+        return;
+    }
+
     uint8_t garageDoorState = doorState();
+
     spl(garageDoorState);
 
     // autoCloseDoor()
 
-    // Add new config directive, manual_mode
     // pendingOperations()
 }
 
@@ -56,11 +67,7 @@ bool doorAutoCloseCondition () {
 
     // get / (tesla) data separately (separate out from /garage_data)
 
-    int8_t* garageData = fetchGarageData();
-
-    int8_t autoCloseEnabled = garageData[4];
-
-    if (! autoCloseEnabled) {
+    if (! garageStruct.autoCloseEnabled) {
         spl("Door auto close disabled");
         return false;
     }
@@ -161,7 +168,17 @@ void autoCloseDoor (uint8_t doorState) {
 }
 
 void pendingOperations () {
-    int8_t* garageData = fetchGarageData();
+    if (garageStruct.appEnabled) {
+        int8_t activity = garageStruct.activity;
+
+        if (activity == OPERATE_DOOR) {
+            spl("Manually operating garage door");
+            doorOperate();
+        }
+    }
+    else {
+        spl("App is disabled; can't perform action");
+    }
 }
 
 void doorOperate () {
@@ -178,23 +195,17 @@ void doorOperate () {
 }
 
 void doorActivate () {
-
-    int8_t* garageData = fetchGarageData();
-    int8_t relayEnabled = garageData[3];
-
-    if (relayEnabled) {
+    if (garageStruct.relayEnabled) {
         digitalWrite(DOOR_RELAY_PIN, HIGH);
         delay(250);
         digitalWrite(DOOR_RELAY_PIN, LOW);
     }
 }
 
-int8_t* fetchGarageData () {
+int fetchGarageData () {
 
     http.begin(wifi, url_garage);
     http.setTimeout(8000);
-
-    static int8_t data[6];
 
     int httpCode = http.GET();
 
@@ -202,7 +213,7 @@ int8_t* fetchGarageData () {
         s(F("HTTP Error Code: "));
         spl(httpCode);
         http.end();
-        return data;
+        return httpCode;
     }
 
     StaticJsonDocument<JSON_SIZE> json;
@@ -212,19 +223,19 @@ int8_t* fetchGarageData () {
         s(F("Error: "));
         spl(error.c_str());
         http.end();
-        return data;
+        return -1;
     }
 
-    data[0] = json["garage_door_state"];
-    data[1] = json["tesla_in_garage"];
-    data[2] = json["activity"];
-    data[3] = json["relay_enabled"];
-    data[4] = json["app_enabled"];
-    data[5] = json["auto_close_enabled"];
+    garageStruct.garageDoorState    = json["garage_door_state"];
+    garageStruct.teslaInGarage      = json["tesla_in_garage"];
+    garageStruct.activity           = json["activity"];
+    garageStruct.relayEnabled       = json["relay_enabled"];
+    garageStruct.appEnabled         = json["app_enabled"];
+    garageStruct.autoCloseEnabled   = json["auto_close_enabled"];
 
     http.end();
 
-    return data;
+    return 0;
 }
 
 int8_t* fetchTeslaData () {
