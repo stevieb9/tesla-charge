@@ -3,8 +3,9 @@
 unsigned long   doorCheckTime;
 bool            gotData = false;
 int8_t*         data;
+char*           url_tesla;
+char*           url_garage;
 char*           url_update;
-char*           url_fetch;
 uint8_t         lastDoorPosition;
 enum            shiftState {P, R, D};
 enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_OPENING, DOOR_CLOSING};
@@ -26,12 +27,14 @@ void setup() {
     wifiSetup();
 
     if (DEBUG_URL) {
+        url_tesla  = URL_TESLA;
+        url_garage = URL_GARAGE;
         url_update = URL_UPDATE;
-        url_fetch = URL_FETCH;
     }
     else {
+        url_tesla  = URL_TESLA;
+        url_garage = URL_GARAGE;
         url_update = URL_UPDATE;
-        url_fetch = URL_FETCH;
     }
 
     doorCheckTime = millis();
@@ -42,25 +45,57 @@ void setup() {
 void loop() {
     uint8_t garageDoorState = doorState();
     spl(garageDoorState);
+
+    // autoCloseDoor()
+
+    // Add new config directive, manual_mode
+    // pendingOperations()
 }
 
 bool doorAutoCloseCondition () {
 
-    // - check that auto-close is enabled (/garage_data)
-     // get / (tesla) data separately (separate out from /garage_data)
+    // get / (tesla) data separately (separate out from /garage_data)
 
-     int8_t* data = fetchData();
+    int8_t* garageData = fetchGarageData();
 
-     while (data[0] == -1) {
+    int8_t autoCloseEnabled = garageData[4];
+
+    if (! autoCloseEnabled) {
+        spl("Door auto close disabled");
+        return false;
+    }
+
+    if (doorState() == DOOR_OPEN) {
+        spl("Door already open");
+        return false;
+    }
+
+    uint8_t teslaData[8] = fetchTeslaData();
+
+    uint8_t carInGarage     = data[1];
+    uint8_t teslaError      = data[5];
+    uint8_t teslaFetching   = data[7];
+
+    uint8_t attempts = 0;
+
+    while (teslaError == 1 || teslaFetching == 1) {
         delay(TESLA_API_DELAY);
-        data = fetchData();
-     }
 
-    spl(data);
+        teslaData = fetchTeslaData();
 
-    int8_t carInGarage = data[0];
+        carInGarage     = data[1];
+        teslaError      = data[5];
+        teslaFetching   = data[7];
 
-    if (! carInGarage && doorState() == DOOR_OPEN) {
+        if (attempts == TESLA_API_RETRIES) {
+            continue;
+        }
+
+        attempts++;
+    }
+
+    if (! carInGarage) {
+        spl("All auto close conditions met (car in garage)");
         return true;
     }
 
@@ -125,6 +160,10 @@ void autoCloseDoor (uint8_t doorState) {
     }
 }
 
+void pendingOperations () {
+    int8_t* garageData = fetchGarageData();
+}
+
 void doorOperate () {
     uint8_t door = doorState();
 
@@ -139,15 +178,20 @@ void doorOperate () {
 }
 
 void doorActivate () {
-    // check if relay is enabled (/garage_data)
-    digitalWrite(DOOR_RELAY_PIN, HIGH);
-    delay(250);
-    digitalWrite(DOOR_RELAY_PIN, LOW);
+
+    int8_t* garageData = fetchGarageData();
+    int8_t relayEnabled = garageData[3];
+
+    if (relayEnabled) {
+        digitalWrite(DOOR_RELAY_PIN, HIGH);
+        delay(250);
+        digitalWrite(DOOR_RELAY_PIN, LOW);
+    }
 }
 
-int8_t* fetchData () {
+int8_t* fetchGarageData () {
 
-    http.begin(wifi, url_fetch);
+    http.begin(wifi, url_garage);
     http.setTimeout(8000);
 
     static int8_t data[5];
@@ -178,6 +222,50 @@ int8_t* fetchData () {
     data[4] = json["auto_close"];
 
     http.end();
+
+    return data;
+}
+
+int8_t* fetchTeslaData () {
+
+    http.begin(url);
+    http.setTimeout(8000);
+
+    static uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+    int httpCode = http.GET();
+
+    if (httpCode < 0) {
+        s(F("HTTP Error Code: "));
+        spl(httpCode);
+        gotData = false;
+        data[5] = 1;
+        http.end();
+        return data;
+    }
+
+    StaticJsonDocument<JSON_SIZE> json;
+    DeserializationError error = deserializeJson(json, http.getString());
+
+    if (error) {
+        gotData = false;
+        data[5] = 1;
+        http.end();
+        return data;
+    }
+
+    data[0] = json["online"];
+    data[1] = json["garage"];
+    data[2] = json["gear"];
+    data[3] = json["charge"];
+    data[4] = json["charging"];
+    data[5] = json["error"];
+    data[6] = json["rainbow"];
+    data[7] = json["fetching"];
+
+    http.end();
+
+    gotData = true;
 
     return data;
 }

@@ -111,16 +111,6 @@ get '/garage_data' => sub {
     
     config_load();
     
-    $tesla_event->start if $tesla_event->waiting;
-
-    if ($tesla_data) {
-        my $tesla_data_ref = decode_json $tesla_data;
-        $garage_data->{garage} = $tesla_data_ref->{garage};
-    }
-    else {
-        $garage_data->{garage} = -1;
-    }
-
     return encode_json $garage_data if $garage_data;
 };
 get '/garage_door_state' => sub {
