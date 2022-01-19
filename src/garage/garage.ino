@@ -3,9 +3,9 @@
 unsigned long   doorCheckTime;
 bool            gotData = false;
 int8_t*         data;
-char*           url_tesla;
-char*           url_garage;
-char*           url_update;
+char*           urlTesla;
+char*           urlGarage;
+char*           urlUpdate;
 uint8_t         lastDoorPosition;
 enum            shiftState {P, R, D};
 enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_OPENING, DOOR_CLOSING};
@@ -30,14 +30,14 @@ void setup() {
     wifiSetup();
 
     if (DEBUG_URL) {
-        url_tesla  = URL_TESLA;
-        url_garage = URL_GARAGE;
-        url_update = URL_UPDATE;
+        urlTesla  = URL_TESLA;
+        urlGarage = URL_GARAGE;
+        urlUpdate = URL_UPDATE;
     }
     else {
-        url_tesla  = URL_TESLA;
-        url_garage = URL_GARAGE;
-        url_update = URL_UPDATE;
+        urlTesla  = URL_TESLA;
+        urlGarage = URL_GARAGE;
+        urlUpdate = URL_UPDATE;
     }
 
     doorCheckTime = millis();
@@ -77,7 +77,7 @@ bool doorAutoCloseCondition () {
         return false;
     }
 
-    uint8_t teslaData[8] = fetchTeslaData();
+    uint8_t* teslaData = fetchTeslaData();
 
     uint8_t carInGarage     = data[1];
     uint8_t teslaError      = data[5];
@@ -204,7 +204,7 @@ void doorActivate () {
 
 int fetchGarageData () {
 
-    http.begin(wifi, url_garage);
+    http.begin(wifi, urlGarage);
     http.setTimeout(8000);
 
     int httpCode = http.GET();
@@ -238,9 +238,9 @@ int fetchGarageData () {
     return 0;
 }
 
-int8_t* fetchTeslaData () {
+uint8_t* fetchTeslaData () {
 
-    http.begin(url);
+    http.begin(wifi, urlTesla);
     http.setTimeout(8000);
 
     static uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -284,7 +284,7 @@ int8_t* fetchTeslaData () {
 
 void updateData (uint8_t doorState) {
 
-    http.begin(wifi, url_update);
+    http.begin(wifi, urlUpdate);
     http.setTimeout(8000);
     http.addHeader("Content-Type", "application/json");
 
