@@ -277,6 +277,8 @@ sub gear {
     return 2 if $gear eq 'N';
 }
 sub _default_data {
+    # Used in every API call to '/'
+
     my $struct = {
         online      => 0, # Vehicle is online
         garage      => 0, # Vehicle is in the garage
@@ -291,6 +293,8 @@ sub _default_data {
     return $struct;
 }
 sub _default_garage_data {
+    # Used once at initial script run
+
     my $struct = {
         garage_door_state   => -1,  # 0 = Closed, 1 = Open, 2 = Opening, 3 = Closing, -1 = Unknown
         tesla_in_garage     => -1,  # 1 = Tesla in garage, 0 = Tesla not in garage

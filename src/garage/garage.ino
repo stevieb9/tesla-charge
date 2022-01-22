@@ -1,12 +1,13 @@
 #include "garage.h"
 
-unsigned long   doorCheckTime;
-bool            gotData = false;
-int8_t*         data;
 char*           urlTesla;
 char*           urlGarage;
 char*           urlUpdate;
+
+bool            gotData = false;
+int8_t*         data;
 uint8_t         lastDoorPosition;
+
 enum            shiftState {P, R, D};
 enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_OPENING, DOOR_CLOSING};
 enum            operation {NONE, OPERATE_DOOR};
@@ -40,8 +41,6 @@ void setup() {
         urlUpdate = URL_UPDATE;
     }
 
-    doorCheckTime = millis();
-
     ArduinoOTA.begin();
 }
 
@@ -64,9 +63,6 @@ void loop() {
 }
 
 bool doorAutoCloseCondition () {
-
-    // get / (tesla) data separately (separate out from /garage_data)
-
     if (! garageStruct.autoCloseEnabled) {
         spl("Door auto close disabled");
         return false;
@@ -102,7 +98,7 @@ bool doorAutoCloseCondition () {
     }
 
     if (! carInGarage) {
-        spl("All auto close conditions met (car in garage)");
+        spl("All auto close conditions met (car not in garage)");
         return true;
     }
 
@@ -119,7 +115,9 @@ uint8_t doorState () {
         doorState = DOOR_OPEN;
         spl(F("Door open"));
         lastDoorPosition = DOOR_OPEN;
-        digitalWrite(DOOR_OPEN_LED, HIGH);
+        if (! digitalRead(DOOR_OPEN_LED)) {
+            digitalWrite(DOOR_OPEN_LED, HIGH);
+        }
     }
     else if (doorClosed) {
         doorState = DOOR_CLOSED;
@@ -144,7 +142,10 @@ uint8_t doorState () {
         }
     }
 
-    updateData(doorState);
+    if (doorState != lastDoorState) {
+        updateData(doorState);
+    }
+
     return doorState;
 }
 
@@ -184,8 +185,6 @@ void pendingOperations () {
     else {
         spl("App is disabled; can't perform action");
     }
-
-    // reset pending
 }
 
 void doorOperate () {
