@@ -336,8 +336,8 @@ void readEEPROM(int startAdr, int maxLength, char* dest) {
 
 void wifiSetup () {
 
-    s(F("MAC Address: "));
-    spl(WiFi.macAddress());
+    Serial.print(F("MAC Address: "));
+    Serial.println(WiFi.macAddress());
 
     char ssid[16];
     char ssidPassword[16];
@@ -348,10 +348,14 @@ void wifiSetup () {
     WiFi.begin(ssid, ssidPassword);
 
     while (WiFi.status() != WL_CONNECTED) {
-        spl(F("RSSI: ") + (String) WiFi.RSSI());
+        Serial.println(F("RSSI: ") + (String) WiFi.RSSI());
         delay(500);
     }
-    spl(F("Wifi Connected"));
+
+    Serial.println(F("Wifi Connected"));
+
+    Serial.print(F("IP address:\t"));
+    Serial.println(WiFi.localIP());
 
     delay(1000);
 }
