@@ -60,8 +60,7 @@ void loop() {
     uint8_t garageDoorState = doorState();
 
     autoCloseDoor();
-
-    // pendingOperations()
+    pendingOperations();
 }
 
 bool doorAutoCloseCondition () {
@@ -196,6 +195,8 @@ void pendingOperations () {
     else {
         spl(F("App is disabled; can't perform action"));
     }
+
+    updateData(doorState());
 }
 
 void doorOperate () {

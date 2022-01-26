@@ -133,6 +133,13 @@ post '/garage_update' => sub {
 
     return;
 };
+get '/garage_door_operate' => sub {
+    # Trigger the garage door to operate (app/web)
+    return if ! security();
+    #my $data = decode_json request->body;
+
+    $garage_data->{activity} = 1;
+};
 get '/garage_door_toggle' => sub {
     # Toggle door state (web)
     return if ! security();
