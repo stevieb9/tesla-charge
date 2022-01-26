@@ -9,19 +9,22 @@
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
 
-#define SERIAL_DEBUG        /* Serial output (comment to disable) */
+//#define SERIAL_DEBUG        /* Serial output (comment to disable) */
 
-#define DEBUG_URL       0   /* Call the debug data HTTP URL */
-#define URL_TESLA       "http://192.168.1.5:55556/"
-#define URL_GARAGE      "http://192.168.1.5:55556/garage_data"
-#define URL_UPDATE      "http://192.168.1.5:55556/garage_update"
+#define DEBUG_TESLA_URL       0   /* Call the Tesla debug data HTTP URL */
+#define DEBUG_GARAGE_URL      0   /* Call the garage debug data HTTP URL */
 
-#define URL_DEBUG       "http://192.168.1.5:55556/debug"
+#define URL_TESLA   "http://192.168.1.5:55556/"
+#define URL_GARAGE  "http://192.168.1.5:55556/garage_data"
+#define URL_UPDATE  "http://192.168.1.5:55556/garage_update"
 
-#define DOOR_CHECK_DELAY    1000
-#define DOOR_CLOSE_TIME     3000
-#define TESLA_API_DELAY     2000
-#define TESLA_API_RETRIES   3
+#define URL_DEBUG_TESLA     "http://192.168.1.5:55556/debug"
+#define URL_DEBUG_GARAGE    "http://192.168.1.5:55556/debug_garage"
+
+#define DOOR_CHECK_DELAY    1000    // UNUSED - loop() delay timer
+#define DOOR_CLOSE_TIME     3000    // Seconds door must be open before auto-close
+#define TESLA_API_DELAY     2000    // Delay to retry the Tesla API call
+#define TESLA_API_RETRIES   3       // Retries to attempt Tesla API call
 
 #define JSON_SIZE           192
 
