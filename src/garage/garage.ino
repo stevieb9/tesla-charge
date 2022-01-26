@@ -5,8 +5,12 @@ char*           urlGarage;
 char*           urlUpdate;
 
 bool            gotData = false;
-int8_t*         data;
+bool            doorAutoCloseAuthorized = false;
+
+int8_t*         teslaData;
 uint8_t         lastDoorPosition = -1;
+
+unsigned long   doorOpenTime = 0;
 
 enum            shiftState {P, R, D};
 enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_CLOSING, DOOR_OPENING};
@@ -48,34 +52,34 @@ void loop() {
     int apiResult = fetchGarageData();
 
     if (apiResult < 0) {
-        spl("Error retrieving garage API data");
+        spl(F("Error retrieving garage API data"));
         delay(1000);
         return;
     }
 
     uint8_t garageDoorState = doorState();
 
-    // autoCloseDoor()
+    autoCloseDoor();
 
     // pendingOperations()
 }
 
 bool doorAutoCloseCondition () {
     if (! garageStruct.autoCloseEnabled) {
-        spl("Door auto close disabled");
+        spl(F("Door auto close disabled"));
         return false;
     }
 
-    if (doorState() == DOOR_OPEN) {
-        spl("Door already open");
+    if (doorState() == DOOR_CLOSED) {
+        spl(F("Door already closed"));
         return false;
     }
 
     uint8_t* teslaData = fetchTeslaData();
 
-    uint8_t carInGarage     = data[1];
-    uint8_t teslaError      = data[5];
-    uint8_t teslaFetching   = data[7];
+    uint8_t carInGarage     = teslaData[1];
+    uint8_t teslaError      = teslaData[5];
+    uint8_t teslaFetching   = teslaData[7];
 
     uint8_t attempts = 0;
 
@@ -84,9 +88,9 @@ bool doorAutoCloseCondition () {
 
         teslaData = fetchTeslaData();
 
-        carInGarage     = data[1];
-        teslaError      = data[5];
-        teslaFetching   = data[7];
+        carInGarage     = teslaData[1];
+        teslaError      = teslaData[5];
+        teslaFetching   = teslaData[7];
 
         if (attempts == TESLA_API_RETRIES) {
             continue;
@@ -96,10 +100,11 @@ bool doorAutoCloseCondition () {
     }
 
     if (! carInGarage) {
-        spl("All auto close conditions met (car not in garage)");
+        spl(F("All auto close conditions met (car not in garage)"));
         return true;
     }
 
+    spl(F("Car is in garage"));
     return false;
 }
 
@@ -111,25 +116,21 @@ uint8_t doorState () {
 
     if (doorOpen) {
         doorState = DOOR_OPEN;
-        spl(F("Door open"));
         if (! digitalRead(DOOR_OPEN_LED)) {
             digitalWrite(DOOR_OPEN_LED, HIGH);
         }
     }
     else if (doorClosed) {
         doorState = DOOR_CLOSED;
-        spl(F("Door closed"));
         if (digitalRead(DOOR_OPEN_LED)) {
             digitalWrite(DOOR_OPEN_LED, LOW);
         }
     }
     else {
         if (lastDoorPosition == DOOR_OPEN || lastDoorPosition == DOOR_CLOSING) {
-            spl(F("Door closing"));
             doorState = DOOR_CLOSING;
         }
         else if (lastDoorPosition == DOOR_CLOSED || lastDoorPosition == DOOR_OPENING) {
-            spl(F("Door opening"));
             doorState = DOOR_OPENING;
         }
         else {
@@ -152,22 +153,29 @@ uint8_t doorState () {
     return doorState;
 }
 
-void autoCloseDoor (uint8_t doorState) {
+void autoCloseDoor () {
 
-    if (doorState == DOOR_OPEN) {
-        // - save door open time, increment each loop
+    uint8_t doorPosition = doorState();
 
-        // - if door open time > 5 mins
+    if (doorPosition == DOOR_OPEN) {
+        if (doorOpenTime == 0) {
+            doorOpenTime = millis();
+        }
 
-        // bool canCloseDoor = doorAutoCloseCondition();
-        //
-        // if (canCloseDoor) {
-        //     doorOperate();
-        // }
+        if (millis() - doorOpenTime >= DOOR_CLOSE_TIME) {
+            bool canCloseDoor = doorAutoCloseCondition();
 
+            if (canCloseDoor) {
+                doorOperate();
+            }
+
+            doorOpenTime = 0;
+        }
     }
-    else if (doorState == DOOR_CLOSED){
-        // - if door open time > 0, reset it to 0
+    else {
+        if (doorOpenTime > 0) {
+            doorOpenTime = 0;
+        }
     }
 }
 
@@ -181,12 +189,12 @@ void pendingOperations () {
         }
 
         if (activity == OPERATE_DOOR) {
-            spl("Manually operating garage door");
+            spl(F("Manually operating garage door"));
             doorOperate();
         }
     }
     else {
-        spl("App is disabled; can't perform action");
+        spl(F("App is disabled; can't perform action"));
     }
 }
 
@@ -252,7 +260,7 @@ uint8_t* fetchTeslaData () {
     http.begin(wifi, urlTesla);
     http.setTimeout(8000);
 
-    static uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    static uint8_t teslaData[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     int httpCode = http.GET();
 
@@ -260,9 +268,9 @@ uint8_t* fetchTeslaData () {
         s(F("HTTP Error Code: "));
         spl(httpCode);
         gotData = false;
-        data[5] = 1;
+        teslaData[5] = 1;
         http.end();
-        return data;
+        return teslaData;
     }
 
     StaticJsonDocument<JSON_SIZE> json;
@@ -270,37 +278,37 @@ uint8_t* fetchTeslaData () {
 
     if (error) {
         gotData = false;
-        data[5] = 1;
+        teslaData[5] = 1;
         http.end();
-        return data;
+        return teslaData;
     }
 
-    data[0] = json["online"];
-    data[1] = json["garage"];
-    data[2] = json["gear"];
-    data[3] = json["charge"];
-    data[4] = json["charging"];
-    data[5] = json["error"];
-    data[6] = json["rainbow"];
-    data[7] = json["fetching"];
+    teslaData[0] = json["online"];
+    teslaData[1] = json["garage"];
+    teslaData[2] = json["gear"];
+    teslaData[3] = json["charge"];
+    teslaData[4] = json["charging"];
+    teslaData[5] = json["error"];
+    teslaData[6] = json["rainbow"];
+    teslaData[7] = json["fetching"];
 
     http.end();
 
     gotData = true;
 
-    return data;
+    return teslaData;
 }
 
 void updateData (uint8_t doorState) {
 
     http.begin(wifi, urlUpdate);
     http.setTimeout(8000);
-    http.addHeader("Content-Type", "application/json");
+    http.addHeader(F("Content-Type"), F("application/json"));
 
     DynamicJsonDocument jsonDoc(128);
 
-    jsonDoc["door_state"] = doorState;
-    jsonDoc["activity"] = garageStruct.activity;
+    jsonDoc[F("door_state")] = doorState;
+    jsonDoc[F("activity")] = garageStruct.activity;
 
     char jsonData[192];
     serializeJson(jsonDoc, jsonData);
@@ -339,7 +347,7 @@ void wifiSetup () {
     WiFi.begin(ssid, ssidPassword);
 
     while (WiFi.status() != WL_CONNECTED) {
-        spl("RSSI: " + (String) WiFi.RSSI());
+        spl(F("RSSI: ") + (String) WiFi.RSSI());
         delay(500);
     }
     spl(F("Wifi Connected"));
