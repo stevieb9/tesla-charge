@@ -6,10 +6,10 @@ char*           urlUpdate;
 
 bool            gotData = false;
 int8_t*         data;
-uint8_t         lastDoorPosition;
+uint8_t         lastDoorPosition = -1;
 
 enum            shiftState {P, R, D};
-enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_OPENING, DOOR_CLOSING};
+enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_CLOSING, DOOR_OPENING};
 enum            operation {NONE, OPERATE_DOOR};
 
 garageData garageStruct;
@@ -48,14 +48,12 @@ void loop() {
     int apiResult = fetchGarageData();
 
     if (apiResult < 0) {
-        spl("Error retrieving API data");
+        spl("Error retrieving garage API data");
         delay(1000);
         return;
     }
 
     uint8_t garageDoorState = doorState();
-
-    spl(garageDoorState);
 
     // autoCloseDoor()
 
@@ -109,12 +107,11 @@ uint8_t doorState () {
     uint8_t doorOpen = ! digitalRead(DOOR_OPEN_PIN);
     uint8_t doorClosed = ! digitalRead(DOOR_CLOSED_PIN);
 
-    uint8_t doorState;
+    uint8_t doorState = lastDoorPosition;
 
     if (doorOpen) {
         doorState = DOOR_OPEN;
         spl(F("Door open"));
-        lastDoorPosition = DOOR_OPEN;
         if (! digitalRead(DOOR_OPEN_LED)) {
             digitalWrite(DOOR_OPEN_LED, HIGH);
         }
@@ -122,17 +119,16 @@ uint8_t doorState () {
     else if (doorClosed) {
         doorState = DOOR_CLOSED;
         spl(F("Door closed"));
-        lastDoorPosition = DOOR_CLOSED;
         if (digitalRead(DOOR_OPEN_LED)) {
             digitalWrite(DOOR_OPEN_LED, LOW);
         }
     }
     else {
-        if (lastDoorPosition == DOOR_OPEN) {
+        if (lastDoorPosition == DOOR_OPEN || lastDoorPosition == DOOR_CLOSING) {
             spl(F("Door closing"));
             doorState = DOOR_CLOSING;
         }
-        else if (lastDoorPosition == DOOR_CLOSED) {
+        else if (lastDoorPosition == DOOR_CLOSED || lastDoorPosition == DOOR_OPENING) {
             spl(F("Door opening"));
             doorState = DOOR_OPENING;
         }
@@ -142,9 +138,16 @@ uint8_t doorState () {
         }
     }
 
-    if (doorState != lastDoorState) {
+    if (doorState != lastDoorPosition) {
         updateData(doorState);
+
+        s(F("doorState: "));
+        spl(doorState);
+        s(F("lastDoorPosition: "));
+        spl(lastDoorPosition);
     }
+
+    lastDoorPosition = doorState;
 
     return doorState;
 }
