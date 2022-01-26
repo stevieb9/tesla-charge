@@ -34,13 +34,17 @@ void setup() {
     Serial.begin(9600);
     wifiSetup();
 
-    if (DEBUG_URL) {
+    if (DEBUG_TESLA_URL) {
+        urlTesla  = URL_DEBUG_TESLA;
+    } else {
         urlTesla  = URL_TESLA;
-        urlGarage = URL_GARAGE;
+    }
+
+    if (DEBUG_GARAGE_URL) {
+        urlGarage = URL_DEBUG_GARAGE;
         urlUpdate = URL_UPDATE;
     }
     else {
-        urlTesla  = URL_TESLA;
         urlGarage = URL_GARAGE;
         urlUpdate = URL_UPDATE;
     }
