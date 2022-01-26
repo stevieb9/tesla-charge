@@ -246,12 +246,12 @@ int fetchGarageData () {
         return -1;
     }
 
-    garageStruct.garageDoorState    = json["garage_door_state"];
-    garageStruct.teslaInGarage      = json["tesla_in_garage"];
-    garageStruct.activity           = json["activity"];
-    garageStruct.relayEnabled       = json["relay_enabled"];
-    garageStruct.appEnabled         = json["app_enabled"];
-    garageStruct.autoCloseEnabled   = json["auto_close_enabled"];
+    garageStruct.garageDoorState    = json[F("garage_door_state")];
+    garageStruct.teslaInGarage      = json[F("tesla_in_garage")];
+    garageStruct.activity           = json[F("activity")];
+    garageStruct.relayEnabled       = json[F("relay_enabled")];
+    garageStruct.appEnabled         = json[F("app_enabled")];
+    garageStruct.autoCloseEnabled   = json[F("auto_close_enabled")];
 
     http.end();
 
@@ -286,14 +286,14 @@ uint8_t* fetchTeslaData () {
         return teslaData;
     }
 
-    teslaData[0] = json["online"];
-    teslaData[1] = json["garage"];
-    teslaData[2] = json["gear"];
-    teslaData[3] = json["charge"];
-    teslaData[4] = json["charging"];
-    teslaData[5] = json["error"];
-    teslaData[6] = json["rainbow"];
-    teslaData[7] = json["fetching"];
+    teslaData[0] = json[F("online")];
+    teslaData[1] = json[F("garage")];
+    teslaData[2] = json[F("gear")];
+    teslaData[3] = json[F("charge")];
+    teslaData[4] = json[F("charging")];
+    teslaData[5] = json[F("error")];
+    teslaData[6] = json[F("rainbow")];
+    teslaData[7] = json[F("fetching")];
 
     http.end();
 
