@@ -49,6 +49,8 @@ void setup() {
 }
 
 void loop() {
+    ArduinoOTA.handle();
+
     int apiResult = fetchGarageData();
 
     if (apiResult < 0) {
