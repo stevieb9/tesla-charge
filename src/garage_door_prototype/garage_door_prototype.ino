@@ -4,23 +4,22 @@
 AccelStepper doorOpener (
         STEPPER_FULLSTEP,
         PIN_IN1,
-        PIN_IN2,
         PIN_IN3,
+        PIN_IN2,
         PIN_IN4
 );
 
 void setup() {
-    doorOpener.setMaxSpeed(4000.0);
-    doorOpener.setAcceleration(100.0);
-    doorOpener.setSpeed(4000);
+    doorOpener.setMaxSpeed(MAX_SPEED);
+    doorOpener.setAcceleration(ACCELERATION);
+    doorOpener.setSpeed(SET_SPEED);
     doorOpener.moveTo(2038);
 }
 
 void loop() {
-    if (doorOpener.distanceToGo() == 0)
-        //
+    if (doorOpener.distanceToGo() == 0) {
         doorOpener.moveTo(-doorOpener.currentPosition());
+    }
 
-    // Move the motor one step
     doorOpener.run();
 }

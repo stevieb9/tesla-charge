@@ -8,7 +8,11 @@
 #define PIN_IN3 10
 #define PIN_IN4 11
 
-#define POSITION_OPEN   2048
+#define MAX_SPEED       1000.0
+#define SET_SPEED       1000
+#define ACCELERATION    100.0
+
+#define POSITION_OPEN   2038
 #define POSITION_CLOSED 0
 
 #endif //TESLA_CHARGE_GARAGE_DOOR_PROTOTYPE_H
