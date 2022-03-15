@@ -10,6 +10,7 @@ bool            doorAutoCloseAuthorized = false;
 int8_t*         teslaData;
 uint8_t         lastDoorPosition = -1;
 
+unsigned long   lastLoopCycleTime = 0;
 unsigned long   doorOpenTime = 0;
 
 enum            shiftState {P, R, D};
@@ -55,18 +56,22 @@ void setup() {
 void loop() {
     ArduinoOTA.handle();
 
-    int apiResult = fetchGarageData();
+    if (millis() - lastLoopCycleTime > LOOP_CYCLE_DELAY) {
+        int apiResult = fetchGarageData();
 
-    if (apiResult < 0) {
-        spl(F("Error retrieving garage API data"));
-        delay(1000);
-        return;
+        if (apiResult < 0) {
+            spl(F("Error retrieving garage API data"));
+            delay(500);
+            return;
+        }
+
+        uint8_t garageDoorState = doorState();
+
+        autoCloseDoor();
+        pendingOperations();
+
+        lastLoopCycleTime = millis();
     }
-
-    uint8_t garageDoorState = doorState();
-
-    autoCloseDoor();
-    pendingOperations();
 }
 
 bool doorAutoCloseCondition () {
@@ -147,10 +152,10 @@ uint8_t doorState () {
     if (doorState != lastDoorPosition) {
         updateData(doorState);
 
-        s(F("doorState: "));
-        spl(doorState);
         s(F("lastDoorPosition: "));
         spl(lastDoorPosition);
+        s(F("doorState: "));
+        spl(doorState);
     }
 
     lastDoorPosition = doorState;

@@ -41,7 +41,7 @@ my $garage_debug = 0;
 config_load();
 
 # Tesla data
-tie my $tesla_data, 'IPC::Shareable', 'TSLA', {create => 1, destroy => 1};
+tie my $tesla_data, 'IPC::Shareable', {key => 'TSLA', create => 1};
 $tesla_data = '';
 
 # Garage data
