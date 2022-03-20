@@ -1,0 +1,7 @@
+Revision history for tesla-charge
+
+1.00 UNREL
+    - Removed reliance on Tim Dorssers TeslaPy Python distribution thanks to
+      my new Tesla::Vehicle and Tesla::API distributions
+    - Renamed web.pl to app.psgi
+    - Removed script_path directive from config file
