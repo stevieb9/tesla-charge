@@ -49,7 +49,7 @@
 #define ALARM_OFF_TIME  3000
 #define ALARM_CHARGE    70
 
-#define DATA_DELAY          500
-#define FETCH_BLINK_DELAY   250
+#define DATA_DELAY          500 // ms to wait between API calls
+#define FETCH_BLINK_DELAY   250 // ms to leave fetch LED on
 
 #endif //TESLA_CHARGE_TESLACHARGE_H
