@@ -93,9 +93,12 @@ get '/wake' => sub {
     # Wake up the Tesla
     return if ! security();
 
-    $car->wake;
+    my $awoke_ok = eval {
+        $car->wake;
+        1;
+    };
 
-    if (! $car->online) {
+    if (! $car->online || ! $awoke_ok) {
         return "<html><body>Error code -1: Failed to wake the car</body></html>";
     }
 
