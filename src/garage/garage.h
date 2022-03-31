@@ -14,12 +14,12 @@
 #define DEBUG_TESLA_URL       0   /* Call the Tesla debug data HTTP URL */
 #define DEBUG_GARAGE_URL      0   /* Call the garage debug data HTTP URL */
 
-#define URL_TESLA   "http://192.168.1.22:55556/"
-#define URL_GARAGE  "http://192.168.1.22:55556/garage_data"
-#define URL_UPDATE  "http://192.168.1.22:55556/garage_update"
+#define URL_TESLA   "http://192.168.1.252:55556/"
+#define URL_GARAGE  "http://192.168.1.252:55556/garage_data"
+#define URL_UPDATE  "http://192.168.1.252:55556/garage_update"
 
-#define URL_DEBUG_TESLA     "http://192.168.1.5:55556/debug"
-#define URL_DEBUG_GARAGE    "http://192.168.1.5:55556/debug_garage"
+#define URL_DEBUG_TESLA     "http://192.168.1.252:55556/debug"
+#define URL_DEBUG_GARAGE    "http://192.168.1.252:55556/debug_garage"
 
 #define LOOP_CYCLE_DELAY    500     // Delays the loop cycle
 #define DOOR_CLOSE_TIME     20000   // Millieconds door must be open before auto-close
