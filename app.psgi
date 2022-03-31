@@ -226,7 +226,7 @@ sub fetch {
         $charging //= 'Disconnected';
         $charging = $charging eq 'Disconnected' ? 0 : 1;
 
-        if (! defined $gear) {
+        if (! defined $gear || $gear eq 'U') {
             print "Error: Corrupt JSON data from Tesla API.\n";
             $struct->{error} = 1;
             return $struct;

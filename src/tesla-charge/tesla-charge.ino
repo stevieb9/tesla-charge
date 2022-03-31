@@ -32,6 +32,7 @@ unsigned long   errors  = 0;
 SSD1306Wire oled(0x3c, 4, 5);
 CRGB leds[NUM_LEDS];
 HTTPClient http;
+WiFiClient wifi;
 
 void setup() {
     pinMode(PIR, INPUT);
@@ -270,7 +271,7 @@ void displayOLED (uint8_t charge) {
 
 uint8_t* fetchData () {
 
-    http.begin(url);
+    http.begin(wifi, url);
     http.setTimeout(8000);
     
     static uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
