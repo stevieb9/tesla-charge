@@ -72,6 +72,7 @@ void setup() {
 void loop() {
     ArduinoOTA.handle();
 
+    delay(1000);
     bool magnet = digitalRead(REED);
     bool motion = digitalRead(PIR);
 
@@ -383,12 +384,15 @@ void drawLED(uint8_t led, CRGB colour) {
     leds[led] = colour;
 }
 
-char* serialLEDColour () {
-    for (uint8_t i = NUM_LEDS - 1; i < 255; i = i - 1) {
+void serialLEDColour () {
+    uint8_t ledCount = NUM_LEDS;
+
+    while (ledCount != 0) {
+        ledCount--;
 
         char* colour = "Unknown";
         
-        CRGB currentColour = leds[i];
+        CRGB currentColour = leds[ledCount];
         
         if (currentColour == CRGB(CRGB::Yellow)) {
             colour = "Yellow";
@@ -413,12 +417,9 @@ char* serialLEDColour () {
         }
 
         s(F("LED "));
-        s(i);
+        s(ledCount);
         s(F(": "));
         spl(colour);
-        if (i == 0) {
-            spl(F("\n"));
-        }
     }
 }
 
