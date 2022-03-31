@@ -72,7 +72,6 @@ void setup() {
 void loop() {
     ArduinoOTA.handle();
 
-    delay(1000);
     bool magnet = digitalRead(REED);
     bool motion = digitalRead(PIR);
 
