@@ -1,9 +1,9 @@
 /*
-    This sketch must be compiled with Debug enabled
-    and set to Serial.
+    Sometimes there are issues with compiling this sketch.
 
-    Set it to Serial1 to disable the debug output from going
-    to the serial monitor.
+    If that's the case, try Tools->Debug Port = Serial1
+
+    Tools->Debug Level can be set to None
 */
 
 #include "TeslaCharge.h"
