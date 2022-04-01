@@ -41,7 +41,6 @@ my $garage_debug = 0;
 
 my $car = Tesla::Vehicle->new(api_cache_persist => 1);
 
-print "starting\n";
 config_load();
 
 # Tesla data
@@ -179,7 +178,9 @@ sub config_load {
     $garage_debug = 1 if $garage_conf->{debug};
 }
 sub debug_data {
-    return encode_json $tesla_conf->{debug_data};
+    my $data = encode_json $tesla_conf->{debug_data};
+    print "$data\n";
+    return $data;
 }
 sub debug_garage_data {
     return encode_json $garage_conf->{debug_data};
@@ -295,7 +296,7 @@ sub _default_data {
         error       => 0, # Tesla API error
         rainbow     => 0, # Rainbow LED mode
         fetching    => 1, # Currently fetching data from Tesla
-        alarm       => 1, # Alarm sound
+        alarm       => $tesla_conf->{alarm}, # Alarm sound
     };
 
     return $struct;
