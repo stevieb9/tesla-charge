@@ -221,7 +221,6 @@ void loop() {
         if (! oledClear) {
             alarm(false);
             lastCharge = CHARGE_MAX;
-            FastLED.show();
             resetOLED();
         }
     }
@@ -327,7 +326,6 @@ void resetStatusLED () {
 }
 
 void statusLED (CRGB statusColour, CRGB stateColour) {
-
     CRGB statusCurrentColour = leds[LED_STATUS];
     CRGB stateCurrentColour = leds[LED_STATE];
 
@@ -343,20 +341,21 @@ void statusLED (CRGB statusColour, CRGB stateColour) {
         colourChanged = true;
     }
 
-    FastLED.show();
     if (colourChanged) {
         FastLED.show();
     }
 }
 
 void resetChargeLED () {
+    if (chargeLED)
     for (uint8_t i = 0; i < 5; i++) {
         drawLED(i, CRGB::Black);
     }
+    FastLED.show();
+
 }
 
 void chargeLED (uint8_t charge) {
-
     for (uint8_t i = 0; i < 5; i++) {
         drawLED(i, CRGB::Green);
     }
