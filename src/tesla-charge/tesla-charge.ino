@@ -312,7 +312,11 @@ uint8_t* fetchData () {
     data[6] = json["rainbow"];
     data[7] = json["fetching"];
     data[8] = json["alarm"];
-    
+
+    s(F("DATA: "));
+    spl(data[0]);
+    spl(data[8]);
+
     http.end();
 
     gotData = true;
