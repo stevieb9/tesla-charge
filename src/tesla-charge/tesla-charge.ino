@@ -1,9 +1,9 @@
 /*
-    Sometimes there are issues with compiling this sketch.
+    This sketch must be compiled with Debug enabled
+    and set to Serial.
 
-    If that's the case, try Tools->Debug Port = Serial1
-
-    Tools->Debug Level can be set to None
+    Set it to Serial1 to disable the debug output from going
+    to the serial monitor.
 */
 
 #include "TeslaCharge.h"
@@ -79,7 +79,6 @@ void loop() {
         spl(F("Rainbow - Magnet mode"));
         oledClear = false;
         rainbowCycle(1);
-        serialLEDColour();
         return;
     }
     else if (motion || DEBUG_MOTION || DEBUG_DEVEL) {
@@ -105,16 +104,13 @@ void loop() {
         uint8_t fetching    = data[7];
         uint8_t alarmEnabled = data[8];
 
-        s(F("alarm: "));
-        spl(alarmEnabled);
-
         s(F("\n**** Count:\t\t\t"));
         spl(count);
         count++;
         
         if (fetching) {
             spl(F("                   FETCHING"));
-            
+
             currentTime = millis();
             
             if (currentTime - fetchLEDBlinkTime >= FETCH_BLINK_DELAY) {
@@ -130,7 +126,6 @@ void loop() {
                     fetchBlinkStatus = false;
                 }
                
-                serialLEDColour();
                 fetchLEDBlinkTime = currentTime;
             }
             
@@ -146,14 +141,12 @@ void loop() {
             rainbowEnabled = true;
             oledClear = false;
             rainbowCycle(1);
-            serialLEDColour();
             return;
         }
         if (error) {
             spl(F("Error"));
             resetChargeLED();
             statusLED(CRGB::Yellow, CRGB::Black);
-            serialLEDColour();
             statusLEDClear = false;
             gotData = false;
             errors++;
@@ -163,7 +156,6 @@ void loop() {
             spl(F("Offline"));
             resetChargeLED();
             statusLED(CRGB::Blue, CRGB::Black);
-            serialLEDColour();
             statusLEDClear = false;
             return;
         }
@@ -184,7 +176,6 @@ void loop() {
                 statusLED(CRGB::White, CRGB::Green);
             }
 
-            serialLEDColour();
             statusLEDClear = false;
             displayOLED(charge);
             return;
@@ -193,7 +184,6 @@ void loop() {
             spl(F("Charging..."));
             resetChargeLED();
             statusLED(CRGB::Purple, CRGB::Black);
-            serialLEDColour();
             statusLEDClear = false;
             displayOLED(charge);
             return;
@@ -214,17 +204,16 @@ void loop() {
                     alarm(true);
                 }
             }
-            serialLEDColour();
         }
     }
     else {
         resetStatusLED();
         resetChargeLED();
         FastLED.show();
-        
+
         gotData         = false;
         rainbowEnabled  = false;
- 
+
         if (! oledClear) {
             alarm(false);
             lastCharge = CHARGE_MAX;
@@ -313,10 +302,6 @@ uint8_t* fetchData () {
     data[7] = json["fetching"];
     data[8] = json["alarm"];
 
-    s(F("DATA: "));
-    spl(data[0]);
-    spl(data[8]);
-
     http.end();
 
     gotData = true;
@@ -338,7 +323,6 @@ void resetStatusLED () {
 }
 
 void statusLED (CRGB statusColour, CRGB stateColour) {
-        
     CRGB statusCurrentColour = leds[LED_STATUS];
     CRGB stateCurrentColour = leds[LED_STATE];
 
@@ -359,14 +343,13 @@ void statusLED (CRGB statusColour, CRGB stateColour) {
     }
 }
 
-void resetChargeLED () {    
+void resetChargeLED () {
     for (uint8_t i = 0; i < 5; i++) {
         drawLED(i, CRGB::Black);
     }
 }
 
 void chargeLED (uint8_t charge) {
-
     for (uint8_t i = 0; i < 5; i++) {
         drawLED(i, CRGB::Green);
     }
@@ -450,7 +433,6 @@ void rainbowCycle(int SpeedDelay) {
         for (i = 0; i < NUM_LEDS; i++) {
             c = Wheel(((i * 256 / NUM_LEDS) + j) & 255);
             drawLED(i, CRGB(*c, *(c + 1), *(c + 2)));
-            //setPixel(i, *c, *(c + 1), *(c + 2));
         }
         FastLED.show();
         delay(SpeedDelay);
