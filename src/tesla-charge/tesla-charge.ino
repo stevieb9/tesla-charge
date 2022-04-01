@@ -103,7 +103,11 @@ void loop() {
         uint8_t error       = data[5];
         uint8_t rainbow     = data[6];
         uint8_t fetching    = data[7];
-        
+        uint8_t alarmEnabled = data[8];
+
+        s(F("alarm: "));
+        spl(alarmEnabled);
+
         s(F("\n**** Count:\t\t\t"));
         spl(count);
         count++;
@@ -205,9 +209,11 @@ void loop() {
             oledClear = false;
 
             if (charge < ALARM_CHARGE) {
-                alarm(true);
+                if (alarmEnabled) {
+                    // Only sound the alarm if its enabled
+                    alarm(true);
+                }
             }
-
             serialLEDColour();
         }
     }
@@ -274,7 +280,7 @@ uint8_t* fetchData () {
     http.begin(wifi, url);
     http.setTimeout(8000);
     
-    static uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    static uint8_t data[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     int httpCode = http.GET();
 
@@ -305,6 +311,7 @@ uint8_t* fetchData () {
     data[5] = json["error"];
     data[6] = json["rainbow"];
     data[7] = json["fetching"];
+    data[8] = json["alarm"];
     
     http.end();
 
