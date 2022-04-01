@@ -38,7 +38,7 @@ void setup() {
     pinMode(PIR, INPUT);
     pinMode(REED, INPUT_PULLUP);
     pinMode(ALARM, OUTPUT);
-    
+
     digitalWrite(ALARM, LOW);
 
     Serial.begin(9600);
@@ -48,7 +48,7 @@ void setup() {
     alarmOffTime      = millis();
     dataRefreshTime   = millis();
     fetchLEDBlinkTime = millis();
-    
+
     oled.init();
     oled.flipScreenVertically();
     oled.setFont(myFont_53);
@@ -79,12 +79,13 @@ void loop() {
         spl(F("Rainbow - Magnet mode"));
         oledClear = false;
         rainbowCycle(1);
+        //serialLEDColour();
         return;
     }
     else if (motion || DEBUG_MOTION || DEBUG_DEVEL) {
 
         unsigned long currentTime = millis();
-        
+
         if (currentTime - dataRefreshTime >= DATA_DELAY) {
             gotData = false;
             dataRefreshTime = currentTime;
@@ -102,17 +103,16 @@ void loop() {
         uint8_t error       = data[5];
         uint8_t rainbow     = data[6];
         uint8_t fetching    = data[7];
-        uint8_t alarmEnabled = data[8];
 
         s(F("\n**** Count:\t\t\t"));
         spl(count);
         count++;
-        
+
         if (fetching) {
             spl(F("                   FETCHING"));
 
             currentTime = millis();
-            
+
             if (currentTime - fetchLEDBlinkTime >= FETCH_BLINK_DELAY) {
                 resetChargeLED();
 
@@ -125,10 +125,11 @@ void loop() {
                     resetStatusLED();
                     fetchBlinkStatus = false;
                 }
-               
+
+                //serialLEDColour();
                 fetchLEDBlinkTime = currentTime;
             }
-            
+
             return;
         }
         if (errors) {
@@ -141,12 +142,14 @@ void loop() {
             rainbowEnabled = true;
             oledClear = false;
             rainbowCycle(1);
+            //serialLEDColour();
             return;
         }
         if (error) {
             spl(F("Error"));
             resetChargeLED();
             statusLED(CRGB::Yellow, CRGB::Black);
+            //serialLEDColour();
             statusLEDClear = false;
             gotData = false;
             errors++;
@@ -156,6 +159,7 @@ void loop() {
             spl(F("Offline"));
             resetChargeLED();
             statusLED(CRGB::Blue, CRGB::Black);
+            //serialLEDColour();
             statusLEDClear = false;
             return;
         }
@@ -176,6 +180,7 @@ void loop() {
                 statusLED(CRGB::White, CRGB::Green);
             }
 
+            //serialLEDColour();
             statusLEDClear = false;
             displayOLED(charge);
             return;
@@ -184,6 +189,7 @@ void loop() {
             spl(F("Charging..."));
             resetChargeLED();
             statusLED(CRGB::Purple, CRGB::Black);
+            //serialLEDColour();
             statusLEDClear = false;
             displayOLED(charge);
             return;
@@ -199,17 +205,15 @@ void loop() {
             oledClear = false;
 
             if (charge < ALARM_CHARGE) {
-                if (alarmEnabled) {
-                    // Only sound the alarm if its enabled
-                    alarm(true);
-                }
+                alarm(true);
             }
+
+            //serialLEDColour();
         }
     }
     else {
         resetStatusLED();
         resetChargeLED();
-        FastLED.show();
 
         gotData         = false;
         rainbowEnabled  = false;
@@ -217,6 +221,7 @@ void loop() {
         if (! oledClear) {
             alarm(false);
             lastCharge = CHARGE_MAX;
+            FastLED.show();
             resetOLED();
         }
     }
@@ -268,8 +273,8 @@ uint8_t* fetchData () {
 
     http.begin(wifi, url);
     http.setTimeout(8000);
-    
-    static uint8_t data[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    static uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     int httpCode = http.GET();
 
@@ -300,12 +305,11 @@ uint8_t* fetchData () {
     data[5] = json["error"];
     data[6] = json["rainbow"];
     data[7] = json["fetching"];
-    data[8] = json["alarm"];
 
     http.end();
 
     gotData = true;
-    
+
     return data;
 }
 
@@ -323,11 +327,12 @@ void resetStatusLED () {
 }
 
 void statusLED (CRGB statusColour, CRGB stateColour) {
+
     CRGB statusCurrentColour = leds[LED_STATUS];
     CRGB stateCurrentColour = leds[LED_STATE];
 
     bool colourChanged = false;
-    
+
     if (statusColour != statusCurrentColour) {
         drawLED(LED_STATUS, statusColour);
         colourChanged = true;
@@ -338,6 +343,7 @@ void statusLED (CRGB statusColour, CRGB stateColour) {
         colourChanged = true;
     }
 
+    FastLED.show();
     if (colourChanged) {
         FastLED.show();
     }
@@ -350,6 +356,7 @@ void resetChargeLED () {
 }
 
 void chargeLED (uint8_t charge) {
+
     for (uint8_t i = 0; i < 5; i++) {
         drawLED(i, CRGB::Green);
     }
@@ -377,16 +384,13 @@ void drawLED(uint8_t led, CRGB colour) {
     leds[led] = colour;
 }
 
-void serialLEDColour () {
-    uint8_t ledCount = NUM_LEDS;
-
-    while (ledCount != 0) {
-        ledCount--;
+char* serialLEDColour () {
+    for (uint8_t i = NUM_LEDS - 1; i < 255; i = i - 1) {
 
         char* colour = "Unknown";
-        
-        CRGB currentColour = leds[ledCount];
-        
+
+        CRGB currentColour = leds[i];
+
         if (currentColour == CRGB(CRGB::Yellow)) {
             colour = "Yellow";
         }
@@ -410,9 +414,12 @@ void serialLEDColour () {
         }
 
         s(F("LED "));
-        s(ledCount);
+        s(i);
         s(F(": "));
         spl(colour);
+        if (i == 0) {
+            spl(F("\n"));
+        }
     }
 }
 
@@ -433,6 +440,7 @@ void rainbowCycle(int SpeedDelay) {
         for (i = 0; i < NUM_LEDS; i++) {
             c = Wheel(((i * 256 / NUM_LEDS) + j) & 255);
             drawLED(i, CRGB(*c, *(c + 1), *(c + 2)));
+            //setPixel(i, *c, *(c + 1), *(c + 2));
         }
         FastLED.show();
         delay(SpeedDelay);
