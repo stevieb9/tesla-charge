@@ -13,11 +13,28 @@ int main () {
 
     TeslaVehicle car;
 
-    uint8_t data[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+    uint8_t data[9] = {
+        0,
+        1,
+        2,
+        3,
+        4,
+        1,  // error
+        6,
+        1,  // fetching
+        8
+    };
 
     car.data(data);
 
-    printf("garage: %d, fetching: %d\n", car.garage(), car.fetching());
-
-    return 0;
+    switch (car.state()) {
+        case car.ERROR:
+            printf("ERROR\n");
+            break;
+        case car.FETCHING:
+            printf("FETCHING\n");
+            break;
+        default:
+            printf("Error\n");
+    }
 }

@@ -15,31 +15,49 @@ private:
     uint8_t _error;
     uint8_t _rainbow;
     uint8_t _fetching;
+    uint8_t _alarmEnabled;
 
 public:
+
+    enum statusMap { ERROR, FETCHING };
 
     TeslaVehicle () {}
     ~TeslaVehicle() {}
 
     void data (uint8_t* data)  {
-        _online     = data[0];
-        _garage     = data[1];
-        _gear       = data[2];
-        _charge     = data[3];
-        _charging   = data[4];
-        _error      = data[5];
-        _rainbow    = data[6];
-        _fetching   = data[7];
+        _online         = data[0];
+        _garage         = data[1];
+        _gear           = data[2];
+        _charge         = data[3];
+        _charging       = data[4];
+        _error          = data[5];
+        _rainbow        = data[6];
+        _fetching       = data[7];
+        _alarmEnabled   = data[8];
     }
 
-    uint8_t online   () { return _online; }
-    uint8_t garage   () { return _garage; }
-    uint8_t gear     () { return _gear; }
-    uint8_t charge   () { return _charge; }
-    uint8_t charging () { return _charging; }
-    uint8_t error    () { return _error; }
-    uint8_t rainbow  () { return _rainbow; }
-    uint8_t fetching () { return _fetching; }
+    uint8_t online          () { return _online; }
+    uint8_t garage          () { return _garage; }
+    uint8_t gear            () { return _gear; }
+    uint8_t charge          () { return _charge; }
+    uint8_t charging        () { return _charging; }
+    uint8_t error           () { return _error; }
+    uint8_t rainbow         () { return _rainbow; }
+    uint8_t fetching        () { return _fetching; }
+    uint8_t alarmEnabled    () { return _fetching; }
+
+    uint8_t state () {
+        uint8_t vehicleState = 0;
+
+        if (this->error()) {
+            vehicleState = ERROR;
+        }
+        else if (this->fetching()) {
+            vehicleState = FETCHING;
+        }
+
+        return vehicleState;
+    }
 };
 
 #endif //TESLA_CHARGE_VEHICLE_H
