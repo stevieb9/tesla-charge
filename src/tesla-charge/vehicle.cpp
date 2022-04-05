@@ -19,9 +19,9 @@ int main () {
         2,
         3,
         4,
-        1,  // error
+        0,  // error
         6,
-        1,  // fetching
+        0,  // fetching
         8
     };
 
@@ -35,6 +35,6 @@ int main () {
             printf("FETCHING\n");
             break;
         default:
-            printf("Error\n");
+            printf("UNKNOWN\n");
     }
 }
