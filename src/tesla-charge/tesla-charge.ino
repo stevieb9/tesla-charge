@@ -9,6 +9,11 @@
 #include "TeslaCharge.h"
 #include "TeslaVehicle.h"
 
+bool rainbowEnabled = false;
+bool oledInit = false;
+bool oledClear = true;
+bool fetchBlinkStatus = false;
+
 char* url;
 
 uint8_t lastCharge = CHARGE_MAX;
@@ -81,10 +86,8 @@ void loop() {
         }
 
         if (!gotData && !rainbowEnabled) {
-            data = fetchData();
+            car.load(fetchData());
         }
-
-        car.data(data);
 
         switch (car.state()) {
             case ERROR:
@@ -103,7 +106,7 @@ void loop() {
                 home();
                 break;
             case HOME_CHARGING:
-                charging();
+                home_charging();
                 break;
             case AWAY_CHARGING:
                 away_charging();
@@ -264,7 +267,6 @@ void chargeLED (uint8_t charge) {
     }
 
     FastLED.show();
-    chargeLEDClear = false;
 }
 
 void drawLED(uint8_t led, CRGB colour) {
@@ -293,7 +295,7 @@ void ledSet (CRGB led5, CRGB led4, CRGB led3, CRGB led2, CRGB led1, CRGB led0) {
         colourChanged = true;
     }
 
-    if (colorChanged) {
+    if (colourChanged) {
         drawLED(5, led5);
         drawLED(4, led4);
         drawLED(3, led3);
@@ -420,7 +422,7 @@ void wifiSetup () {
 void fetching () {
     spl(F("                   FETCHING"));
 
-    currentTime = millis();
+    unsigned long currentTime = millis();
 
     if (currentTime - fetchLEDBlinkTime >= FETCH_BLINK_DELAY) {
         if (! fetchBlinkStatus) {
@@ -430,12 +432,11 @@ void fetching () {
                 CRGB::Black,
                 CRGB::Black,
                 CRGB::Black,
-                CRGB::Black,
+                CRGB::Black
             );
         }
         else {
             // off
-            ledClear();
             fetchBlinkStatus = false;
         }
 
@@ -452,7 +453,7 @@ void error () {
         CRGB::Black,
         CRGB::Black,
         CRGB::Black,
-        CRGB::Black,
+        CRGB::Black
     );
 }
 
@@ -470,27 +471,27 @@ void offline () {
         CRGB::Black,
         CRGB::Black,
         CRGB::Black,
-        CRGB::Black,
+        CRGB::Black
     );
 }
 
 void home () {
-    if (charge >= 85 && charge <= 100) {
+    if (car.charge() >= 85 && car.charge() <= 100) {
         ledSet(CRGB::Black, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green);
     }
-    else if (charge < 85) {
+    else if (car.charge() < 85) {
         ledSet(CRGB::Black, CRGB::Red, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green);
     }
-    else if (charge < 80) {
+    else if (car.charge() < 80) {
         ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Green, CRGB::Green, CRGB::Green);
     }
-    else if (charge < 60) {
+    else if (car.charge() < 60) {
         ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Green, CRGB::Green);
     }
-    else if (charge < 40) {
+    else if (car.charge() < 40) {
         ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Green);
     }
-    else if (charge < 20) {
+    else if (car.charge() < 20) {
         ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red);
     }
 }
@@ -502,7 +503,7 @@ void home_charging () {
         CRGB::Black,
         CRGB::Black,
         CRGB::Black,
-        CRGB::Black,
+        CRGB::Black
     );
 }
 

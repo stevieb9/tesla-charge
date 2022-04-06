@@ -35,7 +35,7 @@ public:
     TeslaVehicle () {}
     ~TeslaVehicle() {}
 
-    void data (uint8_t* data);
+    void load (uint8_t* data);
     uint8_t state ();
 
     uint8_t online          () { return _online; }
@@ -49,7 +49,7 @@ public:
     uint8_t alarmEnabled    () { return _fetching; }
 };
 
-void TeslaVehicle::data (uint8_t* data)  {
+void TeslaVehicle::load (uint8_t* data)  {
     _online         = data[0];
     _garage         = data[1];
     _gear           = data[2];
@@ -82,20 +82,20 @@ uint8_t TeslaVehicle::state () {
     }
     else if (! this->garage()) {
         // Not in garage
-        if (this->charging) {
+        if (this->charging()) {
             vehicleState = AWAY_CHARGING;
         }
-        else if (this->gear == P) {
+        else if (this->gear() == P) {
             vehicleState = AWAY_PARKED;
         }
         else {
             vehicleState = AWAY_DRIVING;
         }
     }
-    else if (this->charging) {
+    else if (this->charging()) {
         vehicleState = HOME_CHARGING;
     }
-    else if (this->garage) {
+    else if (this->garage()) {
         vehicleState = HOME;
     }
 
