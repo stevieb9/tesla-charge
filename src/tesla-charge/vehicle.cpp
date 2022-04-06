@@ -28,10 +28,10 @@ int main () {
     car.data(data);
 
     switch (car.state()) {
-        case car.ERROR:
+        case ERROR:
             printf("ERROR\n");
             break;
-        case car.FETCHING:
+        case FETCHING:
             printf("FETCHING\n");
             break;
         default:

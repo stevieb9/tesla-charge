@@ -1,9 +1,20 @@
 #ifndef TESLA_CHARGE_VEHICLE_H
 #define TESLA_CHARGE_VEHICLE_H
 
-#include <stdint.h>
+enum shiftState { P, R, D };
 
-//using namespace std;
+enum statusState {
+    UNKNOWN,
+    ERROR,
+    FETCHING,
+    RAINBOW,
+    OFFLINE,
+    HOME,
+    HOME_CHARGING,
+    AWAY_CHARGING,
+    AWAY_PARKED,
+    AWAY_DRIVING
+};
 
 class TeslaVehicle {
 
@@ -21,8 +32,6 @@ private:
 
 public:
 
-    enum statusMap { UNKNOWN, ERROR, FETCHING };
-
     TeslaVehicle () {}
     ~TeslaVehicle() {}
 
@@ -38,8 +47,6 @@ public:
     uint8_t rainbow         () { return _rainbow; }
     uint8_t fetching        () { return _fetching; }
     uint8_t alarmEnabled    () { return _fetching; }
-
-
 };
 
 void TeslaVehicle::data (uint8_t* data)  {
@@ -58,10 +65,38 @@ uint8_t TeslaVehicle::state () {
     uint8_t vehicleState = 0;
 
     if (this->error()) {
+        // Error
         vehicleState = ERROR;
     }
     else if (this->fetching()) {
+        // Fetching
         vehicleState = FETCHING;
+    }
+    else if (this->rainbow()) {
+        // Rainbow
+        vehicleState = RAINBOW;
+    }
+    else if (! this->online()) {
+        // Offline
+        vehicleState = OFFLINE;
+    }
+    else if (! this->garage()) {
+        // Not in garage
+        if (this->charging) {
+            vehicleState = AWAY_CHARGING;
+        }
+        else if (this->gear == P) {
+            vehicleState = AWAY_PARKED;
+        }
+        else {
+            vehicleState = AWAY_DRIVING;
+        }
+    }
+    else if (this->charging) {
+        vehicleState = HOME_CHARGING;
+    }
+    else if (this->garage) {
+        vehicleState = HOME;
     }
 
     return vehicleState;
