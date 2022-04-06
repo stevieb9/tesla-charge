@@ -7,32 +7,25 @@
 */
 
 #include "TeslaCharge.h"
+#include "TeslaVehicle.h"
 
 char* url;
 
-bool oledInit        = false;
-bool oledClear       = false;
-bool rainbowEnabled  = false;
-bool statusLEDClear  = true;
-bool fetchBlinkStatus = false;
-
 uint8_t lastCharge = CHARGE_MAX;
-enum    shiftState {P, R, D};
 
 unsigned long alarmOnTime;
 unsigned long alarmOffTime;
 unsigned long dataRefreshTime;
 unsigned long fetchLEDBlinkTime;
 
-uint8_t*        data;
 bool            gotData = false;
 unsigned long   count   = 0;
-unsigned long   errors  = 0;
 
 SSD1306Wire oled(0x3c, 4, 5);
 CRGB leds[NUM_LEDS];
 HTTPClient http;
 WiFiClient wifi;
+TeslaVehicle car;
 
 void setup() {
     pinMode(PIR, INPUT);
@@ -55,7 +48,6 @@ void setup() {
     oled.setTextAlignment(TEXT_ALIGN_LEFT);
 
     resetOLED();
-    resetChargeLED();
 
     wifiSetup();
 
@@ -77,13 +69,10 @@ void loop() {
 
     if ((magnet == LOW || DEBUG_MAGNET) && ! DEBUG_DEVEL) {
         spl(F("Rainbow - Magnet mode"));
-        oledClear = false;
         rainbowCycle(1);
-        //serialLEDColour();
         return;
     }
     else if (motion || DEBUG_MOTION || DEBUG_DEVEL) {
-
         unsigned long currentTime = millis();
 
         if (currentTime - dataRefreshTime >= DATA_DELAY) {
@@ -91,130 +80,43 @@ void loop() {
             dataRefreshTime = currentTime;
         }
 
-        if (! gotData && ! rainbowEnabled) {
+        if (!gotData && !rainbowEnabled) {
             data = fetchData();
         }
 
-        uint8_t online      = data[0];
-        uint8_t garage      = data[1];
-        uint8_t gear        = data[2];
-        uint8_t charge      = data[3];
-        uint8_t charging    = data[4];
-        uint8_t error       = data[5];
-        uint8_t rainbow     = data[6];
-        uint8_t fetching    = data[7];
+        car.data(data);
 
-        s(F("\n**** Count:\t\t\t"));
-        spl(count);
-        count++;
-
-        if (fetching) {
-            spl(F("                   FETCHING"));
-
-            currentTime = millis();
-
-            if (currentTime - fetchLEDBlinkTime >= FETCH_BLINK_DELAY) {
-                resetChargeLED();
-
-                if (! fetchBlinkStatus) {
-                    statusLED(CRGB::Green, CRGB::Black);
-                    statusLEDClear = false;
-                    fetchBlinkStatus = true;
-                }
-                else {
-                    resetStatusLED();
-                    fetchBlinkStatus = false;
-                }
-
-                //serialLEDColour();
-                fetchLEDBlinkTime = currentTime;
-            }
-
-            return;
-        }
-        if (errors) {
-            s(F("**** Errors:\t\t\t"));
-            spl(errors);
-        }
-
-        if (rainbow) {
-            spl(F("Rainbow"));
-            rainbowEnabled = true;
-            oledClear = false;
-            rainbowCycle(1);
-            //serialLEDColour();
-            return;
-        }
-        if (error) {
-            spl(F("Error"));
-            resetChargeLED();
-            statusLED(CRGB::Yellow, CRGB::Black);
-            //serialLEDColour();
-            statusLEDClear = false;
-            gotData = false;
-            errors++;
-            return;
-        }
-        else if (! online) {
-            spl(F("Offline"));
-            resetChargeLED();
-            statusLED(CRGB::Blue, CRGB::Black);
-            //serialLEDColour();
-            statusLEDClear = false;
-            return;
-        }
-        else if (! garage) {
-            s(F("Not in garage... "));
-            resetChargeLED();
-
-            if (charging) {
-                spl(F("Charging"));
-                statusLED(CRGB::White, CRGB::Purple);
-            }
-            else if (gear == P) {
-                spl(F("Parked"));
-                statusLED(CRGB::White, CRGB::Red);
-            }
-            else if (gear == D || gear == R) {
-                spl(F("Driving"));
-                statusLED(CRGB::White, CRGB::Green);
-            }
-
-            //serialLEDColour();
-            statusLEDClear = false;
-            displayOLED(charge);
-            return;
-        }
-        else if (charging) {
-            spl(F("Charging..."));
-            resetChargeLED();
-            statusLED(CRGB::Purple, CRGB::Black);
-            //serialLEDColour();
-            statusLEDClear = false;
-            displayOLED(charge);
-            return;
-        }
-        else {
-            resetStatusLED();
-        }
-
-        if (gear == P || gear == R || gear == D) {
-            spl(F("Garage"));
-            chargeLED(charge);
-            displayOLED(charge);
-            oledClear = false;
-
-            if (charge < ALARM_CHARGE) {
-                alarm(true);
-            }
-
-            //serialLEDColour();
+        switch (car.state()) {
+            case ERROR:
+                error();
+                break;
+            case FETCHING:
+                fetching();
+                break;
+            case RAINBOW:
+                rainbow();
+                break;
+            case OFFLINE:
+                offline();
+                break;
+            case HOME:
+                home();
+                break;
+            case HOME_CHARGING:
+                charging();
+                break;
+            case AWAY_CHARGING:
+                away_charging();
+                break;
+            case AWAY_PARKED:
+                away_parked();
+                break;
+            case AWAY_DRIVING:
+                away_driving();
+                break;
         }
     }
     else {
-        resetStatusLED();
-        resetChargeLED();
-
         gotData         = false;
         rainbowEnabled  = false;
 
@@ -318,13 +220,6 @@ void resetOLED () {
     oledClear = true;
 }
 
-void resetStatusLED () {
-    if (! statusLEDClear) {
-        statusLED(CRGB::Black, CRGB::Black);
-        statusLEDClear = true;
-    }
-}
-
 void statusLED (CRGB statusColour, CRGB stateColour) {
     CRGB statusCurrentColour = leds[LED_STATUS];
     CRGB stateCurrentColour = leds[LED_STATE];
@@ -342,17 +237,9 @@ void statusLED (CRGB statusColour, CRGB stateColour) {
     }
 
     if (colourChanged) {
+        spl("CHANGED");
         FastLED.show();
     }
-}
-
-void resetChargeLED () {
-    if (chargeLED)
-    for (uint8_t i = 0; i < 5; i++) {
-        drawLED(i, CRGB::Black);
-    }
-    FastLED.show();
-
 }
 
 void chargeLED (uint8_t charge) {
@@ -377,10 +264,45 @@ void chargeLED (uint8_t charge) {
     }
 
     FastLED.show();
+    chargeLEDClear = false;
 }
 
 void drawLED(uint8_t led, CRGB colour) {
     leds[led] = colour;
+}
+
+void ledSet (CRGB led5, CRGB led4, CRGB led3, CRGB led2, CRGB led1, CRGB led0) {
+    bool colourChanged = false;
+
+    if (leds[5] != led5) {
+        colourChanged = true;
+    }
+    if (leds[4] != led4) {
+        colourChanged = true;
+    }
+    if (leds[3] != led3) {
+        colourChanged = true;
+    }
+    if (leds[2] != led2) {
+        colourChanged = true;
+    }
+    if (leds[1] != led1) {
+        colourChanged = true;
+    }
+    if (leds[0] != led0) {
+        colourChanged = true;
+    }
+
+    if (colorChanged) {
+        drawLED(5, led5);
+        drawLED(4, led4);
+        drawLED(3, led3);
+        drawLED(2, led2);
+        drawLED(1, led1);
+        drawLED(0, led0);
+
+        FastLED.show();
+    }
 }
 
 char* serialLEDColour () {
@@ -493,4 +415,105 @@ void wifiSetup () {
 
     delay(1000);
     oled.setFont(myFont_53);
+}
+
+void fetching () {
+    spl(F("                   FETCHING"));
+
+    currentTime = millis();
+
+    if (currentTime - fetchLEDBlinkTime >= FETCH_BLINK_DELAY) {
+        if (! fetchBlinkStatus) {
+            ledSet(
+                CRGB::Green,
+                CRGB::Black,
+                CRGB::Black,
+                CRGB::Black,
+                CRGB::Black,
+                CRGB::Black,
+            );
+        }
+        else {
+            // off
+            ledClear();
+            fetchBlinkStatus = false;
+        }
+
+        fetchLEDBlinkTime = currentTime;
+    }
+}
+
+void error () {
+    gotData = false;
+
+    ledSet(
+        CRGB::Yellow,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+    );
+}
+
+void rainbow () {
+    spl(F("Rainbow"));
+    rainbowEnabled = true;
+    rainbowCycle(1);
+}
+
+void offline () {
+    spl(F("Offline"));
+    ledSet(
+        CRGB::Blue,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+    );
+}
+
+void home () {
+    if (charge >= 85 && charge <= 100) {
+        ledSet(CRGB::Black, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green);
+    }
+    else if (charge < 85) {
+        ledSet(CRGB::Black, CRGB::Red, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green);
+    }
+    else if (charge < 80) {
+        ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Green, CRGB::Green, CRGB::Green);
+    }
+    else if (charge < 60) {
+        ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Green, CRGB::Green);
+    }
+    else if (charge < 40) {
+        ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Green);
+    }
+    else if (charge < 20) {
+        ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red);
+    }
+}
+
+void home_charging () {
+    ledSet(
+        CRGB::Purple,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+    );
+}
+
+void away_charging () {
+
+}
+
+void away_parked () {
+
+}
+
+void away_driving() {
+
 }
