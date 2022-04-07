@@ -1,6 +1,11 @@
 #include "/Users/steve/repos/tesla-charge/inc/TeslaCharge.h"
 #include "/Users/steve/repos/tesla-charge/inc/TeslaVehicle.h"
 
+typedef struct VehicleData {
+    uint8_t state;
+    uint8_t charge;
+} VehicleData;
+
 bool oledInit = false;
 bool oledClear = true;
 
@@ -16,6 +21,7 @@ SSD1306Wire oled(0x3c, 4, 5);
 HTTPClient http;
 WiFiClient wifi;
 TeslaVehicle car;
+VehicleData vehicleData;
 
 void setup() {
     pinMode(PIR, INPUT);
@@ -40,6 +46,15 @@ void setup() {
     else {
         url = URL;
     }
+
+    if (esp_now_init() != 0) {
+        Serial.println(F("Error initializing ESP-NOW"));
+        return;
+    }
+
+    esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
+    esp_now_register_send_cb(vehicleDataSent);
+    esp_now_add_peer(MacController, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
 
     ArduinoOTA.begin();
 }
@@ -82,7 +97,13 @@ void loop() {
             case AWAY_DRIVING:
                 break;
         }
+
+        vehicleData.state = car.state();
+        vehicleData.charge = car.charge();
+
+        esp_now_send(MacController, (uint8_t *) &vehicleData, sizeof(vehicleData));
     }
+
     else {
         gotData         = false;
 
@@ -152,6 +173,16 @@ void resetOLED () {
     oled.clear();
     oled.display();
     oledClear = true;
+}
+
+void vehicleDataSent(uint8_t *mac, uint8_t sendStatus) {
+    Serial.print(F("Last Packet Send Status: "));
+    if (sendStatus == 0) {
+        Serial.println(F("Delivery success"));
+    }
+    else {
+        Serial.println(F("Delivery fail"));
+    }
 }
 
 void readEEPROM(int startAdr, int maxLength, char* dest) {
