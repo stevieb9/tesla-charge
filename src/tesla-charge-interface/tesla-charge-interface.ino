@@ -100,10 +100,7 @@ void loop() {
 
         vehicleData.state = car.state();
         vehicleData.charge = car.charge();
-
-        esp_now_send(MacController, (uint8_t *) &vehicleData, sizeof(vehicleData));
     }
-
     else {
         gotData         = false;
 
@@ -111,7 +108,11 @@ void loop() {
             lastCharge = CHARGE_MAX;
             resetOLED();
         }
+
+        vehicleData.state = UNKNOWN;
     }
+
+    esp_now_send(MacController, (uint8_t *) &vehicleData, sizeof(vehicleData));
 }
 
 void displayOLED (uint8_t charge) {

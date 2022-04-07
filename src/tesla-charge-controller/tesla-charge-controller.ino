@@ -31,8 +31,8 @@ void setup() {
 
     wifiSetup();
 
-    vehicleData.state = HOME;
-    vehicleData.charge = 75;
+    vehicleData.state = UNKNOWN;
+    vehicleData.charge = 0;
 
     if (esp_now_init() != 0) {
         Serial.println("Error initializing ESP-NOW");
@@ -49,7 +49,7 @@ void loop() {
     if (1) {
         switch (vehicleData.state) {
             case UNKNOWN:
-                error();
+                unknown();
                 break;
             case ERROR:
                 error();
@@ -227,6 +227,11 @@ void fetching () {
 
         fetchLEDBlinkTime = currentTime;
     }
+}
+
+void unknown () {
+    spl(F("Unknown"));
+    ledReset();
 }
 
 void error () {
