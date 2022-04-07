@@ -39,6 +39,11 @@
 uint8_t MacController[] = {0xC8, 0x2B, 0x96, 0x08, 0x58, 0x47}; // Female
 uint8_t MacInterface[] = {0xC8, 0x2B, 0x96, 0x08, 0x65, 0x4E};  // Male
 
+typedef struct VehicleData {
+    uint8_t state;
+    uint8_t charge;
+} VehicleData;
+
 #define REED            2  // Pin D4
 #define PIR             12 // Pin D6
 #define ALARM           13 // Pin D7

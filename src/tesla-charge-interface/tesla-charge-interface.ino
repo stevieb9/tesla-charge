@@ -1,11 +1,6 @@
 #include "/Users/steve/repos/tesla-charge/inc/TeslaCharge.h"
 #include "/Users/steve/repos/tesla-charge/inc/TeslaVehicle.h"
 
-typedef struct VehicleData {
-    uint8_t state;
-    uint8_t charge;
-} VehicleData;
-
 bool oledInit = false;
 bool oledClear = true;
 
@@ -13,6 +8,8 @@ char* url;
 
 uint8_t lastCharge = CHARGE_MAX;
 
+unsigned long alarmOnTime;
+unsigned long alarmOffTime;
 unsigned long dataRefreshTime;
 
 bool gotData = false;
@@ -30,6 +27,8 @@ void setup() {
     Serial.begin(9600);
 
     dataRefreshTime   = millis();
+    alarmOnTime       = millis();
+    alarmOffTime      = millis();
 
     oled.init();
     oled.flipScreenVertically();
@@ -73,7 +72,7 @@ void loop() {
             dataRefreshTime = currentTime;
         }
 
-        if (!gotData) {
+        if (! gotData) {
             car.load(fetchData());
         }
 
@@ -102,7 +101,7 @@ void loop() {
         vehicleData.charge = car.charge();
     }
     else {
-        gotData         = false;
+        gotData = false;
 
         if (! oledClear) {
             lastCharge = CHARGE_MAX;
@@ -113,6 +112,35 @@ void loop() {
     }
 
     esp_now_send(MacController, (uint8_t *) &vehicleData, sizeof(vehicleData));
+}
+
+void alarm (bool state) {
+    uint8_t alarmState          = digitalRead(ALARM);
+    unsigned long currentTime   = millis();
+
+    if (state) {
+        if (alarmState) {
+            if (currentTime - alarmOnTime >= ALARM_ON_TIME) {
+                digitalWrite(ALARM, LOW);
+                spl(F("Alarm off"));
+                alarmOffTime = currentTime;
+                alarmOnTime  = currentTime;
+            }
+        }
+        else {
+            if (currentTime - alarmOffTime >= ALARM_OFF_TIME) {
+                digitalWrite(ALARM, HIGH);
+                spl(F("Alarm on"));
+                alarmOnTime = currentTime;
+            }
+        }
+    }
+    else {
+        if (alarmState) {
+            digitalWrite(ALARM, LOW);
+            spl(F("Alarm off: state"));
+        }
+    }
 }
 
 void displayOLED (uint8_t charge) {
@@ -177,6 +205,7 @@ void resetOLED () {
 }
 
 void vehicleDataSent(uint8_t *mac, uint8_t sendStatus) {
+    /*
     Serial.print(F("Last Packet Send Status: "));
     if (sendStatus == 0) {
         Serial.println(F("Delivery success"));
@@ -184,6 +213,7 @@ void vehicleDataSent(uint8_t *mac, uint8_t sendStatus) {
     else {
         Serial.println(F("Delivery fail"));
     }
+    */
 }
 
 void readEEPROM(int startAdr, int maxLength, char* dest) {

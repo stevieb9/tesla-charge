@@ -1,14 +1,6 @@
 #include "/Users/steve/repos/tesla-charge/inc/TeslaCharge.h"
 #include "/Users/steve/repos/tesla-charge/inc/TeslaVehicle.h"
 
-typedef struct VehicleData {
-    uint8_t state;
-    uint8_t charge;
-} VehicleData;
-
-
-unsigned long alarmOnTime;
-unsigned long alarmOffTime;
 unsigned long fetchLEDBlinkTime;
 bool fetchBlinkStatus = false;
 
@@ -23,8 +15,6 @@ void setup() {
     Serial.begin(9600);
     FastLED.addLeds<WS2812B, LED, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
-    alarmOnTime       = millis();
-    alarmOffTime      = millis();
     fetchLEDBlinkTime = millis();
 
     ledReset();
@@ -35,7 +25,7 @@ void setup() {
     vehicleData.charge = 0;
 
     if (esp_now_init() != 0) {
-        Serial.println("Error initializing ESP-NOW");
+        Serial.println(F("Error initializing ESP-NOW"));
         return;
     }
 
@@ -45,69 +35,37 @@ void setup() {
 }
 
 void loop() {
-
-    if (1) {
-        switch (vehicleData.state) {
-            case UNKNOWN:
-                unknown();
-                break;
-            case ERROR:
-                error();
-                break;
-            case FETCHING:
-                fetching();
-                break;
-            case RAINBOW:
-                rainbow();
-                break;
-            case OFFLINE:
-                offline();
-                break;
-            case HOME:
-                home();
-                break;
-            case HOME_CHARGING:
-                home_charging();
-                break;
-            case AWAY_CHARGING:
-                away_charging();
-                break;
-            case AWAY_PARKED:
-                away_parked();
-                break;
-            case AWAY_DRIVING:
-                away_driving();
-                break;
-        }
-    }
-}
-
-void alarm (bool state) {
-    uint8_t alarmState          = digitalRead(ALARM);
-    unsigned long currentTime   = millis();
-
-    if (state) {
-        if (alarmState) {
-            if (currentTime - alarmOnTime >= ALARM_ON_TIME) {
-                digitalWrite(ALARM, LOW);
-                spl(F("Alarm off"));
-                alarmOffTime = currentTime;
-                alarmOnTime  = currentTime;
-            }
-        }
-        else {
-            if (currentTime - alarmOffTime >= ALARM_OFF_TIME) {
-                digitalWrite(ALARM, HIGH);
-                spl(F("Alarm on"));
-                alarmOnTime = currentTime;
-            }
-        }
-    }
-    else {
-        if (alarmState) {
-            digitalWrite(ALARM, LOW);
-            spl(F("Alarm off: state"));
-        }
+    switch (vehicleData.state) {
+        case UNKNOWN:
+            unknown();
+            break;
+        case ERROR:
+            error();
+            break;
+        case FETCHING:
+            fetching();
+            break;
+        case RAINBOW:
+            rainbow();
+            break;
+        case OFFLINE:
+            offline();
+            break;
+        case HOME:
+            home();
+            break;
+        case HOME_CHARGING:
+            home_charging();
+            break;
+        case AWAY_CHARGING:
+            away_charging();
+            break;
+        case AWAY_PARKED:
+            away_parked();
+            break;
+        case AWAY_DRIVING:
+            away_driving();
+            break;
     }
 }
 
@@ -336,12 +294,15 @@ void away_driving() {
 
 void vehicleDataRecv(uint8_t * mac, uint8_t *dataRecv, uint8_t len) {
     memcpy(&vehicleData, dataRecv, sizeof(vehicleData));
+
+    /*
     Serial.print("Bytes received: ");
     Serial.println(len);
     Serial.print(F("State: "));
     Serial.println(vehicleData.state);
     Serial.print(F("Settings: "));
     Serial.println(vehicleData.charge);
+    */
 }
 
 void readEEPROM(int startAdr, int maxLength, char* dest) {
