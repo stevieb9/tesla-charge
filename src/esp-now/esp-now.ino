@@ -3,8 +3,6 @@
 #include <EEPROM.h>
 #include <espnow.h>
 
-#include <Adafruit_Sensor.h>
-
 // Female
 //uint8_t peerMAC[] = {0xC8, 0x2B, 0x96, 0x08, 0x58, 0x47};
 

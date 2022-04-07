@@ -1,12 +1,20 @@
 #include "/Users/steve/repos/tesla-charge/inc/TeslaCharge.h"
 #include "/Users/steve/repos/tesla-charge/inc/TeslaVehicle.h"
 
+typedef struct VehicleData {
+    uint8_t state;
+    uint8_t settings;
+} VehicleData;
+
+
 unsigned long alarmOnTime;
 unsigned long alarmOffTime;
 unsigned long fetchLEDBlinkTime;
 bool fetchBlinkStatus = false;
 
+WiFiClient wifi;
 CRGB leds[NUM_LEDS];
+VehicleData vehicleData;
 
 void setup() {
     pinMode(ALARM, OUTPUT);
@@ -18,13 +26,33 @@ void setup() {
     alarmOnTime       = millis();
     alarmOffTime      = millis();
     fetchLEDBlinkTime = millis();
+
+    ledReset();
+
+    wifiSetup();
+
+    if (esp_now_init() != 0) {
+        Serial.println("Error initializing ESP-NOW");
+        return;
+    }
+
+    esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
+    esp_now_register_recv_cb(vehicleDataRecv);
+    esp_now_add_peer(MacInterface, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
+
 }
 
+uint8_t count = 0;
+
 void loop() {
-    uint16_t state = 2;
+
+    ledReset();
 
     if (1) {
-        switch (state) {
+        switch (count) {
+            case UNKNOWN:
+                error();
+                break;
             case ERROR:
                 error();
                 break;
@@ -54,6 +82,10 @@ void loop() {
                 break;
         }
     }
+    if (count < 9) {
+        count++;
+    }
+    delay(2000);
 }
 
 void alarm (bool state) {
@@ -89,6 +121,17 @@ void drawLED(uint8_t led, CRGB colour) {
     leds[led] = colour;
 }
 
+void ledReset () {
+    ledSet(
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Black
+    );
+}
+
 void ledSet (CRGB led5, CRGB led4, CRGB led3, CRGB led2, CRGB led1, CRGB led0) {
     bool colourChanged = false;
 
@@ -100,7 +143,8 @@ void ledSet (CRGB led5, CRGB led4, CRGB led3, CRGB led2, CRGB led1, CRGB led0) {
     }
     if (leds[3] != led3) {
         colourChanged = true;
-    } if (leds[2] != led2) {
+    }
+    if (leds[2] != led2) {
         colourChanged = true;
     }
     if (leds[1] != led1) {
@@ -117,9 +161,9 @@ void ledSet (CRGB led5, CRGB led4, CRGB led3, CRGB led2, CRGB led1, CRGB led0) {
         drawLED(2, led2);
         drawLED(1, led1);
         drawLED(0, led0);
-
-        FastLED.show();
     }
+
+    FastLED.show();
 }
 
 void rainbowCycle(int SpeedDelay) {
@@ -162,7 +206,6 @@ void fetching () {
     unsigned long currentTime = millis();
 
     if (currentTime - fetchLEDBlinkTime >= FETCH_BLINK_DELAY) {
-        spl(F("FETCHING"));
         if (! fetchBlinkStatus) {
             ledSet(
                 CRGB::Green,
@@ -193,6 +236,8 @@ void fetching () {
 }
 
 void error () {
+    spl(F("ERROR"));
+
     ledSet(
         CRGB::Yellow,
         CRGB::Black,
@@ -211,6 +256,7 @@ void rainbow () {
 
 void offline () {
     spl(F("Offline"));
+
     ledSet(
         CRGB::Blue,
         CRGB::Black,
@@ -287,4 +333,43 @@ void away_driving() {
             CRGB::Black,
             CRGB::Green
     );
+}
+
+void vehicleDataRecv(uint8_t * mac, uint8_t *dataRecv, uint8_t len) {
+    memcpy(&vehicleData, dataRecv, sizeof(vehicleData));
+    Serial.print("Bytes received: ");
+    Serial.println(len);
+    Serial.print(F("State: "));
+    Serial.println(vehicleData.state);
+    Serial.print(F("Settings: "));
+    Serial.println(vehicleData.settings);
+}
+
+void readEEPROM(int startAdr, int maxLength, char* dest) {
+    EEPROM.begin(512);
+    delay(10);
+    for (int i = 0; i < maxLength; i++) {
+        dest[i] = char(EEPROM.read(startAdr + i));
+    }
+    EEPROM.end();
+}
+
+void wifiSetup () {
+    s(F("MAC Address: "));
+    spl(WiFi.macAddress());
+
+    char ssid[16];
+    char ssidPassword[16];
+
+    readEEPROM(0,  16, ssid);
+    readEEPROM(16, 16, ssidPassword);
+
+    WiFi.begin(ssid, ssidPassword);
+
+    while (WiFi.status() != WL_CONNECTED) {
+        spl("RSSI: " + (String) WiFi.RSSI());
+        delay(500);
+    }
+
+    spl(F("Wifi Connected"));
 }

@@ -6,6 +6,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266Ping.h>
 #include <ESP8266HTTPClient.h>
+#include <espnow.h>
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
 #include "SSD1306Wire.h"
@@ -21,11 +22,11 @@
 #define DEBUG_MOTION    0   /* PIR on at all times */
 #define DEBUG_URL       0   /* Call the debug data HTTP URL */
 
-#define URL         "http://192.168.1.252:55556"
-#define URL_DEBUG   "http://192.168.1.252:55556/debug"
+//#define URL         "http://192.168.1.252:55556"
+//#define URL_DEBUG   "http://192.168.1.252:55556/debug"
 
-//#define URL         "http://10.0.0.50:55556"
-//#define URL_DEBUG   "http://10.0.0.50:55556/debug"
+#define URL         "http://10.0.0.50:55556"
+#define URL_DEBUG   "http://10.0.0.50:55556/debug"
 
 #ifdef SERIAL_DEBUG
 #define s(x)   Serial.print(x)
@@ -34,6 +35,9 @@
 #define s(x)
 #define spl(x)
 #endif
+
+uint8_t MacController[] = {0xC8, 0x2B, 0x96, 0x08, 0x58, 0x47}; // Female
+uint8_t MacInterface[] = {0xC8, 0x2B, 0x96, 0x08, 0x65, 0x4E};  // Male
 
 #define REED            2  // Pin D4
 #define PIR             12 // Pin D6
