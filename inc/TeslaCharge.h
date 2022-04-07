@@ -6,9 +6,12 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266Ping.h>
 #include <ESP8266HTTPClient.h>
+#include <ArduinoJson.h>
 #include <ArduinoOTA.h>
 #include "SSD1306Wire.h"
 #include "FastLED.h"
+#include "/Users/steve/repos/tesla-charge/inc/myFont.h"
+
 #include "myFont.h"
 
 #define SERIAL_DEBUG        /* Serial output (comment to disable) */
