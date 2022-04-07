@@ -3,7 +3,7 @@
 
 typedef struct VehicleData {
     uint8_t state;
-    uint8_t settings;
+    uint8_t charge;
 } VehicleData;
 
 
@@ -31,6 +31,9 @@ void setup() {
 
     wifiSetup();
 
+    vehicleData.state = HOME;
+    vehicleData.charge = 75;
+
     if (esp_now_init() != 0) {
         Serial.println("Error initializing ESP-NOW");
         return;
@@ -39,17 +42,12 @@ void setup() {
     esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
     esp_now_register_recv_cb(vehicleDataRecv);
     esp_now_add_peer(MacInterface, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
-
 }
-
-uint8_t count = 0;
 
 void loop() {
 
-    ledReset();
-
     if (1) {
-        switch (count) {
+        switch (vehicleData.state) {
             case UNKNOWN:
                 error();
                 break;
@@ -82,10 +80,6 @@ void loop() {
                 break;
         }
     }
-    if (count < 9) {
-        count++;
-    }
-    delay(2000);
 }
 
 void alarm (bool state) {
@@ -236,7 +230,7 @@ void fetching () {
 }
 
 void error () {
-    spl(F("ERROR"));
+    spl(F("Error"));
 
     ledSet(
         CRGB::Yellow,
@@ -250,6 +244,7 @@ void error () {
 
 void rainbow () {
     spl(F("Rainbow"));
+
     //rainbowEnabled = true;
     rainbowCycle(1);
 }
@@ -268,27 +263,26 @@ void offline () {
 }
 
 void home () {
-/*
-    spl("HOME");
-    if (car.charge() >= 85 && car.charge() <= 100) {
+    spl(F("Home"));
+
+    if (vehicleData.charge >= 85 && vehicleData.charge <= 100) {
         ledSet(CRGB::Black, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green);
     }
-    else if (car.charge() < 85) {
+    else if (vehicleData.charge < 85) {
         ledSet(CRGB::Black, CRGB::Red, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green);
     }
-    else if (car.charge() < 80) {
+    else if (vehicleData.charge < 80) {
         ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Green, CRGB::Green, CRGB::Green);
     }
-    else if (car.charge() < 60) {
+    else if (vehicleData.charge < 60) {
         ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Green, CRGB::Green);
     }
-    else if (car.charge() < 40) {
+    else if (vehicleData.charge < 40) {
         ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Green);
     }
-    else if (car.charge() < 20) {
+    else if (vehicleData.charge < 20) {
         ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red);
     }
-*/
 }
 
 void home_charging () {
@@ -342,7 +336,7 @@ void vehicleDataRecv(uint8_t * mac, uint8_t *dataRecv, uint8_t len) {
     Serial.print(F("State: "));
     Serial.println(vehicleData.state);
     Serial.print(F("Settings: "));
-    Serial.println(vehicleData.settings);
+    Serial.println(vehicleData.charge);
 }
 
 void readEEPROM(int startAdr, int maxLength, char* dest) {
