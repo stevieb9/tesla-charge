@@ -19,8 +19,11 @@
 #define DEBUG_MOTION    0   /* PIR on at all times */
 #define DEBUG_URL       0   /* Call the debug data HTTP URL */
 
-#define URL         "http://192.168.1.252:55556"
-#define URL_DEBUG   "http://192.168.1.252:55556/debug"
+//#define URL         "http://192.168.1.252:55556"
+//#define URL_DEBUG   "http://192.168.1.252:55556/debug"
+
+#define URL         "http://10.0.0.50:55556"
+#define URL_DEBUG   "http://10.0.0.50:55556/debug"
 
 #ifdef SERIAL_DEBUG
 #define s(x)   Serial.print(x)
@@ -39,7 +42,7 @@
 #define LED_STATUS      5 // LED strip top
 #define LED_STATE       0 // LED strip bottom
 
-#define JSON_SIZE       224
+#define JSON_SIZE       192
 #define CHARGE_MAX      101
 #define CHARGE_MIN      0
 #define ALARM_ON_TIME   100

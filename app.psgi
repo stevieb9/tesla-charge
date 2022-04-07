@@ -64,20 +64,20 @@ get '/' => sub {
 
     return debug_data() if $tesla_conf->{debug_return};
 
-    if (time - $last_conn_time > DATA_EXPIRY) { 
+    if (time - $last_conn_time > DATA_EXPIRY) {
         $tesla_data = '';
     }
 
     $last_conn_time = time;
 
     $tesla_event->start if $tesla_event->waiting;
-    
+
     return $tesla_data if $tesla_data;
     return encode_json _default_data();
 };
 get '/debug' => sub {
     return if ! security();
-   
+
     content_type 'application/json';
     config_load();
     return debug_data();
@@ -114,7 +114,7 @@ get '/garage_data' => sub {
     return if ! security();
 
     content_type 'application/json';
-    
+
     config_load();
 
     $garage_data->{relay_enabled} = $garage_conf->{relay_enabled};
@@ -178,6 +178,7 @@ sub config_load {
     $garage_debug = 1 if $garage_conf->{debug};
 }
 sub debug_data {
+    delete $tesla_conf->{debug_data}{alarm};
     my $data = encode_json $tesla_conf->{debug_data};
     print "$data\n";
     return $data;
@@ -236,7 +237,7 @@ sub fetch {
             $struct->{error} = 1;
             return $struct;
         }
-       
+
         $gear = gear($gear);
 
         my %out_of_bounds;
@@ -261,7 +262,7 @@ sub fetch {
 }
 sub deviation {
     die "Need lat|lon and coord" if @_ != 2;
-    
+
     my ($what, $coord) = @_;
 
     $what eq 'lat'
@@ -270,7 +271,7 @@ sub deviation {
 }
 sub distance {
     die "Need lat|lon and coord" if @_ != 2;
-    
+
     my ($what, $coord) = @_;
 
     $what eq 'lat'
@@ -296,7 +297,7 @@ sub _default_data {
         error       => 0, # Tesla API error
         rainbow     => 0, # Rainbow LED mode
         fetching    => 1, # Currently fetching data from Tesla
-        alarm       => $tesla_conf->{alarm}, # Alarm sound
+        #alarm       => $tesla_conf->{alarm}, # Alarm sound
     };
 
     return $struct;

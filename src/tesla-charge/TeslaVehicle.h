@@ -46,7 +46,7 @@ public:
     uint8_t error           () { return _error; }
     uint8_t rainbow         () { return _rainbow; }
     uint8_t fetching        () { return _fetching; }
-    uint8_t alarmEnabled    () { return _fetching; }
+//    uint8_t alarmEnabled    () { return _fetching; }
 };
 
 void TeslaVehicle::load (uint8_t* data)  {
@@ -58,7 +58,7 @@ void TeslaVehicle::load (uint8_t* data)  {
     _error          = data[5];
     _rainbow        = data[6];
     _fetching       = data[7];
-    _alarmEnabled   = data[8];
+//    _alarmEnabled   = data[8];
 }
 
 uint8_t TeslaVehicle::state () {

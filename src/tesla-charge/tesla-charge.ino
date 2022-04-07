@@ -40,7 +40,7 @@ void setup() {
     digitalWrite(ALARM, LOW);
 
     Serial.begin(9600);
-    FastLED.addLeds<WS2811, LED, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+    FastLED.addLeds<WS2812B, LED, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
     alarmOnTime       = millis();
     alarmOffTime      = millis();
@@ -223,58 +223,14 @@ void resetOLED () {
     oledClear = true;
 }
 
-void statusLED (CRGB statusColour, CRGB stateColour) {
-    CRGB statusCurrentColour = leds[LED_STATUS];
-    CRGB stateCurrentColour = leds[LED_STATE];
-
-    bool colourChanged = false;
-
-    if (statusColour != statusCurrentColour) {
-        drawLED(LED_STATUS, statusColour);
-        colourChanged = true;
-    }
-
-    if (stateColour != stateCurrentColour) {
-        drawLED(LED_STATE, stateColour);
-        colourChanged = true;
-    }
-
-    if (colourChanged) {
-        spl("CHANGED");
-        FastLED.show();
-    }
-}
-
-void chargeLED (uint8_t charge) {
-    for (uint8_t i = 0; i < 5; i++) {
-        drawLED(i, CRGB::Green);
-    }
-
-    if (charge < 85) {
-        drawLED(4, CRGB::Red);
-    }
-    if (charge < 80) {
-        drawLED(3, CRGB::Red);
-    }
-    if (charge < 60) {
-        drawLED(2, CRGB::Red);
-    }
-    if (charge < 40) {
-        drawLED(1, CRGB::Red);
-    }
-    if (charge < 20) {
-        drawLED(0, CRGB::Red);
-    }
-
-    FastLED.show();
-}
-
 void drawLED(uint8_t led, CRGB colour) {
     leds[led] = colour;
 }
 
 void ledSet (CRGB led5, CRGB led4, CRGB led3, CRGB led2, CRGB led1, CRGB led0) {
     bool colourChanged = false;
+
+//    serialLEDColour();
 
     if (leds[5] != led5) {
         colourChanged = true;
@@ -307,8 +263,10 @@ void ledSet (CRGB led5, CRGB led4, CRGB led3, CRGB led2, CRGB led1, CRGB led0) {
     }
 }
 
-char* serialLEDColour () {
-    for (uint8_t i = NUM_LEDS - 1; i < 255; i = i - 1) {
+void serialLEDColour () {
+    int8_t i = NUM_LEDS - 1;
+
+    while (i >= 0) {
 
         char* colour = "Unknown";
 
@@ -343,6 +301,8 @@ char* serialLEDColour () {
         if (i == 0) {
             spl(F("\n"));
         }
+
+        i--;
     }
 }
 
@@ -420,8 +380,6 @@ void wifiSetup () {
 }
 
 void fetching () {
-    spl(F("                   FETCHING"));
-
     unsigned long currentTime = millis();
 
     if (currentTime - fetchLEDBlinkTime >= FETCH_BLINK_DELAY) {
@@ -434,9 +392,19 @@ void fetching () {
                 CRGB::Black,
                 CRGB::Black
             );
+
+            fetchBlinkStatus = true;
         }
         else {
-            // off
+            ledSet(
+                    CRGB::Black,
+                    CRGB::Black,
+                    CRGB::Black,
+                    CRGB::Black,
+                    CRGB::Black,
+                    CRGB::Black
+            );
+
             fetchBlinkStatus = false;
         }
 
@@ -476,6 +444,7 @@ void offline () {
 }
 
 void home () {
+    spl("HOME");
     if (car.charge() >= 85 && car.charge() <= 100) {
         ledSet(CRGB::Black, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green);
     }
@@ -508,13 +477,34 @@ void home_charging () {
 }
 
 void away_charging () {
-
+    ledSet(
+            CRGB::White,
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Purple
+    );
 }
 
 void away_parked () {
-
+    ledSet(
+            CRGB::White,
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Red
+    );
 }
 
 void away_driving() {
-
+    ledSet(
+            CRGB::White,
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Black,
+            CRGB::Green
+    );
 }
