@@ -130,7 +130,6 @@ void rainbowCycle(int SpeedDelay) {
         for (i = 0; i < NUM_LEDS; i++) {
             c = Wheel(((i * 256 / NUM_LEDS) + j) & 255);
             drawLED(i, CRGB(*c, *(c + 1), *(c + 2)));
-            //setPixel(i, *c, *(c + 1), *(c + 2));
         }
         FastLED.show();
         delay(SpeedDelay);
