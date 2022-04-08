@@ -1,4 +1,5 @@
-#include "/Users/steve/repos/tesla-charge/inc/TeslaCharge.h"
+#include "/Users/steve/repos/tesla-charge/inc/TeslaChargeCommon.h"
+#include "/Users/steve/repos/tesla-charge/inc/TeslaChargeController.h"
 #include "/Users/steve/repos/tesla-charge/inc/TeslaVehicle.h"
 
 unsigned long fetchLEDBlinkTime;
@@ -9,11 +10,8 @@ CRGB leds[NUM_LEDS];
 VehicleData vehicleData;
 
 void setup() {
-    pinMode(ALARM, OUTPUT);
-    digitalWrite(ALARM, LOW);
-
     Serial.begin(9600);
-    FastLED.addLeds<WS2812B, LED, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+    FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
     fetchLEDBlinkTime = millis();
 
@@ -320,7 +318,7 @@ void wifiSetup () {
         delay(500);
     }
 
-    s(F("MAC Address: "));
+    sp(F("MAC Address: "));
     spl(WiFi.macAddress());
 
     spl(F("Wifi Connected"));
