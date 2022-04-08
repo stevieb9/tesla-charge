@@ -4,7 +4,7 @@
 #include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
 #include "SSD1306Wire.h"
-#include "/Users/steve/repos/tesla-charge/inc/myFont.h"
+#include "/Users/steve/repos/tesla-charge/inc/TeslaChargeFont.h"
 
 #define DEBUG_URL       0   /* Call the debug data HTTP URL */
 #define DEBUG_DEVEL     0   /* Testing on a non production unit */
