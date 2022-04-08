@@ -17,7 +17,7 @@ use FindBin;
 use IPC::Shareable;
 use Tesla::Vehicle;
 
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 $| = 1;
 
@@ -199,6 +199,11 @@ sub debug_garage_data {
     return encode_json $garage_conf->{debug_data};
 }
 sub update {
+    # If we're returning the debug data, there's no sense polling the
+    # Tesla API
+
+    return if $tesla_conf->{debug_return};
+
     my $local_data = -1;
 
     until ($local_data != -1) {
