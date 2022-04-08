@@ -49,6 +49,18 @@ garage door prototype.
     + [Hide access logs](#hide-access-logs)
     + [Reload the application if any file changes](#reload-the-application-if-any-file-changes)
     + [Reload the application if the application file changes](#reload-the-application-if-the-application-file-changes)
+* [Vehicle and LED States](#vehicle-and-led-states)
+    + [LED State Quick Table](#led-state-quick-table)
+    + [UNKNOWN](#unknown)
+    + [ERROR](#error)
+    + [FETCHING](#fetching)
+    + [RAINBOW](#rainbow)
+    + [OFFLINE](#offline)
+    + [HOME](#home-display-charge-level)
+    + [HOME_CHARGING](#home_charging)
+    + [AWAY_CHARGING](#away_charging)
+    + [AWAY_PARKED](#away_parked)
+    + [AWAY_DRIVING](#away_driving)
 
 ## System Information
 
@@ -308,6 +320,8 @@ Vehicle state definitions can be found in the `inc/TeslaVehicle.h` file, in the
 | Vehicle is away (charging)     | **white**            | off           | off           | off           | off           | **purple**    |
 | Vehicle is away (parked)       | **white**            | off           | off           | off           | off           | **red**       |
 | Vehicle is away (driving)      | **white**            | off           | off           | off           | off           | **green**     |
+| Vehicle is away (charging)     | **white**            | off           | off           | off           | off           | **purple**    |
+| Vehicle is away (charging)     | **white**            | off           | off           | off           | off           | **purple**    |
 
 ### UNKNOWN
 
