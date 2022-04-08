@@ -22,11 +22,11 @@
 #define DEBUG_MOTION    0   /* PIR on at all times */
 #define DEBUG_URL       0   /* Call the debug data HTTP URL */
 
-//#define URL         "http://192.168.1.252:55556"
-//#define URL_DEBUG   "http://192.168.1.252:55556/debug"
+#define URL         "http://192.168.1.252:55556"
+#define URL_DEBUG   "http://192.168.1.252:55556/debug"
 
-#define URL         "http://10.0.0.50:55556"
-#define URL_DEBUG   "http://10.0.0.50:55556/debug"
+//#define URL         "http://10.0.0.50:55556"
+//#define URL_DEBUG   "http://10.0.0.50:55556/debug"
 
 #ifdef SERIAL_DEBUG
 #define s(x)   Serial.print(x)
@@ -36,7 +36,7 @@
 #define spl(x)
 #endif
 
-uint8_t MacController[] = {0xC8, 0x2B, 0x96, 0x08, 0x58, 0x47}; // Female
+uint8_t MacController[] = {0x5C, 0xCF, 0x7F, 0xCC, 0xA1, 0x8E}; // Female
 uint8_t MacInterface[] = {0xC8, 0x2B, 0x96, 0x08, 0x65, 0x4E};  // Male
 
 typedef struct VehicleData {

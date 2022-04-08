@@ -25,7 +25,7 @@ void setup() {
     vehicleData.charge = 0;
 
     if (esp_now_init() != 0) {
-        Serial.println(F("Error initializing ESP-NOW"));
+        spl(F("Error initializing ESP-NOW"));
         return;
     }
 
@@ -35,6 +35,7 @@ void setup() {
 }
 
 void loop() {
+    spl(vehicleData.state);
     switch (vehicleData.state) {
         case UNKNOWN:
             unknown();
@@ -106,14 +107,14 @@ void ledSet (CRGB led5, CRGB led4, CRGB led3, CRGB led2, CRGB led1, CRGB led0) {
         colourChanged = true;
     }
 
-    if (colourChanged) {
+//    if (colourChanged) {
         drawLED(5, led5);
         drawLED(4, led4);
         drawLED(3, led3);
         drawLED(2, led2);
         drawLED(1, led1);
         drawLED(0, led0);
-    }
+//    }
 
     FastLED.show();
 }
@@ -188,13 +189,10 @@ void fetching () {
 }
 
 void unknown () {
-    spl(F("Unknown"));
     ledReset();
 }
 
 void error () {
-    spl(F("Error"));
-
     ledSet(
         CRGB::Yellow,
         CRGB::Black,
@@ -206,15 +204,11 @@ void error () {
 }
 
 void rainbow () {
-    spl(F("Rainbow"));
-
     //rainbowEnabled = true;
     rainbowCycle(1);
 }
 
 void offline () {
-    spl(F("Offline"));
-
     ledSet(
         CRGB::Blue,
         CRGB::Black,
@@ -226,25 +220,23 @@ void offline () {
 }
 
 void home () {
-    spl(F("Home"));
-
-    if (vehicleData.charge >= 85 && vehicleData.charge <= 100) {
-        ledSet(CRGB::Black, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green);
-    }
-    else if (vehicleData.charge < 85) {
-        ledSet(CRGB::Black, CRGB::Red, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green);
-    }
-    else if (vehicleData.charge < 80) {
-        ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Green, CRGB::Green, CRGB::Green);
-    }
-    else if (vehicleData.charge < 60) {
-        ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Green, CRGB::Green);
+    if (vehicleData.charge < 20) {
+        ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red);
     }
     else if (vehicleData.charge < 40) {
         ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Green);
     }
-    else if (vehicleData.charge < 20) {
-        ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Red);
+    else if (vehicleData.charge < 60) {
+        ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Red, CRGB::Green, CRGB::Green);
+    }
+    else if (vehicleData.charge < 80) {
+        ledSet(CRGB::Black, CRGB::Red, CRGB::Red, CRGB::Green, CRGB::Green, CRGB::Green);
+    }
+    else if (vehicleData.charge < 85) {
+        ledSet(CRGB::Black, CRGB::Red, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green);
+    }
+    else {
+        ledSet(CRGB::Black, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green, CRGB::Green);
     }
 }
 
@@ -292,17 +284,15 @@ void away_driving() {
     );
 }
 
-void vehicleDataRecv(uint8_t * mac, uint8_t *dataRecv, uint8_t len) {
+void vehicleDataRecv(uint8_t* mac, uint8_t *dataRecv, uint8_t len) {
     memcpy(&vehicleData, dataRecv, sizeof(vehicleData));
 
-    /*
     Serial.print("Bytes received: ");
     Serial.println(len);
     Serial.print(F("State: "));
     Serial.println(vehicleData.state);
     Serial.print(F("Settings: "));
     Serial.println(vehicleData.charge);
-    */
 }
 
 void readEEPROM(int startAdr, int maxLength, char* dest) {
@@ -315,9 +305,6 @@ void readEEPROM(int startAdr, int maxLength, char* dest) {
 }
 
 void wifiSetup () {
-    s(F("MAC Address: "));
-    spl(WiFi.macAddress());
-
     char ssid[16];
     char ssidPassword[16];
 
@@ -330,6 +317,9 @@ void wifiSetup () {
         spl("RSSI: " + (String) WiFi.RSSI());
         delay(500);
     }
+
+    s(F("MAC Address: "));
+    spl(WiFi.macAddress());
 
     spl(F("Wifi Connected"));
 }

@@ -14,7 +14,7 @@ unsigned long dataRefreshTime;
 
 bool gotData = false;
 
-SSD1306Wire oled(0x3c, 4, 5);
+SSD1306Wire oled(0x3c, 4, 5); // 4 (D2 - SDA) : 5 (D1 - SCL)
 HTTPClient http;
 WiFiClient wifi;
 TeslaVehicle car;
@@ -205,7 +205,6 @@ void resetOLED () {
 }
 
 void vehicleDataSent(uint8_t *mac, uint8_t sendStatus) {
-    /*
     Serial.print(F("Last Packet Send Status: "));
     if (sendStatus == 0) {
         Serial.println(F("Delivery success"));
@@ -213,7 +212,6 @@ void vehicleDataSent(uint8_t *mac, uint8_t sendStatus) {
     else {
         Serial.println(F("Delivery fail"));
     }
-    */
 }
 
 void readEEPROM(int startAdr, int maxLength, char* dest) {
@@ -226,10 +224,6 @@ void readEEPROM(int startAdr, int maxLength, char* dest) {
 }
 
 void wifiSetup () {
-
-    s(F("MAC Address: "));
-    spl(WiFi.macAddress());
-
     char ssid[16];
     char ssidPassword[16];
 
@@ -237,6 +231,9 @@ void wifiSetup () {
     readEEPROM(16, 16, ssidPassword);
 
     WiFi.begin(ssid, ssidPassword);
+
+    s(F("MAC Address: "));
+    spl(WiFi.macAddress());
 
     while (WiFi.status() != WL_CONNECTED) {
         spl("RSSI: " + (String) WiFi.RSSI());
