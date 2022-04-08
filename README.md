@@ -1,41 +1,54 @@
 # Tesla Charge Alarm System
 
-- [Tesla Charge Alarm System](#tesla-charge-alarm-system)
-    * [System Information](#system-information)
-        + [Perl HTTP API Server](#perl-http-api-server)
-        + [Microcontroller - Interface](#microcontroller---interface)
-        + [Microcontroller - Controller](#microcontroller---controller)
-        + [Microcontroller - Garage](#microcontroller---garage)
-        + [Microcontroller - Garage Door Prototype](#microcontroller---garage-door-prototype)
-        + [Files - Application](#files---application)
-            - [app.psgi](#apppsgi)
-        + [Files - Sketches](#files---sketches)
-            - [tesla-charge-interface.ino](#tesla-charge-interfaceino)
-            - [tesla-charge-controller.ino](#tesla-charge-controllerino)
-            - [garage.ino](#garageino)
-            - [garage-door-prototype.ino](#garage-door-prototypeino)
-        + [Files - Headers](#files---headers)
-            - [TeslaChargeInterface.h](#teslachargeinterfaceh)
-            - [TeslaChargeController.h](#teslachargecontrollerh)
-            - [TeslaChargeCommon.h](#teslachargecommonh)
-            - [TeslaVehicle.h](#teslavehicleh)
-            - [Garage.h](#garageh)
-            - [GarageDoorPrototype.h](#garagedoorprototypeh)
-            - [TeslaChargeFont.h](#teslachargefonth)
-    * [Configuration](#configuration)
-        + [Network Port](#network-port)
-        + [WiFi SSID and Password](#wifi-ssid-and-password)
-        + [HTTP API URLS](#http-api-urls)
-        + [ESP-NOW MAC Addresses](#esp-now-mac-addresses)
-        + [GPIO Pins](#gpio-pins)
-        + [Configuration File](#configuration-file)
-  * [Install Perl Components](#install-perl-components)
-    * [Run the HTTP API Service](#run-the-http-api-service)
-        + [Run from crontab](#run-from-crontab)
-        + [All logging enabled](#all-logging-enabled)
-        + [Hide access logs](#hide-access-logs)
-        + [Reload the application if any file changes](#reload-the-application-if-any-file-changes)
-        + [Reload the application if the application file changes](#reload-the-application-if-the-application-file-changes)
+This software consists of a Perl application that fetches vehicle data from the
+Tesla API, and presents a REST API interface that allows applications and
+micro-controllers to access that data.
+
+It also includes four Arduino sketches for microcontrollers. The primary two
+([Interface](#microcontroller---interface) and
+[Controller](#microcontroller---controller)) make up a device that attaches to
+the garage wall. It has an LED strip and OLED screen that displays charge
+information about the vehicle, with an audible alarm if the vehicle is below a
+certain battery level.
+
+The other two are related to a garage door management system, as well as a
+garage door prototype.
+
+* [System Information](#system-information)
+    + [Perl HTTP API Server](#perl-http-api-server)
+    + [Microcontroller - Interface](#microcontroller---interface)
+    + [Microcontroller - Controller](#microcontroller---controller)
+    + [Microcontroller - Garage](#microcontroller---garage)
+    + [Microcontroller - Garage Door Prototype](#microcontroller---garage-door-prototype)
+    + [Files - Application](#files---application)
+        - [app.psgi](#apppsgi)
+    + [Files - Sketches](#files---sketches)
+        - [tesla-charge-interface.ino](#tesla-charge-interfaceino)
+        - [tesla-charge-controller.ino](#tesla-charge-controllerino)
+        - [garage.ino](#garageino)
+        - [garage-door-prototype.ino](#garage-door-prototypeino)
+    + [Files - Headers](#files---headers)
+        - [TeslaChargeInterface.h](#teslachargeinterfaceh)
+        - [TeslaChargeController.h](#teslachargecontrollerh)
+        - [TeslaChargeCommon.h](#teslachargecommonh)
+        - [TeslaVehicle.h](#teslavehicleh)
+        - [Garage.h](#garageh)
+        - [GarageDoorPrototype.h](#garagedoorprototypeh)
+        - [TeslaChargeFont.h](#teslachargefonth)
+* [Configuration](#configuration)
+    + [Network Port](#network-port)
+    + [WiFi SSID and Password](#wifi-ssid-and-password)
+    + [HTTP API URLS](#http-api-urls)
+    + [ESP-NOW MAC Addresses](#esp-now-mac-addresses)
+    + [GPIO Pins](#gpio-pins)
+    + [Configuration File](#configuration-file)
+* [Install Perl Components](#install-perl-components)
+* [Run the HTTP API Service](#run-the-http-api-service)
+    + [Run from crontab](#run-from-crontab)
+    + [All logging enabled](#all-logging-enabled)
+    + [Hide access logs](#hide-access-logs)
+    + [Reload the application if any file changes](#reload-the-application-if-any-file-changes)
+    + [Reload the application if the application file changes](#reload-the-application-if-the-application-file-changes)
 
 ## System Information
 
@@ -275,3 +288,151 @@ or...
 ### Reload the application if the application file changes
 
     plackup -R app.psgi app.psgi
+
+## Vehicle and LED States
+
+Vehicle state definitions can be found in the `inc/TeslaVehicle.h` file, in the
+`statusState` enum definition.
+
+### LED State Quick Table
+
+| Description                    | LED 6                | LED 5         | LED 4         | LED 3         | LED 2         | LED 1         |
+|:-------------------------------|----------------------|---------------|---------------|---------------|---------------|---------------|
+| Device dormant                 | off                  | off           | off           | off           | off           | off           |
+| Error with Tesla API           | **yellow**           | off           | off           | off           | off           | off           |
+| Fetching data from Tesla       | **green** (flashing) | off           | off           | off           | off           | off           |
+| Rainbow mode                   | multi                | multi         | multi         | multi         | multi         | multi         |
+| Vehicle is offline             | **blue**             | off           | off           | off           | off           | off           |
+| Vehicle is home (not charging) | off                  | **green/red** | **green/red** | **green/red** | **green/red** | **green/red** |
+| Vehicle is home (charging)     | **purple**           | off           | off           | off           | off           | off           |
+| Vehicle is away (charging)     | **white**            | off           | off           | off           | off           | **purple**    |
+| Vehicle is away (parked)       | **white**            | off           | off           | off           | off           | **red**       |
+| Vehicle is away (driving)      | **white**            | off           | off           | off           | off           | **green**     |
+
+### UNKNOWN
+
+The software is in a waiting state and has no information on the vehicle.
+
+LED State: All LEDs off
+
+| LED State |
+|:----------|
+| Off       |
+| Off       |
+| Off       |
+| Off       |
+| Off       |
+| Off       |
+
+### ERROR
+
+The software has encountered an error while fetching data from the Tesla API,
+or the micro-controller device can't contact the REST API software.
+
+| LED State  |
+|:-----------|
+| **Yellow** |
+| Off        |
+| Off        |
+| Off        |
+| Off        |
+| Off        |
+
+## FETCHING
+
+The REST API server is currently attempting to fetch data from the Tesla API.
+
+| LED State            |
+|:---------------------|
+| **Green (blinking)** |
+| Off                  |
+| Off                  |
+| Off                  |
+| Off                  |
+| Off                  |
+
+## RAINBOW
+
+This is a special fun mode, and simply rotates all the LEDs through a rainbow of
+colours.
+
+## OFFLINE
+
+This is the state if the vehicle is currently offline (ie. not awake).
+
+
+| LED State |
+|:----------|
+| **Blue**  |
+| Off       |
+| Off       |
+| Off       |
+| Off       |
+| Off       |
+
+## HOME (Display charge level)
+
+The vehicle is at home and is online, but is not charging. In this state, the
+LEDs display the actual car charge level.
+
+
+| LED State                              |
+|:---------------------------------------|
+| Off                                    |
+| **Red/Green** (Green if battery > 84%) |
+| **Red/Green** (Green if battery > 79%) |
+| **Red/Green** (Green if battery > 59%) |
+| **Red/Green** (Green if battery > 39%) |
+| **Red/Green** (Green if battery > 19%) |
+
+## HOME_CHARGING
+
+The vehicle is at home, and is currently charging.
+
+| LED State  |
+|:-----------|
+| **Purple** |
+| Off        |
+| Off        |
+| Off        |
+| Off        |
+| Off        |
+
+## AWAY_CHARGING
+
+The vehicle is charging, but it's not at home.
+
+| LED State  |
+|:-----------|
+| **White**  |
+| Off        |
+| Off        |
+| Off        |
+| Off        |
+| **Purple** |
+
+## AWAY_PARKED
+
+The vehicle is not at home, and is currently in park.
+
+| LED State |
+|:----------|
+| **White** |
+| Off       |
+| Off       |
+| Off       |
+| Off       |
+| **Red**   |
+
+## AWAY_DRIVING
+
+The vehicle is currenty away from home and is in a gear other than park.
+
+| LED State |
+|:----------|
+| **White** |
+| Off       |
+| Off       |
+| Off       |
+| Off       |
+| **Green** |
