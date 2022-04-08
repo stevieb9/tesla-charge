@@ -320,8 +320,6 @@ Vehicle state definitions can be found in the `inc/TeslaVehicle.h` file, in the
 | Vehicle is away (charging)     | **white**            | off           | off           | off           | off           | **purple**    |
 | Vehicle is away (parked)       | **white**            | off           | off           | off           | off           | **red**       |
 | Vehicle is away (driving)      | **white**            | off           | off           | off           | off           | **green**     |
-| Vehicle is away (charging)     | **white**            | off           | off           | off           | off           | **purple**    |
-| Vehicle is away (charging)     | **white**            | off           | off           | off           | off           | **purple**    |
 
 ### UNKNOWN
 
