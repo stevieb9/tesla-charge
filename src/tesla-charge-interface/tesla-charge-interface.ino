@@ -121,7 +121,6 @@ void displayClear () {
 }
 
 void displayCharge (uint8_t batteryLevel, bool soundAlarm) {
-
     if (batteryLevel < ALARM_CHARGE && soundAlarm) {
         alarm(1);
     }
@@ -164,8 +163,7 @@ void OLEDClear () {
 }
 
 void OLEDDisplay (uint8_t charge) {
-
-    if (! oledInit || charge != lastCharge) {
+    if (! oledInit || charge != lastCharge || oledClear) {
         displayClear();
         oled.drawString(0, 0, (String) charge);
         oled.display();
