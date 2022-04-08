@@ -8,6 +8,7 @@
         "debug_return": 0,
         "retry":        3,
         "rainbow":      0,
+        "alarm":        1,
         "debug_data": {
             "online":   0,
             "charge":   0,
@@ -17,7 +18,7 @@
             "error":    0,
             "rainbow":  0,
             "fetching": 0,
-            "alarm" :   1
+            "alarm" :   0
         }
     },
     "garage": {
