@@ -35,7 +35,7 @@ void setup() {
     oled.setFont(myFont_53);
     oled.setTextAlignment(TEXT_ALIGN_LEFT);
 
-    resetOLED();
+    displayClear();
 
     wifiSetup();
 
@@ -77,23 +77,23 @@ void loop() {
         }
 
         switch (car.state()) {
-            case ERROR:
-                break;
-            case FETCHING:
-                break;
-            case RAINBOW:
-                break;
             case OFFLINE:
+                displayClear();
                 break;
             case HOME:
+                displayCharge(car.charge(), true);
                 break;
             case HOME_CHARGING:
+                displayCharge(car.charge(), false);
                 break;
             case AWAY_CHARGING:
+                displayCharge(car.charge(), false);
                 break;
             case AWAY_PARKED:
+                displayCharge(car.charge(), false);
                 break;
             case AWAY_DRIVING:
+                displayCharge(car.charge(), false);
                 break;
         }
 
@@ -102,16 +102,26 @@ void loop() {
     }
     else {
         gotData = false;
-
-        if (! oledClear) {
-            lastCharge = CHARGE_MAX;
-            resetOLED();
-        }
-
+        displayClear();
+        lastCharge = CHARGE_MAX;
+        alarm(0);
         vehicleData.state = UNKNOWN;
     }
 
     esp_now_send(MacController, (uint8_t *) &vehicleData, sizeof(vehicleData));
+}
+
+void displayClear () {
+    OLEDClear();
+}
+
+void displayCharge (uint8_t batteryLevel, bool soundAlarm) {
+
+    if (batteryLevel < ALARM_CHARGE && soundAlarm) {
+        alarm(1);
+    }
+
+    OLEDDisplay(batteryLevel);
 }
 
 void alarm (bool state) {
@@ -143,10 +153,18 @@ void alarm (bool state) {
     }
 }
 
-void displayOLED (uint8_t charge) {
+void OLEDClear () {
+    if (! oledClear) {
+        oled.clear();
+        oled.display();
+        oledClear = true;
+    }
+}
+
+void OLEDDisplay (uint8_t charge) {
 
     if (! oledInit || charge != lastCharge) {
-        resetOLED();
+        displayClear();
         oled.drawString(0, 0, (String) charge);
         oled.display();
         lastCharge = charge;
@@ -198,13 +216,8 @@ uint8_t* fetchData () {
     return data;
 }
 
-void resetOLED () {
-    oled.clear();
-    oled.display();
-    oledClear = true;
-}
-
 void vehicleDataSent(uint8_t *mac, uint8_t sendStatus) {
+    /*
     Serial.print(F("Last Packet Send Status: "));
     if (sendStatus == 0) {
         Serial.println(F("Delivery success"));
@@ -212,6 +225,7 @@ void vehicleDataSent(uint8_t *mac, uint8_t sendStatus) {
     else {
         Serial.println(F("Delivery fail"));
     }
+    */
 }
 
 void readEEPROM(int startAdr, int maxLength, char* dest) {

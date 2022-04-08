@@ -287,12 +287,14 @@ void away_driving() {
 void vehicleDataRecv(uint8_t* mac, uint8_t *dataRecv, uint8_t len) {
     memcpy(&vehicleData, dataRecv, sizeof(vehicleData));
 
+    /*
     Serial.print("Bytes received: ");
     Serial.println(len);
     Serial.print(F("State: "));
     Serial.println(vehicleData.state);
     Serial.print(F("Settings: "));
     Serial.println(vehicleData.charge);
+    */
 }
 
 void readEEPROM(int startAdr, int maxLength, char* dest) {
