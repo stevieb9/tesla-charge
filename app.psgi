@@ -207,7 +207,6 @@ sub fetch {
     $struct->{fetching} = 0;
 
     if ($conf->{rainbow}) {
-        print "Rainbow!\n" if $tesla_debug;
         $struct->{rainbow} = 1;
         return $struct;
     }
@@ -217,7 +216,6 @@ sub fetch {
     $online = $car->online;
 
     if (! defined $online || ! $online) {
-        print "Offline!\n" if $tesla_debug;
         $struct->{online} = 0;
         return $struct;
     }

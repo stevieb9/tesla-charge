@@ -138,21 +138,18 @@ void alarm (bool state) {
             if (alarmState) {
                 if (currentTime - alarmOnTime >= ALARM_ON_TIME) {
                     digitalWrite(ALARM, LOW);
-                    spl(F("Alarm off"));
                     alarmOffTime = currentTime;
                     alarmOnTime = currentTime;
                 }
             } else {
                 if (currentTime - alarmOffTime >= ALARM_OFF_TIME) {
                     digitalWrite(ALARM, HIGH);
-                    spl(F("Alarm on"));
                     alarmOnTime = currentTime;
                 }
             }
         } else {
             if (alarmState) {
                 digitalWrite(ALARM, LOW);
-                spl(F("Alarm off: state"));
             }
         }
     }
