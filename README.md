@@ -230,3 +230,47 @@ or...
 ### Reload the application if the application file changes
 
     plackup -R app.psgi app.psgi
+
+### Configuration File
+
+Initially, copy the `config.json-dist` file to `config.json` in the root
+directory.
+
+All values below are default.
+
+    {
+        "system": {
+            "secure_ip":    0,          # Refuse access based on IP
+            "secure_auth":  0           # Allow only authorized users
+        },
+        "tesla_vehicle": {
+            "debug":        0,          # Display debug output in app.psgi
+            "debug_return": 1,          # Return the below debug data to interface microcontroller
+            "retry":        3,          # app.psgi will retry Tesla API this many times
+            "rainbow":      0,          # Force enable "rainbow" mode
+            "alarm":        1,          # Toggle the audible alarm
+            "debug_data": {
+                "online":   0,          # Bool - Vehicle awake
+                "charge":   0,          # 0-100 - Set the battery level
+                "charging": 0,          # Bool - Vehicle charging
+                "garage":   0,          # Bool - Car in garage
+                "gear":     0,          # 0-2  - Car gear (0 - P, 1 - R, 2 - N & D)
+                "error":    0,          # Bool - Simulate API fetch error
+                "rainbow":  0,          # Bool - Rainbow mode
+                "fetching": 0,          # Bool - Fetching data
+                "alarm":    0           # Bool - Audible alarm enabled
+            }
+        },
+        "garage": {
+            "debug":            0,      # Bool - Display debug output in app.psgi
+            "debug_return":     0,      # Bool - Return the below debug data instead of live data
+            "app_enabled":      1,      # Bool - Mobile app allowed to make changes
+            "relay_enabled":    1,      # Bool - Garage door opener relay enabled
+            "auto_close_enabled": 1,    # Bool - Allow garage door auto-close
+            "debug_data": {
+                "garage_door_state":    -1, # -1 - Uninit, 0 - Closed, 1 - Open, 2 - Closing, 3 - Opening
+                "tesla_in_garage":      -1, # -1 - Uninit, 0 - Away, 1 - In garage
+                "activity":             0   # Bool - Pending garage door action
+            }
+        }
+    }
