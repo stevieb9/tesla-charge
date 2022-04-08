@@ -1,5 +1,5 @@
 #include <AccelStepper.h>
-#include "garage_door_prototype.h"
+#include "../../inc/GarageDoorPrototype.h"
 
 AccelStepper doorOpener (
         STEPPER_FULLSTEP,
