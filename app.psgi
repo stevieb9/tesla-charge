@@ -180,9 +180,20 @@ sub config_load {
     $garage_debug = 1 if $garage_conf->{debug};
 }
 sub debug_data {
-    my $data = encode_json $tesla_conf->{debug_data};
-    print "$data\n";
-    return $data;
+    my $debug_data = $tesla_conf->{debug_data};
+
+    my @data_items;
+
+    for (sort {$a cmp $b} keys %$debug_data) {
+        push @data_items, qq~"$_":$debug_data->{$_}~;
+    }
+
+    my $data_string = join ',', @data_items;
+
+    print "$data_string\n";
+
+    my $return_data = encode_json $debug_data;
+    return $return_data;
 }
 sub debug_garage_data {
     return encode_json $garage_conf->{debug_data};
