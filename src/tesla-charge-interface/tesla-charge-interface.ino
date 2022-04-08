@@ -4,6 +4,7 @@
 
 bool oledInit = false;
 bool oledClear = true;
+bool alarmEnabled = true;
 
 char* url;
 
@@ -24,6 +25,9 @@ VehicleData vehicleData;
 void setup() {
     pinMode(PIR, INPUT);
     pinMode(REED, INPUT_PULLUP);
+    pinMode(ALARM, OUTPUT);
+
+    digitalWrite(ALARM, LOW);
 
     Serial.begin(9600);
 
@@ -129,27 +133,27 @@ void alarm (bool state) {
     uint8_t alarmState          = digitalRead(ALARM);
     unsigned long currentTime   = millis();
 
-    if (state) {
-        if (alarmState) {
-            if (currentTime - alarmOnTime >= ALARM_ON_TIME) {
+    if (alarmEnabled) {
+        if (state) {
+            if (alarmState) {
+                if (currentTime - alarmOnTime >= ALARM_ON_TIME) {
+                    digitalWrite(ALARM, LOW);
+                    spl(F("Alarm off"));
+                    alarmOffTime = currentTime;
+                    alarmOnTime = currentTime;
+                }
+            } else {
+                if (currentTime - alarmOffTime >= ALARM_OFF_TIME) {
+                    digitalWrite(ALARM, HIGH);
+                    spl(F("Alarm on"));
+                    alarmOnTime = currentTime;
+                }
+            }
+        } else {
+            if (alarmState) {
                 digitalWrite(ALARM, LOW);
-                spl(F("Alarm off"));
-                alarmOffTime = currentTime;
-                alarmOnTime  = currentTime;
+                spl(F("Alarm off: state"));
             }
-        }
-        else {
-            if (currentTime - alarmOffTime >= ALARM_OFF_TIME) {
-                digitalWrite(ALARM, HIGH);
-                spl(F("Alarm on"));
-                alarmOnTime = currentTime;
-            }
-        }
-    }
-    else {
-        if (alarmState) {
-            digitalWrite(ALARM, LOW);
-            spl(F("Alarm off: state"));
         }
     }
 }
@@ -209,6 +213,8 @@ uint8_t* fetchData () {
     data[5] = json["error"];
     data[6] = json["rainbow"];
     data[7] = json["fetching"];
+
+    alarmEnabled = json["alarm"];
 
     http.end();
 

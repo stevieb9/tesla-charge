@@ -21,7 +21,7 @@
 #define PIR             12 // Pin D6
 #define ALARM           13 // Pin D7
 
-#define JSON_SIZE       192
+#define JSON_SIZE       224
 #define CHARGE_MAX      101
 #define CHARGE_MIN      0
 #define ALARM_ON_TIME   100

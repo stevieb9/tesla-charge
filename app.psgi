@@ -178,7 +178,6 @@ sub config_load {
     $garage_debug = 1 if $garage_conf->{debug};
 }
 sub debug_data {
-    delete $tesla_conf->{debug_data}{alarm};
     my $data = encode_json $tesla_conf->{debug_data};
     print "$data\n";
     return $data;
@@ -297,7 +296,7 @@ sub _default_data {
         error       => 0, # Tesla API error
         rainbow     => 0, # Rainbow LED mode
         fetching    => 1, # Currently fetching data from Tesla
-        #alarm       => $tesla_conf->{alarm}, # Alarm sound
+        alarm       => $tesla_conf->{alarm}, # Alarm sound
     };
 
     return $struct;
