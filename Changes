@@ -8,7 +8,7 @@ Revision history for tesla-charge
       LED strip, Interface - does everything else) which communicate via
       ESP-NOW protocol
 
-1.00 UNREL
+1.00 2022-04-01
     - Removed reliance on Tim Dorssers TeslaPy Python distribution thanks to
       my new Tesla::Vehicle and Tesla::API distributions
     - Renamed web.pl to app.psgi
