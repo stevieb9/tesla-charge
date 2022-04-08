@@ -28,7 +28,8 @@
         + [HTTP API URLS](#http-api-urls)
         + [ESP-NOW MAC Addresses](#esp-now-mac-addresses)
         + [GPIO Pins](#gpio-pins)
-    * [Install Perl Components](#install-perl-components)
+        + [Configuration File](#configuration-file)
+  * [Install Perl Components](#install-perl-components)
     * [Run the HTTP API Service](#run-the-http-api-service)
         + [Run from crontab](#run-from-crontab)
         + [All logging enabled](#all-logging-enabled)
@@ -200,37 +201,6 @@ address of the device on the serial console.
 The GPIO pin definitions used by each microcontroller can be found in their
 respective header file in `inc/`.
 
-## Install Perl Components
-
-    cd tesla-charge
-    cpanm --installdeps .
-
-## Run the HTTP API Service
-
-### Run from crontab
-
-    @reboot sleep 10; cd /path/to/tesla-charge; /path/to/perl app.psgi > /tmp/tesla_web.log 2>&1
-
-### All logging enabled 
-
-    perl app.psgi
-
-or...
-
-    plackup app.psgi -p 55556
-
-### Hide access logs
-
-    plackup --access-log /dev/null -p 55556
-
-### Reload the application if any file changes 
-
-    plackup -R . app.psgi
-
-### Reload the application if the application file changes
-
-    plackup -R app.psgi app.psgi
-
 ### Configuration File
 
 Initially, copy the `config.json-dist` file to `config.json` in the root
@@ -274,3 +244,34 @@ All values below are default.
             }
         }
     }
+
+## Install Perl Components
+
+    cd tesla-charge
+    cpanm --installdeps .
+
+## Run the HTTP API Service
+
+### Run from crontab
+
+    @reboot sleep 10; cd /path/to/tesla-charge; /path/to/perl app.psgi > /tmp/tesla_web.log 2>&1
+
+### All logging enabled 
+
+    perl app.psgi
+
+or...
+
+    plackup app.psgi -p 55556
+
+### Hide access logs
+
+    plackup --access-log /dev/null -p 55556
+
+### Reload the application if any file changes 
+
+    plackup -R . app.psgi
+
+### Reload the application if the application file changes
+
+    plackup -R app.psgi app.psgi
