@@ -310,16 +310,16 @@ Vehicle state definitions can be found in the `inc/TeslaVehicle.h` file, in the
 
 | Description                    | LED 6                | LED 5         | LED 4         | LED 3         | LED 2         | LED 1         |
 |:-------------------------------|----------------------|---------------|---------------|---------------|---------------|---------------|
-| Device dormant                 | off                  | off           | off           | off           | off           | off           |
-| Error with Tesla API           | **yellow**           | off           | off           | off           | off           | off           |
-| Fetching data from Tesla       | **green** (flashing) | off           | off           | off           | off           | off           |
-| Rainbow mode                   | multi                | multi         | multi         | multi         | multi         | multi         |
-| Vehicle is offline             | **blue**             | off           | off           | off           | off           | off           |
-| Vehicle is home (not charging) | off                  | **green/red** | **green/red** | **green/red** | **green/red** | **green/red** |
-| Vehicle is home (charging)     | **purple**           | off           | off           | off           | off           | off           |
-| Vehicle is away (charging)     | **white**            | off           | off           | off           | off           | **purple**    |
-| Vehicle is away (parked)       | **white**            | off           | off           | off           | off           | **red**       |
-| Vehicle is away (driving)      | **white**            | off           | off           | off           | off           | **green**     |
+| Device dormant                 | -                    | -             | -             | -             | -             | -             |
+| Error with Tesla API           | **yellow**           | -             | -             | -             | -             | -             |
+| Fetching data from Tesla       | **green** (flashing) | -             | -             | -             | -             | -             |
+| Rainbow mode                   | **multi**            | **multi**     | **multi**     | **multi**     | **multi**     | **multi**     |
+| Vehicle is -line             | **blue**             | -             | -             | -             | -             | -             |
+| Vehicle is home (not charging) | -                    | **green/red** | **green/red** | **green/red** | **green/red** | **green/red** |
+| Vehicle is home (charging)     | **purple**           | -             | -             | -             | -             | -             |
+| Vehicle is away (charging)     | **white**            | -             | -             | -             | -             | **purple**    |
+| Vehicle is away (parked)       | **white**            | -             | -             | -             | -             | **red**       |
+| Vehicle is away (driving)      | **white**            | -             | -             | -             | -             | **green**     |
 
 ### UNKNOWN
 
