@@ -17,6 +17,8 @@ use FindBin;
 use IPC::Shareable;
 use Tesla::Vehicle;
 
+our $VERSION = '1.01';
+
 $| = 1;
 
 set port => 55556;

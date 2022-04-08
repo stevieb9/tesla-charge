@@ -1,5 +1,13 @@
 Revision history for tesla-charge
 
+1.02 UNREL
+    -
+
+1.01 2022-04-08
+    - Separated code into two separate controllers (Controller - controls the
+      LED strip, Interface - does everything else) which communicate via
+      ESP-NOW protocol
+
 1.00 UNREL
     - Removed reliance on Tim Dorssers TeslaPy Python distribution thanks to
       my new Tesla::Vehicle and Tesla::API distributions
