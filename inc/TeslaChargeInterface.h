@@ -17,9 +17,11 @@
 #define URL         "http://10.0.0.50:55556"
 #define URL_DEBUG   "http://10.0.0.50:55556/debug"
 
-#define REED            2  // Pin D4
-#define PIR             12 // Pin D6
-#define ALARM           13 // Pin D7
+#define REED_PIN        2  // Pin D4
+#define PIR_PIN         12 // Pin D6
+#define ALARM_PIN       13 // Pin D7
+#define SDA_PIN         4  // Pin D2
+#define SCL_PIN         5  // Pin D1
 
 #define JSON_SIZE       224
 #define CHARGE_MAX      101

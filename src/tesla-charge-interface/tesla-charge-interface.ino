@@ -16,18 +16,18 @@ unsigned long dataRefreshTime;
 
 bool gotData = false;
 
-SSD1306Wire oled(0x3c, 4, 5); // 4 (D2 - SDA) : 5 (D1 - SCL)
+SSD1306Wire oled(0x3c, SDA_PIN, SCL_PIN);
 HTTPClient http;
 WiFiClient wifi;
 TeslaVehicle car;
 VehicleData vehicleData;
 
 void setup() {
-    pinMode(PIR, INPUT);
-    pinMode(REED, INPUT_PULLUP);
-    pinMode(ALARM, OUTPUT);
+    pinMode(PIR_PIN, INPUT);
+    pinMode(REED_PIN, INPUT_PULLUP);
+    pinMode(ALARM_PIN, OUTPUT);
 
-    digitalWrite(ALARM, LOW);
+    digitalWrite(ALARM_PIN, LOW);
 
     Serial.begin(9600);
 
@@ -66,8 +66,8 @@ void setup() {
 void loop() {
     ArduinoOTA.handle();
 
-    bool magnet = digitalRead(REED);
-    bool motion = digitalRead(PIR);
+    bool magnet = digitalRead(REED_PIN);
+    bool motion = digitalRead(PIR_PIN);
 
     if (motion || DEBUG_MOTION || DEBUG_DEVEL) {
         unsigned long currentTime = millis();
@@ -129,26 +129,26 @@ void displayCharge (uint8_t batteryLevel, bool soundAlarm) {
 }
 
 void alarm (bool state) {
-    uint8_t alarmState          = digitalRead(ALARM);
+    uint8_t alarmState          = digitalRead(ALARM_PIN);
     unsigned long currentTime   = millis();
 
     if (alarmEnabled) {
         if (state) {
             if (alarmState) {
                 if (currentTime - alarmOnTime >= ALARM_ON_TIME) {
-                    digitalWrite(ALARM, LOW);
+                    digitalWrite(ALARM_PIN, LOW);
                     alarmOffTime = currentTime;
                     alarmOnTime = currentTime;
                 }
             } else {
                 if (currentTime - alarmOffTime >= ALARM_OFF_TIME) {
-                    digitalWrite(ALARM, HIGH);
+                    digitalWrite(ALARM_PIN, HIGH);
                     alarmOnTime = currentTime;
                 }
             }
         } else {
             if (alarmState) {
-                digitalWrite(ALARM, LOW);
+                digitalWrite(ALARM_PIN, LOW);
             }
         }
     }
@@ -260,6 +260,7 @@ void wifiSetup () {
     oled.setFont(ArialMT_Plain_16);
     oled.drawString(0, 0, F("Wifi Connected"));
     oled.display();
+    oledClear = false;
 
     delay(1000);
     oled.setFont(myFont_53);
