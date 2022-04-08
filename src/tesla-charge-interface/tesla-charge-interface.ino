@@ -1,4 +1,5 @@
-#include "/Users/steve/repos/tesla-charge/inc/TeslaCharge.h"
+#include "/Users/steve/repos/tesla-charge/inc/TeslaChargeCommon.h"
+#include "/Users/steve/repos/tesla-charge/inc/TeslaChargeInterface.h"
 #include "/Users/steve/repos/tesla-charge/inc/TeslaVehicle.h"
 
 bool oledInit = false;
@@ -183,7 +184,7 @@ uint8_t* fetchData () {
     int httpCode = http.GET();
 
     if (httpCode < 0) {
-        s(F("HTTP Error Code: "));
+        sp(F("HTTP Error Code: "));
         spl(httpCode);
         gotData = false;
         data[5] = 1;
@@ -246,7 +247,7 @@ void wifiSetup () {
 
     WiFi.begin(ssid, ssidPassword);
 
-    s(F("MAC Address: "));
+    sp(F("MAC Address: "));
     spl(WiFi.macAddress());
 
     while (WiFi.status() != WL_CONNECTED) {

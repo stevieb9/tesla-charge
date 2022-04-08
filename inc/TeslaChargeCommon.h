@@ -9,12 +9,6 @@
 
 #define SERIAL_DEBUG        /* Serial output (comment to disable) */
 
-//#define URL         "http://192.168.1.252:55556"
-//#define URL_DEBUG   "http://192.168.1.252:55556/debug"
-
-#define URL         "http://10.0.0.50:55556"
-#define URL_DEBUG   "http://10.0.0.50:55556/debug"
-
 #ifdef SERIAL_DEBUG
 #define sp(x)   Serial.print(x)
 #define spl(x) Serial.println(x)
