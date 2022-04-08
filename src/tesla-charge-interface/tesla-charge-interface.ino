@@ -82,9 +82,6 @@ void loop() {
         }
 
         switch (car.state()) {
-            case OFFLINE:
-                displayClear();
-                break;
             case HOME:
                 displayCharge(car.charge(), true);
                 break;
@@ -100,6 +97,9 @@ void loop() {
             case AWAY_DRIVING:
                 displayCharge(car.charge(), false);
                 break;
+            default:
+                displayClear();
+            break;
         }
 
         vehicleData.state = car.state();
