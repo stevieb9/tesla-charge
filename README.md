@@ -302,7 +302,7 @@ Vehicle state definitions can be found in the `inc/TeslaVehicle.h` file, in the
 | Error with Tesla API           | **yellow**           | -             | -             | -             | -             | -             |
 | Fetching data from Tesla       | **green** (flashing) | -             | -             | -             | -             | -             |
 | Rainbow mode                   | **multi**            | **multi**     | **multi**     | **multi**     | **multi**     | **multi**     |
-| Vehicle is -line             | **blue**             | -             | -             | -             | -             | -             |
+| Vehicle is offline             | **blue**             | -             | -             | -             | -             | -             |
 | Vehicle is home (not charging) | -                    | **green/red** | **green/red** | **green/red** | **green/red** | **green/red** |
 | Vehicle is home (charging)     | **purple**           | -             | -             | -             | -             | -             |
 | Vehicle is away (charging)     | **white**            | -             | -             | -             | -             | **purple**    |
