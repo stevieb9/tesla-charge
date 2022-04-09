@@ -71,6 +71,8 @@ most part, all return values are JSON.
 
 ### Microcontroller - Interface
 
+Board used: WeMOS D1 R2
+
 This device:
 
 - Communicates with the external Perl HTTP API server
@@ -93,6 +95,8 @@ It also uses a shared header in `inc/TeslaChargeCommon.h`.
 
 ### Microcontroller - Controller
 
+Board used: WeMOS D1 R2
+
 This device:
 
 - Receives data from the [Interface Microcontroller](#microcontroller---interface)
@@ -107,6 +111,8 @@ It also uses a shared header in `inc/TeslaChargeCommon.h`.
 
 ### Microcontroller - Garage
 
+Board used: WeMOS D1 R2
+
 This device monitors the garage door for its open and close state and has the
 ability to open or close on demand, or auto close. It uses magnetic sensors
 to determine the position of the door.
@@ -118,6 +124,8 @@ The sketch is in `src/garage/garage.ino` and its header file is
 `inc/Garage.h`.
 
 ### Microcontroller - Garage Door Prototype
+
+Board used: Arduino Uno R3
 
 This microcontroller simulates a garage door using a timed stepper motor.
 
