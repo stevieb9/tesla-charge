@@ -27,6 +27,7 @@ garage door prototype.
     + [AWAY_PARKED](#away_parked)
     + [AWAY_DRIVING](#away_driving)
 * [System Information](#system-information)
+    + [Hardware Used](#hardware-used)
     + [Perl HTTP API Server](#perl-http-api-server)
     + [Microcontroller - Interface](#microcontroller---interface)
     + [Microcontroller - Controller](#microcontroller---controller)
@@ -51,6 +52,8 @@ garage door prototype.
     + [Reload the application if the application file changes](#reload-the-application-if-the-application-file-changes)
 
 ## System Information
+
+### Hardware Used
 
 For the core of the system, three of the micro-controllers used are
 ESP8266-based Wemos D1 units (these show up as "Lolin(WEMOS) D1 R2 & mini" as
