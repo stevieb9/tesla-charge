@@ -52,6 +52,14 @@ garage door prototype.
 
 ## System Information
 
+For the core of the system, three of the micro-controllers used are
+ESP8266-based Wemos D1 units (these show up as "Lolin(WEMOS) D1 R2 & mini" as
+the Board type in the Arduino IDE). For the garage door  prototype, an Arduino
+Uno was used.
+
+The Perl backend API software can be run by any computer that is reachable via
+wifi to the micro-controllers (I use a Raspberry Pi 3).
+
 ### Perl HTTP API Server
 
 This software is responsible for collecting and aggregating from the Tesla API,
@@ -186,6 +194,13 @@ There are several things that need to be verified and/or modified.
 
 By default, the Perl HTTP API server runs on port `55556`. You can edit this in
 the `app.psgi` file, or run `plackup` with the `-p PORTNUM` option to change it.
+
+### Header File Paths
+
+The way Arduino sketches are built, we can't use relative paths when including
+header files in the sketches. At the top of each `.ino` sketch file, replace the
+absolute path of the includes to reflect the real location of the headers on
+your system.
 
 ### WiFi SSID and Password
 
