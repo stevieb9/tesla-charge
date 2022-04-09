@@ -253,7 +253,7 @@ All values below are default.
             "debug_data": {
                 "garage_door_state":    -1, # -1 - Uninit, 0 - Closed, 1 - Open, 2 - Closing, 3 - Opening
                 "tesla_in_garage":      -1, # -1 - Uninit, 0 - Away, 1 - In garage
-                "activity":             0   # Bool - Pending garage door action
+                "activity":              0  # Bool - Pending garage door action
             }
         }
     }

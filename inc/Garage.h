@@ -24,7 +24,7 @@
 #define LOOP_CYCLE_DELAY    500     // Delays the loop cycle
 #define DOOR_CLOSE_TIME     20000   // Millieconds door must be open before auto-close
 #define TESLA_API_DELAY     2000    // Delay to retry the Tesla API call
-#define TESLA_API_RETRIES   3       // Retries to attempt Tesla API call
+define TESLA_API_RETRIES   3       // Retries to attempt Tesla API call
 
 #define JSON_SIZE           192
 
@@ -50,4 +50,5 @@ class garageData {
         int8_t appEnabled;
         int8_t autoCloseEnabled;
 };
+
 #endif //TESLA_CHARGE_GARAGE_H
