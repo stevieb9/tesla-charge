@@ -33,6 +33,11 @@ void setup() {
     digitalWrite(DOOR_OPEN_LED, LOW);
 
     Serial.begin(9600);
+
+    while (! Serial) {
+        continue;
+    }
+
     wifiSetup();
 
     if (DEBUG_TESLA_URL) {

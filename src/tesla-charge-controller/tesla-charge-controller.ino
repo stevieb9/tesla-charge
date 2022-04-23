@@ -11,6 +11,11 @@ VehicleData vehicleData;
 
 void setup() {
     Serial.begin(9600);
+
+    while (! Serial) {
+        continue;
+    }
+
     FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
     fetchLEDBlinkTime = millis();

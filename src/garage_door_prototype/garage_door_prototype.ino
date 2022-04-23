@@ -20,6 +20,10 @@ void setup() {
 
     Serial.begin(9600);
 
+    while (! Serial) {
+        continue;
+    }
+
     doorOpener.setMaxSpeed(MAX_SPEED);
     doorOpener.setAcceleration(ACCELERATION);
     doorOpener.setSpeed(SET_SPEED);

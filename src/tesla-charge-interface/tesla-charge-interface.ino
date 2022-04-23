@@ -31,6 +31,10 @@ void setup() {
 
     Serial.begin(9600);
 
+    while (! Serial) {
+        continue;
+    }
+
     dataRefreshTime   = millis();
     alarmOnTime       = millis();
     alarmOffTime      = millis();
