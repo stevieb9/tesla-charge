@@ -202,7 +202,7 @@ for the custom fonts displayed on the OLED display device.
 If on Ubuntu, some packages are required:
 
   - `sudo apt-get install libssl-dev`
-
+  - `sudo apt-get install zlib1g-dev`
 
 Install the dependencies:
 

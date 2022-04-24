@@ -1,3 +1,4 @@
+requires 'Net::SSLeay', '0';
 requires 'Async::Event::Interval', '1.12';
 requires 'IPC::Shareable', '1.12';
 requires 'Dancer2', '0';
