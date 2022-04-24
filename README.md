@@ -199,6 +199,8 @@ for the custom fonts displayed on the OLED display device.
 
 ## Installation
 
+  - `cd /path/to/application`
+
 If on Ubuntu, some packages are required:
 
   - `sudo apt-get install libssl-dev`
@@ -212,6 +214,10 @@ If things fail:
 
   - `sudo apt-get install libnet-ssleay-perl`
   - `sudo apt-get install libcrypt-ssleay-perl`
+
+Copy and edit the configuration file:
+
+  - `cp config.json-dist config.json`
 
 ## Configuration
 
@@ -317,6 +323,10 @@ or...
 ### Hide access logs
 
     plackup --access-log /dev/null -p 55556
+
+### With SSL enabled
+
+    sudo plackup -p 443 --enable-ssl --ssl-key-file /etc/letsencrypt/live/tesla.hellbent.app/privkey.pem --ssl-cert-file /etc/letsencrypt/live/tesla.hellbent.app/fullchain.pem --access-log /dev/null app.psgi
 
 ### Reload the application if any file changes 
 
