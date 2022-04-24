@@ -1,11 +1,5 @@
 #!/usr/bin/env perl
 
-# Crontab entry
-# @reboot sleep 10; cd /home/steve/repos/tesla-charge; /home/steve/perl5/perlbrew/perls/perl-5.30.1/bin/perl app.psgi > /tmp/tesla_web.log 2>&1
-
-# Auto-reloading plack command
-# plackup --access-log /dev/null -p 55556 -r -R . app.psgi
-
 use warnings;
 use strict;
 use 5.10.0;
