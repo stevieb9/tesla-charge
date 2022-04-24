@@ -89,35 +89,12 @@ void ledReset () {
 }
 
 void ledSet (CRGB led5, CRGB led4, CRGB led3, CRGB led2, CRGB led1, CRGB led0) {
-    bool colourChanged = false;
-
-    if (leds[5] != led5) {
-        colourChanged = true;
-    }
-    if (leds[4] != led4) {
-        colourChanged = true;
-    }
-    if (leds[3] != led3) {
-        colourChanged = true;
-    }
-    if (leds[2] != led2) {
-        colourChanged = true;
-    }
-    if (leds[1] != led1) {
-        colourChanged = true;
-    }
-    if (leds[0] != led0) {
-        colourChanged = true;
-    }
-
-//    if (colourChanged) {
-        drawLED(5, led5);
-        drawLED(4, led4);
-        drawLED(3, led3);
-        drawLED(2, led2);
-        drawLED(1, led1);
-        drawLED(0, led0);
-//    }
+    drawLED(5, led5);
+    drawLED(4, led4);
+    drawLED(3, led3);
+    drawLED(2, led2);
+    drawLED(1, led1);
+    drawLED(0, led0);
 
     FastLED.show();
 }

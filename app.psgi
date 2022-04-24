@@ -233,7 +233,7 @@ sub fetch {
 
     $online = $car->online;
 
-    if (! defined $online || ! $online) {
+    if (! $online) {
         $struct->{online} = 0;
         return $struct;
     }

@@ -36,6 +36,7 @@ garage door prototype.
     + [Files - Application](#files---application)
     + [Files - Sketches](#files---sketches)
     + [Files - Headers](#files---headers)
+* [Installation](#installation) 
 * [Configuration](#configuration)
     + [Network Port](#network-port)
     + [WiFi SSID and Password](#wifi-ssid-and-password)
@@ -43,7 +44,6 @@ garage door prototype.
     + [ESP-NOW MAC Addresses](#esp-now-mac-addresses)
     + [GPIO Pins](#gpio-pins)
     + [Configuration File](#configuration-file)
-* [Install Perl Components](#install-perl-components)
 * [Run the HTTP API Service](#run-the-http-api-service)
     + [Run from crontab](#run-from-crontab)
     + [All logging enabled](#all-logging-enabled)
@@ -197,6 +197,22 @@ sketch.
 Used by the [Interface Microcontroller](#microcontroller---interface) sketch
 for the custom fonts displayed on the OLED display device.
 
+## Installation
+
+If on Ubuntu, some packages are required:
+
+  - `sudo apt-get install libssl-dev`
+
+
+Install the dependencies:
+
+  - `cpanm --installdeps .`
+
+If things fail:
+
+  - `sudo apt-get install libnet-ssleay-perl`
+  - `sudo apt-get install libcrypt-ssleay-perl`
+
 ## Configuration
 
 There are several things that need to be verified and/or modified.
@@ -283,11 +299,6 @@ All values below are default.
             }
         }
     }
-
-## Install Perl Components
-
-    cd tesla-charge
-    cpanm --installdeps .
 
 ## Run the HTTP API Service
 
