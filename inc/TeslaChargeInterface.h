@@ -11,8 +11,7 @@
 #define DEBUG_MAGNET    0   // REED switch on at all times
 #define DEBUG_MOTION    0   // PIR on at all times
 
-#define URL         "http://192.168.1.252:55556"
-//#define URL         "http://10.0.0.50:55556"
+#define URL             "http://192.168.1.252:55556"
 
 #define REED_PIN        2  // Pin D4
 #define PIR_PIN         12 // Pin D6
