@@ -18,7 +18,7 @@ bool gotData = false;
 
 SSD1306Wire oled(0x3c, SDA_PIN, SCL_PIN);
 HTTPClient http;
-WiFiClient wifi;
+BearSSL::WiFiClientSecure wifi;
 WiFiManager wifiManager;
 TeslaVehicle car;
 VehicleData vehicleData;
@@ -48,6 +48,7 @@ void setup() {
     displayClear();
 
     wifiManager.autoConnect(apNameInterface);
+    wifi.setInsecure();
 
     url = URL;
 
