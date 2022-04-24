@@ -6,6 +6,7 @@ use 5.10.0;
 
 use Async::Event::Interval;
 use Dancer2;
+use Dancer2::Plugin::Auth::OAuth;
 use Data::Dumper;
 use FindBin;
 use IPC::Shareable;
@@ -14,6 +15,8 @@ use Tesla::Vehicle;
 our $VERSION = '1.02';
 
 $| = 1;
+
+$ENV{DANCER_CONFIG_EXT} = 'yml';
 
 set port => 55556;
 
