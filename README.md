@@ -48,6 +48,7 @@ garage door prototype.
     + [Run from crontab](#run-from-crontab)
     + [All logging enabled](#all-logging-enabled)
     + [Hide access logs](#hide-access-logs)
+    + [With an SSL certificate](#with-ssl-enabled)
     + [Reload the application if any file changes](#reload-the-application-if-any-file-changes)
     + [Reload the application if the application file changes](#reload-the-application-if-the-application-file-changes)
 
