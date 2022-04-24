@@ -1,7 +1,11 @@
 Revision history for tesla-charge
 
 1.02 UNREL
-    -
+    - We now use WiFiManager; if we can't connect to a known wireless network,
+      we'll start the controllers in AP mode ('TeslaInterface' and
+      'TeslaController') so that a new wifi config can be uploaded
+    - Added SSL support
+    - We now connect to the public tesla.hellbent.app website via HTTPS
 
 1.01 2022-04-08
     - Separated code into two separate controllers (Controller - controls the
