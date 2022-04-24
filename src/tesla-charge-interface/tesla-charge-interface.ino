@@ -48,12 +48,7 @@ void setup() {
 
     wifiSetup();
 
-    if (DEBUG_URL) {
-        url = URL_DEBUG;
-    }
-    else {
-        url = URL;
-    }
+    url = URL;
 
     if (esp_now_init() != 0) {
         Serial.println(F("Error initializing ESP-NOW"));
@@ -252,13 +247,14 @@ void wifiSetup () {
 
     WiFi.begin(ssid, ssidPassword);
 
-    sp(F("MAC Address: "));
-    spl(WiFi.macAddress());
-
     while (WiFi.status() != WL_CONNECTED) {
         spl("RSSI: " + (String) WiFi.RSSI());
         delay(500);
     }
+
+    sp(F("MAC Address: "));
+    spl(WiFi.macAddress());
+
     spl(F("Wifi Connected"));
 
     oled.setFont(ArialMT_Plain_16);
