@@ -3,6 +3,7 @@
 
 #include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
+#include <ESP8266WiFi.h>
 #include "SSD1306Wire.h"
 #include "/Users/steve/repos/tesla-charge/inc/TeslaChargeFont.h"
 

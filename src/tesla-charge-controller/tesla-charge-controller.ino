@@ -5,7 +5,7 @@
 unsigned long fetchLEDBlinkTime;
 bool fetchBlinkStatus = false;
 
-WiFiClient wifi;
+WiFiManager wifiManager;
 CRGB leds[NUM_LEDS];
 VehicleData vehicleData;
 
@@ -22,7 +22,7 @@ void setup() {
 
     ledReset();
 
-    wifiSetup();
+    wifiManager.autoConnect(apNameController);
 
     vehicleData.state = UNKNOWN;
     vehicleData.charge = 0;
@@ -278,33 +278,4 @@ void vehicleDataRecv(uint8_t* mac, uint8_t *dataRecv, uint8_t len) {
     Serial.print(F("Settings: "));
     Serial.println(vehicleData.charge);
     */
-}
-
-void readEEPROM(int startAdr, int maxLength, char* dest) {
-    EEPROM.begin(512);
-    delay(10);
-    for (int i = 0; i < maxLength; i++) {
-        dest[i] = char(EEPROM.read(startAdr + i));
-    }
-    EEPROM.end();
-}
-
-void wifiSetup () {
-    char ssid[16];
-    char ssidPassword[16];
-
-    readEEPROM(0,  16, ssid);
-    readEEPROM(16, 16, ssidPassword);
-
-    WiFi.begin(ssid, ssidPassword);
-
-    while (WiFi.status() != WL_CONNECTED) {
-        spl("RSSI: " + (String) WiFi.RSSI());
-        delay(500);
-    }
-
-    sp(F("MAC Address: "));
-    spl(WiFi.macAddress());
-
-    spl(F("Wifi Connected"));
 }

@@ -19,6 +19,7 @@ bool gotData = false;
 SSD1306Wire oled(0x3c, SDA_PIN, SCL_PIN);
 HTTPClient http;
 WiFiClient wifi;
+WiFiManager wifiManager;
 TeslaVehicle car;
 VehicleData vehicleData;
 
@@ -46,7 +47,7 @@ void setup() {
 
     displayClear();
 
-    wifiSetup();
+    wifiManager.autoConnect(apNameInterface);
 
     url = URL;
 
@@ -228,41 +229,3 @@ void vehicleDataSent(uint8_t *mac, uint8_t sendStatus) {
     }
     */
 }
-
-void readEEPROM(int startAdr, int maxLength, char* dest) {
-    EEPROM.begin(512);
-    delay(10);
-    for (int i = 0; i < maxLength; i++) {
-        dest[i] = char(EEPROM.read(startAdr + i));
-    }
-    EEPROM.end();
-}
-
-void wifiSetup () {
-    char ssid[16];
-    char ssidPassword[16];
-
-    readEEPROM(0,  16, ssid);
-    readEEPROM(16, 16, ssidPassword);
-
-    WiFi.begin(ssid, ssidPassword);
-
-    while (WiFi.status() != WL_CONNECTED) {
-        spl("RSSI: " + (String) WiFi.RSSI());
-        delay(500);
-    }
-
-    sp(F("MAC Address: "));
-    spl(WiFi.macAddress());
-
-    spl(F("Wifi Connected"));
-
-    oled.setFont(ArialMT_Plain_16);
-    oled.drawString(0, 0, F("Wifi Connected"));
-    oled.display();
-    oledClear = false;
-
-    delay(1000);
-    oled.setFont(myFont_53);
-}
-
