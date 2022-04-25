@@ -63,7 +63,8 @@ the Board type in the Arduino IDE). For the garage door  prototype, an Arduino
 Uno was used.
 
 The Perl backend API software can be run by any computer that is reachable via
-wifi to the micro-controllers (I use a Raspberry Pi 3).
+wifi to the micro-controllers (I used to use a Raspberry Pi 3, but then
+decided to have it run on an external VPS).
 
 ### Perl HTTP API Server
 
