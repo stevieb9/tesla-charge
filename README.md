@@ -240,10 +240,11 @@ your system.
 
 ### WiFi SSID and Password
 
-This must be stored in EEPROM.
-
-- SSID is at EEPROM address 0, and is 16 bytes long maximum
-- Password is at EEPROM address 16, and is 16 bytes long
+We use `WiFiManager` to manage the WiFi credentials. If a known network isn't
+available to automatically log into, the controllers will start up in Access
+Point mode. Simply connect to the AP (`TeslaInterface` and `TeslaController`),
+and using a web browser, connect to `http://192.168.4.1`. You can enter in the
+WiFi details there.
 
 ### HTTP API URL
 
