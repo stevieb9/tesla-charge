@@ -163,10 +163,17 @@ sub security {
     }
 
     if ($system_conf->{secure_auth}) {
-        my $user_token = body_parameters->get('token');
+        my $user_token;
+
+        if (body_parameters->get('token')) {
+            $user_token = body_parameters->get('token');
+        }
+        else {
+            $user_token = from_json(request->body)->{token};
+        }
 
         if (! defined $user_token || ! grep { $user_token eq $_ } values %$tokens) {
-            print "Failed to authenticate token\n";
+            print "Failed to authenticate token: '$user_token'\n";
             $secure = 0;
         }
     }
