@@ -1,7 +1,10 @@
-requires 'Net::SSLeay', '0';
 requires 'Async::Event::Interval', '1.12';
-requires 'IPC::Shareable', '1.12';
+requires 'Digest::SHA', '0';
 requires 'Dancer2', '0';
 requires 'Data::Dumper', '0';
 requires 'FindBin', '0';
+requires 'IPC::Shareable', '1.12';
+requires 'JSON', '0';
+requires 'MOME::Base64', '0';
+requires 'Net::SSLeay', '0';
 requires 'Tesla::Vehicle', '0.07';

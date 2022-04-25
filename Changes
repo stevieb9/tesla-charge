@@ -7,6 +7,8 @@ Revision history for tesla-charge
     - Added SSL support
     - Backend API URL is now configured through the WiFi configuration captive
       portal. ie, it's no longer hard-coded
+    - Added token authentication (routes now are get/post); added 'tokens'
+      section to config file
 
 1.01 2022-04-08
     - Separated code into two separate controllers (Controller - controls the

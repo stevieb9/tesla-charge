@@ -31,6 +31,7 @@ use constant {
 my $system_conf;
 my $tesla_conf;
 my $garage_conf;
+my $tokens;
 
 my $tesla_debug = 0;
 my $garage_debug = 0;
@@ -51,7 +52,7 @@ $tesla_event->start;
 
 my $last_conn_time = time;
 
-get '/' => sub {
+any ['get', 'post'] => '/' => sub {
     config_load();
 
     return if ! security();
@@ -71,21 +72,21 @@ get '/' => sub {
     return $tesla_data if $tesla_data;
     return encode_json _default_data();
 };
-get '/debug' => sub {
+any ['get', 'post'] => '/debug' => sub {
     return if ! security();
 
     content_type 'application/json';
     config_load();
     return debug_data();
 };
-get '/debug_garage' => sub {
+any ['get', 'post'] => '/debug_garage' => sub {
     return if ! security();
 
     content_type 'application/json';
     config_load();
     return debug_garage_data();
 };
-get '/wake' => sub {
+any ['get', 'post'] => '/wake' => sub {
     # Wake up the Tesla
     return if ! security();
 
@@ -100,12 +101,12 @@ get '/wake' => sub {
 
     redirect '/';
 };
-get '/garage' => sub {
+any ['get', 'post'] => '/garage' => sub {
     # Main garage page (web)
     return if ! security();
     return template 'garage';
 };
-get '/garage_data' => sub {
+any ['get', 'post'] => '/garage_data' => sub {
     # Get garage data (microcontroller)
     return if ! security();
 
@@ -119,7 +120,7 @@ get '/garage_data' => sub {
 
     return encode_json $garage_data if $garage_data;
 };
-get '/garage_door_state' => sub {
+any ['get', 'post'] => '/garage_door_state' => sub {
     # Get garage door state
     return if ! security();
     return int $garage_data->{garage_door_state};
@@ -135,14 +136,14 @@ post '/garage_update' => sub {
 
     return;
 };
-get '/garage_door_operate' => sub {
+any ['get', 'post'] => '/garage_door_operate' => sub {
     # Trigger the garage door to operate (app/web)
     return if ! security();
     #my $data = decode_json request->body;
 
     $garage_data->{activity} = 1;
 };
-get '/garage_door_toggle' => sub {
+any ['get', 'post'] => '/garage_door_toggle' => sub {
     # Toggle door state (web)
     return if ! security();
 };
@@ -150,13 +151,27 @@ get '/garage_door_toggle' => sub {
 dance;
 
 sub security {
+    my $secure = 1;
+
     if ($system_conf->{secure_ip}) {
         my $allowed_ips = $system_conf->{allowed_ips};
         my $requester_ip = request->address;
 
-        return if ! grep { $requester_ip eq $_ } @$allowed_ips;
+        print "Failed to authenticate IP address\n";
+
+        $secure = 0 if ! grep { $requester_ip eq $_ } @$allowed_ips;
     }
-    return 1;
+
+    if ($system_conf->{secure_auth}) {
+        my $user_token = body_parameters->get('token');
+
+        if (! defined $user_token || ! grep { $user_token eq $_ } values %$tokens) {
+            print "Failed to authenticate token\n";
+            $secure = 0;
+        }
+    }
+
+    return $secure;
 }
 sub config_load {
     my $conf;
@@ -172,6 +187,7 @@ sub config_load {
     $system_conf = $conf->{system};
     $tesla_conf  = $conf->{tesla_vehicle};
     $garage_conf = $conf->{garage};
+    $tokens      = $conf->{tokens};
 
     $tesla_debug = 1 if $tesla_conf->{debug};
     $garage_debug = 1 if $garage_conf->{debug};
