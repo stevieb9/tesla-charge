@@ -43,6 +43,7 @@ garage door prototype.
     + [HTTP API URLS](#http-api-urls)
     + [ESP-NOW MAC Addresses](#esp-now-mac-addresses)
     + [GPIO Pins](#gpio-pins)
+    + [App Security](#security)
     + [Configuration File](#configuration-file)
 * [Run the HTTP API Service](#run-the-http-api-service)
     + [Run from crontab](#run-from-crontab)
@@ -243,11 +244,14 @@ This must be stored in EEPROM.
 - SSID is at EEPROM address 0, and is 16 bytes long maximum
 - Password is at EEPROM address 16, and is 16 bytes long
 
-### HTTP API URLS
+### HTTP API URL
 
-These are hard coded as `URL` and `URL_DEBUG` in the `inc/TeslaChargeInterface.h`
-header file. Each entry should include the URL, port and any route that is
-default.
+This is hard coded as `URL` in the `inc/TeslaChargeInterface.h` header file.
+It should include the URL, port and any route that is default.
+
+Example:
+
+    https://www.mywebsite.com:55556/path/to/app
 
 ### ESP-NOW MAC Addresses
 
@@ -263,6 +267,15 @@ address of the device on the serial console.
 The GPIO pin definitions used by each microcontroller can be found in their
 respective header file in `inc/`.
 
+### Security
+
+Currently, we have IP-based security. All routes will return early if the
+requester IP doesn't match the list in the configuration file.
+
+To enable IP security, set `secure_ip` to `1` in the `system` section of the
+configuration file, and add the allowed IP addresses to the `allowed_ips`
+array in the same section of the file.
+
 ### Configuration File
 
 Initially, copy the `config.json-dist` file to `config.json` in the root
@@ -273,7 +286,9 @@ All values below are default.
     {
         "system": {
             "secure_ip":    0,          # Refuse access based on IP
-            "secure_auth":  0           # Allow only authorized users
+            "secure_auth":  0,          # Allow only authorized users
+            "allowed_ips": [
+            ]
         },
         "tesla_vehicle": {
             "debug":        0,          # Display debug output in app.psgi
