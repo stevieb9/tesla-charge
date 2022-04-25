@@ -6,6 +6,8 @@ bool oledInit = false;
 bool oledClear = true;
 bool alarmEnabled = true;
 
+String apiTokenString = "";
+
 uint8_t lastCharge = CHARGE_MAX;
 
 unsigned long alarmOnTime;
@@ -55,7 +57,10 @@ void setup() {
     esp_now_register_send_cb(vehicleDataSent);
     esp_now_add_peer(MacController, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
 
-    readEEPROM(EEPROM_ADDR_API_URL, sizeof(apiURL), apiURL);
+    delay(2000);
+
+    //readEEPROM(EEPROM_ADDR_API_URL, sizeof(apiURL), apiURL);
+    readEEPROM(EEPROM_ADDR_API_TOKEN, 86, apiToken);
 
     // Wipe the wifi creds so we can access the AP config screen
 
@@ -68,23 +73,29 @@ void setup() {
 
     wifiManager.setSaveConfigCallback(saveConfig);
 
-    WiFiManagerParameter custom_api_url("apiurl", "API URL", apiURL, sizeof(apiURL));
-    wifiManager.addParameter(&custom_api_url);
+    //WiFiManagerParameter custom_api_url("apiurl", "API URL", apiURL, sizeof(apiURL));
+    WiFiManagerParameter custom_api_token("apitoken", "API Token", apiToken, 86);
+
+    //wifiManager.addParameter(&custom_api_url);
+    wifiManager.addParameter(&custom_api_token);
 
     if (! wifiManager.autoConnect(apNameInterface)) {
-        spl("Failed to connect to wifi...");
+        spl(F("Failed to connect to wifi..."));
         delay(3000);
         ESP.restart();
         delay(5000);
     }
 
-    strcpy(apiURL, custom_api_url.getValue());
+    //strcpy(apiURL, custom_api_url.getValue());
+    strcpy(apiToken, custom_api_token.getValue());
+
+    apiTokenString = String("{\"token\":\"") + String(apiToken) + String("\"}");
 
     configure();
 
     if (CONFIG_RESET) {
         // Give us time to re-upload the sketch with CONFIG_RESET disabled
-        spl("Config was reset, waiting for sketch upload with reset disabled");
+        spl(F("\nConfig was reset, waiting for sketch upload with reset disabled"));
         delay(100000);
     }
 
@@ -146,7 +157,8 @@ void loop() {
 
 void configure () {
     if (configSaveNeeded) {
-        writeEEPROM(EEPROM_ADDR_API_URL, sizeof(apiURL), apiURL);
+        //writeEEPROM(EEPROM_ADDR_API_URL, sizeof(apiURL), apiURL);
+        writeEEPROM(EEPROM_ADDR_API_TOKEN, 86, apiToken);
     }
 }
 
@@ -214,8 +226,10 @@ uint8_t* fetchData () {
 
     static uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-    int httpCode = http.GET();
+    http.addHeader("Content-Type", "application/json");
+    int httpCode = http.POST(apiTokenString);
 
+    delay(1000);
     if (httpCode < 0) {
         sp(F("HTTP Error Code: "));
         spl(httpCode);
@@ -269,11 +283,11 @@ void saveConfig () {
 }
 
 void writeEEPROM(int startAdr, int laenge, char* writeString) {
-    EEPROM.begin(512); //Max bytes of eeprom to use
+    EEPROM.begin(512);
     yield();
 
     Serial.println();
-    Serial.print("Writing EEPROM: ");
+    Serial.print(F("Writing EEPROM: "));
 
     for (int i = 0; i < laenge; i++) {
         EEPROM.write(startAdr + i, writeString[i]);
@@ -287,11 +301,10 @@ void writeEEPROM(int startAdr, int laenge, char* writeString) {
 void readEEPROM(int startAdr, int maxLength, char* dest) {
     EEPROM.begin(512);
     delay(10);
-    for (int i = 0; i < maxLength; i++)
-    {
+    for (int i = 0; i < maxLength; i++) {
         dest[i] = char(EEPROM.read(startAdr + i));
     }
     EEPROM.end();
-    Serial.print("Ready reading EEPROM:");
+    Serial.print(F("Reading EEPROM: "));
     Serial.println(dest);
 }

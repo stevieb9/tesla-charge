@@ -27,8 +27,10 @@
 
 #define DATA_DELAY      500  // Wait between API calls (milliseconds)
 
-#define EEPROM_ADDR_API_URL 0 // Address location of first bit of API URL
+#define EEPROM_ADDR_API_URL     0 // Address location of first bit of API URL
+#define EEPROM_ADDR_API_TOKEN   420   // Address location of first bit of user token
 
-char apiURL[64] = "";
+const char* apiURL = "https://tesla.hellbent.app:55556";
+char apiToken[86];
 
 #endif
