@@ -84,6 +84,7 @@ void setup() {
 
     if (CONFIG_RESET) {
         // Give us time to re-upload the sketch with CONFIG_RESET disabled
+        spl("Config was reset, waiting for sketch upload with reset disabled");
         delay(100000);
     }
 
