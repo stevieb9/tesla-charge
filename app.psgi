@@ -52,11 +52,11 @@ $tesla_event->start;
 my $last_conn_time = time;
 
 get '/' => sub {
+    config_load();
+
     return if ! security();
 
     content_type 'application/json';
-
-    config_load();
 
     return debug_data() if $tesla_conf->{debug_return};
 
@@ -154,7 +154,7 @@ sub security {
         my $allowed_ips = $system_conf->{allowed_ips};
         my $requester_ip = request->address;
 
-        return "blah" if ! grep { $requester_ip eq $_ } @$allowed_ips;
+        return if ! grep { $requester_ip eq $_ } @$allowed_ips;
     }
     return 1;
 }
