@@ -1,7 +1,9 @@
 {
     "system": {
         "secure_ip":    0,
-        "secure_auth":  0
+        "secure_auth":  0,
+        "allowed_ips": [
+        ]
     },
     "tesla_vehicle": {
         "debug":        0,
