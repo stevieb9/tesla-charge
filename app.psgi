@@ -15,8 +15,6 @@ our $VERSION = '1.02';
 
 $| = 1;
 
-$ENV{DANCER_CONFIG_EXT} = 'yml';
-
 set port => 55556;
 
 use constant {
@@ -153,7 +151,10 @@ dance;
 
 sub security {
     if ($system_conf->{secure_ip}) {
-        return if request->address !~ /^192\.168\.1\.\d+/;
+        my $allowed_ips = $system_conf->{allowed_ips};
+        my $requester_ip = request->address;
+
+        return "blah" if ! grep { $requester_ip eq $_ } @$allowed_ips;
     }
     return 1;
 }
