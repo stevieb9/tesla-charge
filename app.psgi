@@ -6,7 +6,6 @@ use 5.10.0;
 
 use Async::Event::Interval;
 use Dancer2;
-use Dancer2::Plugin::Auth::OAuth;
 use Data::Dumper;
 use FindBin;
 use IPC::Shareable;
