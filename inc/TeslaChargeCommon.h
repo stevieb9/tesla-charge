@@ -3,10 +3,12 @@
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>
+#include <EEPROM.h>
 #include <espnow.h>
 #include <WiFiManager.h>
 
-#define SERIAL_DEBUG // Serial output (comment to disable)
+#define SERIAL_DEBUG        // Serial output (comment to disable)
+#define CONFIG_RESET    0   // Enable AP mode to reset WiFi settings
 
 #ifdef SERIAL_DEBUG
 #define sp(x)   Serial.print(x)

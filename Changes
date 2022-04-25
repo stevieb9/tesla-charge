@@ -5,7 +5,8 @@ Revision history for tesla-charge
       we'll start the controllers in AP mode ('TeslaInterface' and
       'TeslaController') so that a new wifi config can be uploaded
     - Added SSL support
-    - We now connect to the public tesla.hellbent.app website via HTTPS
+    - Backend API URL is now configured through the WiFi configuration captive
+      portal. ie, it's no longer hard-coded
 
 1.01 2022-04-08
     - Separated code into two separate controllers (Controller - controls the

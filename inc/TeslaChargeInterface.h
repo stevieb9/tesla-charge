@@ -12,9 +12,6 @@
 #define DEBUG_MAGNET    0   // REED switch on at all times
 #define DEBUG_MOTION    0   // PIR on at all times
 
-// The location of the backend API
-#define URL             "https://tesla.hellbent.app:55556";
-
 #define REED_PIN        2   // Pin D4
 #define PIR_PIN         12  // Pin D6
 #define ALARM_PIN       13  // Pin D7
@@ -29,5 +26,9 @@
 #define ALARM_CHARGE    70   // Below this battery level, audible alarm sounds
 
 #define DATA_DELAY      500  // Wait between API calls (milliseconds)
+
+#define EEPROM_ADDR_API_URL 0 // Address location of first bit of API URL
+
+char apiURL[64] = "";
 
 #endif

@@ -248,12 +248,17 @@ WiFi details there.
 
 ### HTTP API URL
 
-This is hard coded as `URL` in the `inc/TeslaChargeInterface.h` header file.
-It should include the URL, port and any route that is default.
+This is configured in the WiFi configuration captive portal, along with the
+WiFi credentials. It is available only on the 
+[Interface Controller](#microcontroller---interface). See
+[WiFi Configuration](#wifi-ssid-and-password).
+
+It's size is set to 64 chars, and can be configured in the
+[TeslaChargeInterface header file](#teslachargeinterfaceh) header file.
 
 Example:
 
-    https://www.mywebsite.com:55556/path/to/app
+    API URL: https://www.mywebsite.com:55556/path/to/app
 
 ### ESP-NOW MAC Addresses
 

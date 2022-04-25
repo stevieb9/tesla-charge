@@ -6,8 +6,6 @@ bool oledInit = false;
 bool oledClear = true;
 bool alarmEnabled = true;
 
-char* url;
-
 uint8_t lastCharge = CHARGE_MAX;
 
 unsigned long alarmOnTime;
@@ -15,6 +13,7 @@ unsigned long alarmOffTime;
 unsigned long dataRefreshTime;
 
 bool gotData = false;
+bool configSaveNeeded = false;
 
 SSD1306Wire oled(0x3c, SDA_PIN, SCL_PIN);
 HTTPClient http;
@@ -47,11 +46,6 @@ void setup() {
 
     displayClear();
 
-    wifiManager.autoConnect(apNameInterface);
-    wifi.setInsecure();
-
-    url = URL;
-
     if (esp_now_init() != 0) {
         Serial.println(F("Error initializing ESP-NOW"));
         return;
@@ -60,6 +54,38 @@ void setup() {
     esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
     esp_now_register_send_cb(vehicleDataSent);
     esp_now_add_peer(MacController, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
+
+    readEEPROM(EEPROM_ADDR_API_URL, sizeof(apiURL), apiURL);
+
+    // Wipe the wifi creds so we can access the AP config screen
+
+    if (CONFIG_RESET) {
+        wifiManager.resetSettings();
+    }
+
+    // To allow connecting to HTTPS
+    wifi.setInsecure();
+
+    wifiManager.setSaveConfigCallback(saveConfig);
+
+    WiFiManagerParameter custom_api_url("apiurl", "API URL", apiURL, sizeof(apiURL));
+    wifiManager.addParameter(&custom_api_url);
+
+    if (! wifiManager.autoConnect(apNameInterface)) {
+        spl("Failed to connect to wifi...");
+        delay(3000);
+        ESP.restart();
+        delay(5000);
+    }
+
+    strcpy(apiURL, custom_api_url.getValue());
+
+    configure();
+
+    if (CONFIG_RESET) {
+        // Give us time to re-upload the sketch with CONFIG_RESET disabled
+        delay(100000);
+    }
 
     ArduinoOTA.begin();
 }
@@ -115,6 +141,12 @@ void loop() {
     }
 
     esp_now_send(MacController, (uint8_t *) &vehicleData, sizeof(vehicleData));
+}
+
+void configure () {
+    if (configSaveNeeded) {
+        writeEEPROM(EEPROM_ADDR_API_URL, sizeof(apiURL), apiURL);
+    }
 }
 
 void displayClear () {
@@ -176,7 +208,7 @@ void OLEDDisplay (uint8_t charge) {
 
 uint8_t* fetchData () {
 
-    http.begin(wifi, url);
+    http.begin(wifi, apiURL);
     http.setTimeout(8000);
 
     static uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -229,4 +261,36 @@ void vehicleDataSent(uint8_t *mac, uint8_t sendStatus) {
         Serial.println(F("Delivery fail"));
     }
     */
+}
+
+void saveConfig () {
+    configSaveNeeded = true;
+}
+
+void writeEEPROM(int startAdr, int laenge, char* writeString) {
+    EEPROM.begin(512); //Max bytes of eeprom to use
+    yield();
+
+    Serial.println();
+    Serial.print("Writing EEPROM: ");
+
+    for (int i = 0; i < laenge; i++) {
+        EEPROM.write(startAdr + i, writeString[i]);
+        Serial.print(writeString[i]);
+    }
+
+    EEPROM.commit();
+    EEPROM.end();
+}
+
+void readEEPROM(int startAdr, int maxLength, char* dest) {
+    EEPROM.begin(512);
+    delay(10);
+    for (int i = 0; i < maxLength; i++)
+    {
+        dest[i] = char(EEPROM.read(startAdr + i));
+    }
+    EEPROM.end();
+    Serial.print("Ready reading EEPROM:");
+    Serial.println(dest);
 }
