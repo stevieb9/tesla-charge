@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>
-#include <EEPROM.h>
 #include <espnow.h>
 #include <WiFiManager.h>
 

@@ -4,6 +4,7 @@
 #include <ArduinoJson.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
+#include <FS.h>
 #include "SSD1306Wire.h"
 #include "/Users/steve/repos/tesla-charge/inc/TeslaChargeFont.h"
 
@@ -27,10 +28,7 @@
 
 #define DATA_DELAY      500  // Wait between API calls (milliseconds)
 
-#define EEPROM_ADDR_API_URL     0 // Address location of first bit of API URL
-#define EEPROM_ADDR_API_TOKEN   420   // Address location of first bit of user token
-
-const char* apiURL = "https://tesla.hellbent.app:55556";
 char apiToken[86];
+char apiURL[64];
 
 #endif
