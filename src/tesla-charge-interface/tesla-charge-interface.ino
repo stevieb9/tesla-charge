@@ -1,5 +1,5 @@
-#include "/Users/steve/repos/tesla-charge/inc/TeslaChargeCommon.h"
 #include "/Users/steve/repos/tesla-charge/inc/TeslaChargeInterface.h"
+#include "/Users/steve/repos/tesla-charge/inc/TeslaChargeCommon.h"
 #include "/Users/steve/repos/tesla-charge/inc/TeslaVehicle.h"
 
 bool oledInit = false;
@@ -57,14 +57,12 @@ void setup() {
     esp_now_register_send_cb(vehicleDataSent);
     esp_now_add_peer(MacController, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
 
-    delay(2000);
-
-    //readEEPROM(EEPROM_ADDR_API_URL, sizeof(apiURL), apiURL);
-    readEEPROM(EEPROM_ADDR_API_TOKEN, 86, apiToken);
+    configRead();
 
     // Wipe the wifi creds so we can access the AP config screen
 
     if (CONFIG_RESET) {
+        spl(F("BEFORE RESET"));
         wifiManager.resetSettings();
     }
 
@@ -73,11 +71,15 @@ void setup() {
 
     wifiManager.setSaveConfigCallback(saveConfig);
 
-    //WiFiManagerParameter custom_api_url("apiurl", "API URL", apiURL, sizeof(apiURL));
-    WiFiManagerParameter custom_api_token("apitoken", "API Token", apiToken, 86);
+    spl(F("BEFORE PARAMS"));
 
-    //wifiManager.addParameter(&custom_api_url);
+    WiFiManagerParameter custom_api_token("api_token", "API Token", apiToken, sizeof(apiToken));
+    WiFiManagerParameter custom_api_url("api_url", "API URL", apiURL, sizeof(apiURL));
+
     wifiManager.addParameter(&custom_api_token);
+    wifiManager.addParameter(&custom_api_url);
+
+    spl(F("AFTER PARAMS"));
 
     if (! wifiManager.autoConnect(apNameInterface)) {
         spl(F("Failed to connect to wifi..."));
@@ -86,12 +88,17 @@ void setup() {
         delay(5000);
     }
 
-    //strcpy(apiURL, custom_api_url.getValue());
+    spl(F("BEFORE STRCPY"));
+
+    strcpy(apiURL, custom_api_url.getValue());
+    spl(F("AFTER URL"));
+
     strcpy(apiToken, custom_api_token.getValue());
+    spl(F("AFTER TOKEN"));
 
     apiTokenString = String("{\"token\":\"") + String(apiToken) + String("\"}");
 
-    configure();
+    configWrite();
 
     if (CONFIG_RESET) {
         // Give us time to re-upload the sketch with CONFIG_RESET disabled
@@ -99,6 +106,10 @@ void setup() {
         delay(100000);
     }
 
+    spl(apiToken);
+    spl(apiURL);
+
+    delay(1000);
     ArduinoOTA.begin();
 }
 
@@ -155,10 +166,33 @@ void loop() {
     esp_now_send(MacController, (uint8_t *) &vehicleData, sizeof(vehicleData));
 }
 
-void configure () {
+void configWrite () {
     if (configSaveNeeded) {
-        //writeEEPROM(EEPROM_ADDR_API_URL, sizeof(apiURL), apiURL);
-        writeEEPROM(EEPROM_ADDR_API_TOKEN, 86, apiToken);
+        Serial.println(F("Saving config"));
+
+        File configFile = SPIFFS.open("/config.json", "w");
+
+        if (! configFile) {
+            Serial.println(F("failed to open config file for writing"));
+            return;
+        }
+
+        StaticJsonDocument<256> json;
+
+        json["api_url"] = apiURL;
+        json["api_token"] = apiToken;
+
+        sp("URL: ");
+        spl(apiURL);
+
+        sp("Token: ");
+        spl(apiToken);
+
+        if (serializeJson(json, configFile) == 0) {
+            Serial.println(F("Failed to write to file"));
+        }
+
+        configFile.close();
     }
 }
 
@@ -278,33 +312,40 @@ void vehicleDataSent(uint8_t *mac, uint8_t sendStatus) {
     */
 }
 
+void configRead () {
+    if (SPIFFS.begin()) {
+        Serial.println(F("Mounted file system"));
+        if (SPIFFS.exists("/config.json")) {
+            Serial.println(F("Reading config file"));
+            File configFile = SPIFFS.open("/config.json", "r");
+            if (configFile) {
+                Serial.println(F("Opened config file"));
+
+                StaticJsonDocument<256> json;
+
+                DeserializationError error = deserializeJson(json, configFile);
+
+                spl(F("After deserial"));
+
+                if (! error) {
+                    strcpy(apiURL, json["api_url"]);
+                    strcpy(apiToken, json["api_token"]);
+
+                    sp(F("JSON url: "));
+                    sp(apiURL);
+                    sp(F(" Token: "));
+                    spl(apiToken);
+                } else {
+                    Serial.println(F("Failed to load json config"));
+                }
+                configFile.close();
+            }
+        }
+    } else {
+        Serial.println(F("Failed to mount FS"));
+    }
+};
+
 void saveConfig () {
     configSaveNeeded = true;
-}
-
-void writeEEPROM(int startAdr, int laenge, char* writeString) {
-    EEPROM.begin(512);
-    yield();
-
-    Serial.println();
-    Serial.print(F("Writing EEPROM: "));
-
-    for (int i = 0; i < laenge; i++) {
-        EEPROM.write(startAdr + i, writeString[i]);
-        Serial.print(writeString[i]);
-    }
-
-    EEPROM.commit();
-    EEPROM.end();
-}
-
-void readEEPROM(int startAdr, int maxLength, char* dest) {
-    EEPROM.begin(512);
-    delay(10);
-    for (int i = 0; i < maxLength; i++) {
-        dest[i] = char(EEPROM.read(startAdr + i));
-    }
-    EEPROM.end();
-    Serial.print(F("Reading EEPROM: "));
-    Serial.println(dest);
 }
