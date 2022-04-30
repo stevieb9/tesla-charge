@@ -40,7 +40,8 @@ garage door prototype.
 * [Configuration](#configuration)
     + [Network Port](#network-port)
     + [WiFi SSID and Password](#wifi-ssid-and-password)
-    + [HTTP API URLS](#http-api-urls)
+    + [HTTP API URL](#http-api-url)
+    + [HTTP API Token](#http-api-token)
     + [ESP-NOW MAC Addresses](#esp-now-mac-addresses)
     + [GPIO Pins](#gpio-pins)
     + [App Security](#security)
@@ -222,6 +223,8 @@ Copy and edit the configuration file:
 
   - `cp config.json-dist config.json`
 
+Proceed through the [configuration](#configuration) section of this document.
+
 ## Configuration
 
 There are several things that need to be verified and/or modified.
@@ -260,6 +263,13 @@ Example:
 
     API URL: https://www.mywebsite.com:55556/path/to/app
 
+### HTTP API Token
+
+This is set in the WiFi configuration captive portal along with the WiFi
+credentials, and the API URL. See the [auth security](#api-token-security)
+section of this document for generating a token, which you'd then paste into
+the `API Token` section of the captive portal.
+
 ### ESP-NOW MAC Addresses
 
 Both the interface microcontroller and controller microcontroller MAC addresses
@@ -274,14 +284,41 @@ address of the device on the serial console.
 The GPIO pin definitions used by each microcontroller can be found in their
 respective header file in `inc/`.
 
+Currently, these are:
+
+#### Interface Microcontroller
+
+| Name      | GPIO Pin | Board Pin | Protoboard Pin | Description     |
+|:----------|----------|-----------|----------------|-----------------|
+| SCL_PIN   | 5        | D1        | 13             | I2C SDA (OLED)  |  
+| SDA_PIN   | 4        | D2        | 14             | I2C SDA (OLED)  |  
+| ALARM_PIN | 13       | D7        | 15             | Alarm buzzer    |  
+| REED_PIN  | 2        | D4        | 16             | Magnetic sensor |  
+| PIR_PIN   | 12       | D6        | 17             | Motion sensor   |
+
+#### Controller Microcontroller
+
+| Name    | GPIO Pin | Board Pin | Protoboard Pin | Description       |
+|:--------|----------|-----------|---------------|--------------------|
+| LED_PIN | 14       | D5        | N/A           | LED strip data pin |  
+
 ### Security
 
-Currently, we have IP-based security. All routes will return early if the
-requester IP doesn't match the list in the configuration file.
+#### IP Security
 
 To enable IP security, set `secure_ip` to `1` in the `system` section of the
 configuration file, and add the allowed IP addresses to the `allowed_ips`
 array in the same section of the file.
+
+#### API Token Security
+
+To enable an authentication token, set `secure_auth` to `1` in the `system`
+section of the configuration file, then generate a token by executing the
+`scripts/token_generator.pl` script. Follow the prompts on the command line. It
+will ask for a token name, then it will generate JSON that you must paste into
+the `tokens` section of the configuration file. Here's an example output:
+
+    "vps": "YzU0MWNhMmRmYzI4MGFmOWJmYjAxZmMzMzQ0ZjZkOWNhNTY3ZTIyMTcwOTI5MWRhMWE3NmM5MmVlYzRmMGZkMw"
 
 ### Configuration File
 
