@@ -62,7 +62,6 @@ void setup() {
     // Wipe the wifi creds so we can access the AP config screen
 
     if (CONFIG_RESET) {
-        spl(F("BEFORE RESET"));
         wifiManager.resetSettings();
     }
 
@@ -71,15 +70,11 @@ void setup() {
 
     wifiManager.setSaveConfigCallback(saveConfig);
 
-    spl(F("BEFORE PARAMS"));
-
     WiFiManagerParameter custom_api_token("api_token", "API Token", apiToken, sizeof(apiToken));
     WiFiManagerParameter custom_api_url("api_url", "API URL", apiURL, sizeof(apiURL));
 
     wifiManager.addParameter(&custom_api_token);
     wifiManager.addParameter(&custom_api_url);
-
-    spl(F("AFTER PARAMS"));
 
     if (! wifiManager.autoConnect(apNameInterface)) {
         spl(F("Failed to connect to wifi..."));
@@ -88,13 +83,8 @@ void setup() {
         delay(5000);
     }
 
-    spl(F("BEFORE STRCPY"));
-
     strcpy(apiURL, custom_api_url.getValue());
-    spl(F("AFTER URL"));
-
     strcpy(apiToken, custom_api_token.getValue());
-    spl(F("AFTER TOKEN"));
 
     apiTokenString = String("{\"token\":\"") + String(apiToken) + String("\"}");
 
@@ -105,9 +95,6 @@ void setup() {
         spl(F("\nConfig was reset, waiting for sketch upload with reset disabled"));
         delay(100000);
     }
-
-    spl(apiToken);
-    spl(apiURL);
 
     delay(1000);
     ArduinoOTA.begin();
@@ -181,12 +168,6 @@ void configWrite () {
 
         json["api_url"] = apiURL;
         json["api_token"] = apiToken;
-
-        sp("URL: ");
-        spl(apiURL);
-
-        sp("Token: ");
-        spl(apiToken);
 
         if (serializeJson(json, configFile) == 0) {
             Serial.println(F("Failed to write to file"));
@@ -324,8 +305,6 @@ void configRead () {
                 StaticJsonDocument<256> json;
 
                 DeserializationError error = deserializeJson(json, configFile);
-
-                spl(F("After deserial"));
 
                 if (! error) {
                     strcpy(apiURL, json["api_url"]);
