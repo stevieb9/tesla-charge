@@ -331,7 +331,7 @@ All values below are default.
         "system": {
             "secure_ip":    0,          # Refuse access based on IP
             "secure_auth":  0,          # Allow only authorized users
-            "allowed_ips": [
+            "allowed_ips": [            # IP addresses authorized, comma separated
             ]
         },
         "tesla_vehicle": {
@@ -363,6 +363,8 @@ All values below are default.
                 "tesla_in_garage":      -1, # -1 - Uninit, 0 - Away, 1 - In garage
                 "activity":              0  # Bool - Pending garage door action
             }
+        },
+        "tokens": {                     # API tokens (format: "name": "token_string")
         }
     }
 
