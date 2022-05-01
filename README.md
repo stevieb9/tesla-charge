@@ -5,6 +5,9 @@ you visually and audibly when your Tesla vehicle battery level is low so you
 don't forget to plug the charger in. It is activated only while it senses motion
 through its PIR motion sensor.
 
+It is also capable of acting as a garage door manager, with an auto-close
+feature.
+
 The software consists of a Perl application that fetches vehicle data from the
 Tesla API, and presents a REST API interface that allows applications and
 micro-controllers to access that data.
@@ -665,7 +668,7 @@ or the micro-controller device can't contact the REST API software.
 | Off        |
 | Off        |
 
-## FETCHING
+### FETCHING
 
 The REST API server is currently attempting to fetch data from the Tesla API.
 
@@ -678,12 +681,12 @@ The REST API server is currently attempting to fetch data from the Tesla API.
 | Off                  |
 | Off                  |
 
-## RAINBOW
+### RAINBOW
 
 This is a special fun mode, and simply rotates all the LEDs through a rainbow of
 colours.
 
-## OFFLINE
+### OFFLINE
 
 This is the state if the vehicle is currently offline (ie. not awake).
 
@@ -696,7 +699,7 @@ This is the state if the vehicle is currently offline (ie. not awake).
 | Off       |
 | Off       |
 
-## HOME (Display charge level)
+### HOME (Display charge level)
 
 The vehicle is at home and is online, but is not charging. In this state, the
 LEDs display the actual car charge level.
@@ -711,7 +714,7 @@ LEDs display the actual car charge level.
 | **Red/Green** (Green if battery > 39%) |
 | **Red/Green** (Green if battery > 19%) |
 
-## HOME_CHARGING
+### HOME_CHARGING
 
 The vehicle is at home, and is currently charging.
 
@@ -724,7 +727,7 @@ The vehicle is at home, and is currently charging.
 | Off        |
 | Off        |
 
-## AWAY_CHARGING
+### AWAY_CHARGING
 
 The vehicle is charging, but it's not at home.
 
@@ -737,7 +740,7 @@ The vehicle is charging, but it's not at home.
 | Off        |
 | **Purple** |
 
-## AWAY_PARKED
+### AWAY_PARKED
 
 The vehicle is not at home, and is currently in park.
 
@@ -750,7 +753,7 @@ The vehicle is not at home, and is currently in park.
 | Off       |
 | **Red**   |
 
-## AWAY_DRIVING
+### AWAY_DRIVING
 
 The vehicle is currenty away from home and is in a gear other than park.
 
