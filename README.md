@@ -1,6 +1,10 @@
 # Tesla Charge Alarm System
 
-This software consists of a Perl application that fetches vehicle data from the
+This project is essentially a device that goes on your garage wall to inform
+you visually and audibly when your Tesla vehicle battery level is low so you
+don't forget to plug the charger in.
+
+The software consists of a Perl application that fetches vehicle data from the
 Tesla API, and presents a REST API interface that allows applications and
 micro-controllers to access that data.
 
