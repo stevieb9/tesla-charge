@@ -59,7 +59,9 @@ void setup() {
 
     configRead();
 
-    // Wipe the wifi creds so we can access the AP config screen
+    spl(currentTime = alarmOnTime);
+
+    wifiManager.setConfigPortalTimeout(180);
 
     if (CONFIG_RESET) {
         wifiManager.resetSettings();
@@ -121,6 +123,7 @@ void loop() {
             car.load(fetchData());
         }
 
+
         switch (car.state()) {
             case HOME:
                 displayCharge(car.charge(), true);
@@ -139,9 +142,8 @@ void loop() {
                 break;
             default:
                 displayClear();
-            break;
+                break;
         }
-
         vehicleData.state = car.state();
         vehicleData.charge = car.charge();
     }
@@ -154,6 +156,7 @@ void loop() {
     }
 
     esp_now_send(MacController, (uint8_t *) &vehicleData, sizeof(vehicleData));
+    spl(millis());
 }
 
 void configWrite () {
@@ -193,16 +196,17 @@ void displayCharge (uint8_t batteryLevel, bool soundAlarm) {
 }
 
 void alarm (bool state) {
-    uint8_t alarmState          = digitalRead(ALARM_PIN);
-    unsigned long currentTime   = millis();
-
     if (alarmEnabled) {
+        uint8_t alarmState          = digitalRead(ALARM_PIN);
+        unsigned long currentTime   = millis();
+
         if (state) {
             if (alarmState) {
                 if (currentTime - alarmOnTime >= ALARM_ON_TIME) {
+                    spl(currentTime - alarmOnTime);
                     digitalWrite(ALARM_PIN, LOW);
                     alarmOffTime = currentTime;
-                    alarmOnTime = currentTime;
+                    //alarmOnTime = currentTime;
                 }
             } else {
                 if (currentTime - alarmOffTime >= ALARM_OFF_TIME) {
