@@ -133,6 +133,11 @@ WiFi credentials. It is available only on the
 [Interface Controller](#microcontroller---interface). See
 [WiFi Configuration](#wifi-ssid-and-password) for how to change or set it.
 
+In the `src/tesla-charge-interface/data` directory, there is a `config.json`
+file that you can populate with the URL and access token, then use the sketch
+data uploader in the Arduino IDE as opposed to using the method described in
+the [WiFi config](#wifi-ssid-and-password) section.
+
 It's size is set to 64 chars, and can be configured in the
 [TeslaChargeInterface header file](#teslachargeinterfaceh).
 
@@ -148,6 +153,11 @@ section of this document for generating a token, which you'd then paste into
 the `API Token` section of the captive portal. It is available only on the
 [Interface Controller](#microcontroller---interface). See
 [WiFi Configuration](#wifi-ssid-and-password) for how to change or set it.
+
+In the `src/tesla-charge-interface/data` directory, there is a `config.json`
+file that you can populate with the URL and access token, then use the sketch
+data uploader in the Arduino IDE as opposed to using the method described in
+the [WiFi config](#wifi-ssid-and-password) section.
 
 ### ESP-NOW MAC Addresses
 
