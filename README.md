@@ -246,15 +246,26 @@ your system.
 We use `WiFiManager` to manage the WiFi credentials. If a known network isn't
 available to automatically log into, the controllers will start up in Access
 Point mode. Simply connect to the AP (`TeslaInterface` and `TeslaController`),
-and using a web browser, connect to `http://192.168.4.1`. You can enter in the
-WiFi details there.
+and using a web browser, connect to `http://192.168.4.1`. 
+
+You can enter in the  WiFi details there. 
+
+You can manually access the configuration screen by setting the
+`WIFI_CONFIG_PIN` to `LOW` and rebooting the unit. Don't forget to put the pin
+back to `HIGH` before saving settings.
+
+One last way to access the configuration mode Access Point captive portal is to
+set `CONFIG_RESET` to `1` in the `TeslaChargeCommon.h` file, and compiling then
+installing the new sketch. Make your changes, save them, then the
+microcontroller will sleep so that you can flip the variable back to `0` and
+re-upload the newly compiled sketch.
 
 ### HTTP API URL
 
 This is configured in the WiFi configuration captive portal, along with the
 WiFi credentials. It is available only on the 
 [Interface Controller](#microcontroller---interface). See
-[WiFi Configuration](#wifi-ssid-and-password).
+[WiFi Configuration](#wifi-ssid-and-password) for how to change or set it.
 
 It's size is set to 64 chars, and can be configured in the
 [TeslaChargeInterface header file](#teslachargeinterfaceh) header file.
@@ -268,7 +279,9 @@ Example:
 This is set in the WiFi configuration captive portal along with the WiFi
 credentials, and the API URL. See the [auth security](#api-token-security)
 section of this document for generating a token, which you'd then paste into
-the `API Token` section of the captive portal.
+the `API Token` section of the captive portal. It is available only on the
+[Interface Controller](#microcontroller---interface). See
+[WiFi Configuration](#wifi-ssid-and-password) for how to change or set it.
 
 ### ESP-NOW MAC Addresses
 
@@ -288,19 +301,21 @@ Currently, these are:
 
 #### Interface Microcontroller
 
-| Name      | GPIO Pin | Board Pin | Protoboard Pin | Description     |
-|:----------|----------|-----------|----------------|-----------------|
-| SCL_PIN   | 5        | D1        | 13             | I2C SDA (OLED)  |  
-| SDA_PIN   | 4        | D2        | 14             | I2C SDA (OLED)  |  
-| ALARM_PIN | 13       | D7        | 15             | Alarm buzzer    |  
-| REED_PIN  | 2        | D4        | 16             | Magnetic sensor |  
-| PIR_PIN   | 12       | D6        | 17             | Motion sensor   |
+| Name            | GPIO Pin | Board Pin | Protoboard Pin | Description           |
+|:----------------|----------|-----------|----------------|-----------------------|
+| SCL_PIN         | 5        | D1        | A13            | I2C SDA (OLED)        |  
+| SDA_PIN         | 4        | D2        | A14            | I2C SDA (OLED)        |  
+| ALARM_PIN       | 13       | D7        | A15            | Alarm buzzer          |  
+| REED_PIN        | 2        | D4        | A16            | Magnetic sensor       |  
+| PIR_PIN         | 12       | D6        | A17            | Motion sensor         |
+| WIFI_CONFIG_PIN | 14       | D5        | J13            | AP config mode switch |
 
 #### Controller Microcontroller
 
-| Name    | GPIO Pin | Board Pin | Protoboard Pin | Description       |
-|:--------|----------|-----------|---------------|--------------------|
-| LED_PIN | 14       | D5        | N/A           | LED strip data pin |  
+| Name            | GPIO Pin | Board Pin | Protoboard Pin | Description          |
+|:----------------|----------|-----------|---------------|-----------------------|
+| LED_PIN         | 14       | D5        | N/A           | LED strip data pin    |  
+| WIFI_CONFIG_PIN | 13       | D7        | J14           | AP config mode switch |
 
 ### Security
 
