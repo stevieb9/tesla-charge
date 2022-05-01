@@ -122,7 +122,7 @@ void loop() {
     if (rainbowMagnet) {
         vehicleData.state = RAINBOW;
     }
-    else if (motion || DEBUG_MOTION || DEBUG_DEVEL) {
+    else if (motion || DEBUG_MOTION) {
         unsigned long currentTime = millis();
 
         if (currentTime - dataRefreshTime >= DATA_DELAY) {
@@ -255,7 +255,6 @@ uint8_t* fetchData () {
     http.addHeader("Content-Type", "application/json");
     int httpCode = http.POST(apiTokenString);
 
-    delay(1000);
     if (httpCode < 0) {
         sp(F("HTTP Error Code: "));
         spl(httpCode);

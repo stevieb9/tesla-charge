@@ -179,15 +179,7 @@ void fetching () {
             fetchBlinkStatus = true;
         }
         else {
-            ledSet(
-                CRGB::Black,
-                CRGB::Black,
-                CRGB::Black,
-                CRGB::Black,
-                CRGB::Black,
-                CRGB::Black
-            );
-
+            ledReset();
             fetchBlinkStatus = false;
         }
 
@@ -211,7 +203,6 @@ void error () {
 }
 
 void rainbow () {
-    //rainbowEnabled = true;
     rainbowCycle(1);
 }
 

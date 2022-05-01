@@ -22,7 +22,7 @@
 uint8_t MacInterface[] = {0x60, 0x01, 0x94, 0x71, 0xFF, 0xB0};
 uint8_t MacController[] = {0x5C, 0xCF, 0x7F, 0xCC, 0xA1, 0x8E};
 
-// Access Point names when the controllers are outside a known wifi range
+// Access Point names when the controllers are in config mode
 
 const char* apNameInterface = "TeslaInterface";
 const char* apNameController = "TeslaController";

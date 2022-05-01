@@ -9,6 +9,10 @@ Revision history for tesla-charge
       portal. ie, it's no longer hard-coded
     - Added token authentication (routes now are get/post); added 'tokens'
       section to config file
+    - Added complete documentation
+    - Add wifi config pins; if held HIGH on reboot, we'll enter config AP
+      captive portal mode
+    - Auth tokens now configurable through the captive portal
 
 1.01 2022-04-08
     - Separated code into two separate controllers (Controller - controls the
