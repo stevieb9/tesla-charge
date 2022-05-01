@@ -75,7 +75,27 @@ void setup() {
     wifiManager.addParameter(&custom_api_token);
     wifiManager.addParameter(&custom_api_url);
 
-    if (! wifiManager.autoConnect(apNameInterface)) {
+    // Manage the wifi connection, including checking config or switch to see if
+    // we should be in AP config mode
+
+    if (CONFIG_RESET) {
+        // Give us time to re-upload the sketch with CONFIG_RESET disabled
+        spl(F("\nConfig was reset, waiting for sketch upload with reset disabled"));
+        delay(100000);
+    }
+
+    if (digitalRead(CONFIG_PIN) == LOW) {
+        spl(F("Going into config mode"));
+
+        if (! wifiManager.startConfigPortal(apNameInterface)){
+            Serial.println(F("Failed to start the configuration portal"));
+            delay(3000);
+            ESP.restart();
+            delay(5000);
+        }
+        Serial.println(F("Connected to the configuration portal"));
+    }
+    else if (! wifiManager.autoConnect(apNameInterface)) {
         spl(F("Failed to connect to wifi..."));
         delay(3000);
         ESP.restart();
@@ -89,19 +109,12 @@ void setup() {
 
     configWrite();
 
-    if (CONFIG_RESET) {
-        // Give us time to re-upload the sketch with CONFIG_RESET disabled
-        spl(F("\nConfig was reset, waiting for sketch upload with reset disabled"));
-        delay(100000);
-    }
-
     delay(1000);
     ArduinoOTA.begin();
 }
 
 void loop() {
     ArduinoOTA.handle();
-    configModeCheck();
 
     bool rainbowMagnet = ! digitalRead(REED_PIN);
     bool motion = digitalRead(PIR_PIN);
@@ -325,18 +338,4 @@ void configRead () {
 
 void saveConfig () {
     configSaveNeeded = true;
-}
-
-void configModeCheck () {
-    if (digitalRead(CONFIG_PIN) == LOW) {
-        spl(F("Going into config mode"));
-
-        if (! wifiManager.startConfigPortal(apNameInterface)){
-            Serial.println(F("Failed to start the configuration portal"));
-            delay(3000);
-            ESP.restart();
-            delay(5000);
-        }
-        Serial.println(F("Connected to the configuration portal"));
-    }
 }
