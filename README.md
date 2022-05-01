@@ -2,7 +2,8 @@
 
 This project is essentially a device that goes on your garage wall to inform
 you visually and audibly when your Tesla vehicle battery level is low so you
-don't forget to plug the charger in.
+don't forget to plug the charger in. It is activated only while it senses motion
+through its PIR motion sensor.
 
 The software consists of a Perl application that fetches vehicle data from the
 Tesla API, and presents a REST API interface that allows applications and
@@ -88,6 +89,9 @@ Proceed through the [configuration](#configuration) section of this document.
 
 There are several things that need to be verified and/or modified.
 
+First things first, copy the `config.json-dist` file to `config.json` in the
+root directory of the repository.
+
 ### Network Port
 
 By default, the Perl HTTP API server runs on port `55556`. You can edit this in
@@ -156,7 +160,7 @@ address of the device on the serial console.
 The GPIO pin definitions used by each microcontroller can be found in their
 respective header file in `inc/`.
 
-Currently, these are:
+Currently, these are (note the 'Protoboard pin' is custom to my setup only):
 
 #### Interface Microcontroller
 
@@ -184,6 +188,9 @@ To enable IP security, set `secure_ip` to `1` in the `system` section of the
 configuration file, and add the allowed IP addresses to the `allowed_ips`
 array in the same section of the file.
 
+Currently, only individual IP addresses can be added. Eventually, I'll add the
+ability to enter full prefixes/netblocks.
+
 #### API Token Security
 
 To enable an authentication token, set `secure_auth` to `1` in the `system`
@@ -193,6 +200,8 @@ will ask for a token name, then it will generate JSON that you must paste into
 the `tokens` section of the configuration file. Here's an example output:
 
     "vps": "YzU0MWNhMmRmYzI4MGFmOWJmYjAxZmMzMzQ0ZjZkOWNhNTY3ZTIyMTcwOTI5MWRhMWE3NmM5MmVlYzRmMGZkMw"
+
+You can configure and add as many tokens as you wish.
 
 ### Configuration File
 
@@ -204,19 +213,19 @@ All values below are default.
     {
         "system": {
             "secure_ip":    0,          # Refuse access based on IP
-            "secure_auth":  0,          # Allow only authorized users
+            "secure_auth":  0,          # Allow only authorized tokens
             "allowed_ips": [            # IP addresses authorized, comma separated
             ]
         },
         "tesla_vehicle": {
             "debug":        0,          # Display debug output in app.psgi
-            "debug_return": 1,          # Return the below debug data to interface microcontroller
+            "debug_return": 0,          # Return the below debug data to interface microcontroller
             "retry":        3,          # app.psgi will retry Tesla API this many times
             "rainbow":      0,          # Force enable "rainbow" mode
             "alarm":        1,          # Toggle the audible alarm
             "debug_data": {
                 "online":   0,          # Bool - Vehicle awake
-                "charge":   0,          # 0-100 - Set the battery level
+                "charge":   0,          # 0-100 - Current battery level percent
                 "charging": 0,          # Bool - Vehicle charging
                 "garage":   0,          # Bool - Car in garage
                 "gear":     0,          # 0-2  - Car gear (0 - P, 1 - R, 2 - N & D)
