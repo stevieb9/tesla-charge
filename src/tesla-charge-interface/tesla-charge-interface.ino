@@ -27,6 +27,7 @@ VehicleData vehicleData;
 void setup() {
     pinMode(PIR_PIN, INPUT);
     pinMode(REED_PIN, INPUT_PULLUP);
+    pinMode(CONFIG_PIN, INPUT_PULLUP);
     pinMode(ALARM_PIN, OUTPUT);
 
     digitalWrite(ALARM_PIN, LOW);
@@ -62,6 +63,18 @@ void setup() {
     spl(currentTime = alarmOnTime);
 
     wifiManager.setConfigPortalTimeout(180);
+
+    if (digitalRead(CONFIG_PIN) == LOW) {
+        spl(F("Going into config mode");
+
+        if (! wifiManager.startConfigPortal(apNameInterface)){
+            Serial.println(F("Failed to start the configuration portal"));
+            delay(3000);
+            ESP.restart();
+            delay(5000);
+        }
+        Serial.println(F("Connected to the configuration portal"));
+    }
 
     if (CONFIG_RESET) {
         wifiManager.resetSettings();
