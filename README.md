@@ -41,6 +41,8 @@ garage door prototype.
     + [With an SSL certificate](#with-ssl-enabled)
     + [Reload the application if any file changes](#reload-the-application-if-any-file-changes)
     + [Reload the application if the application file changes](#reload-the-application-if-the-application-file-changes)
+* [REST API routes](#rest-api-routes)
+* [REST API functions](#rest-api-functions)
 * [Vehicle and LED States](#vehicle-and-led-states)
   + [LED State Quick Table](#led-state-quick-table)
   + [UNKNOWN](#unknown)
@@ -416,6 +418,191 @@ or...
 
     plackup -R app.psgi app.psgi
 
+## REST API routes
+
+All available routes less `/garage_update` are both `GET` and `POST` accessible.
+If `secure_auth` is set in the `system` section of the
+[config file](#configuration-file), you **must** `POST` your request, and supply
+a `{"token": "token_value"}` JSON encoded string as the body content or body
+parameter.
+
+If `secure_auth` is disabled, you can use simple `GET` requests.
+
+#### / (main page)
+
+Retrieves the data about the Tesla vehicle and returns it as a JSON encoded
+string.
+
+Example:
+
+    {
+      "rainbow":0,
+      "charge":44,
+      "error":0,
+      "alarm":0,
+      "fetching":0,
+      "gear":0,
+      "online":1,
+      "charging":0,
+      "garage":1
+    }
+
+#### /debug
+
+Returns the debug data as defined in the [config file](#configuration-file),
+without having to set `debug_return`.
+
+#### /debug_garage
+
+Same as `/debug`, but for the garage door state data.
+
+#### /wake
+
+Attempts to wake up the Tesla vehicle if it's currently offline. On success,
+redirects to the main page and returns the data from there. Otherwise, returns
+an HTML error string.
+
+#### /garage
+
+Displays the HTML template for garage door operation in the browser.
+
+#### /garage_data
+
+Retrieves the garage door state data and information.
+
+#### /garage_door_state
+
+Returns the current state of the garage door. `1` if the garage is open, and `0`
+if its closed.
+
+#### /garage_update
+
+This route is a POST only route. It's used to update the state of the garage
+door by the garage microcontroller.
+
+The body content must be JSON encoded:
+
+    {
+      "door_state" : 1,
+      "activity" : 0
+    }
+
+Parameter `door_state` is one of `0` for `DOOR_CLOSED`, `1` for `DOOR_OPEN`, `2`
+for `DOOR_CLOSING` and `3` for `DOOR_OPENING`.
+
+Parameter `activity` is a bool which is a flag to say that there is a pending
+operation needed. Typically, you should always set this to `0` to indicate that
+the last pending activity required has been acknowleded and operated on.
+
+#### /garage_door_operate
+
+This route sets a flag that informs the system that a garage door operation is
+required.
+
+## REST API functions
+
+#### security()
+
+Checks the configuration file to see if either `secure_ip` or `secure_auth` are
+enabled, and if so, verifies the caller's IP address and/or the supplied token
+to the data provided in the [config file](#configuration-file).
+
+Returns true (`1`) if authorization is successful (or auth is disabled), and
+false (`0`) otherwise.
+
+#### config_load()
+
+Reads in the `config.json` configuration file.
+
+#### debug_data()
+
+Parses, sorts, encodes and returns the Tesla vehicle debug data as defined in
+the `tesla_vehicle` `debug_data` section of the [config file](#configuration-file).
+
+The data is JSON encoded before being returned.
+
+#### debug_garage_data()
+
+Same thing as [debug_data()](#debug_data), but for the `garage` `debug_data`
+[config file](#configuration-file) section.
+
+#### update()
+
+Fetches the vehicle data from the Tesla API, and stores it in the local cache.
+If we can't fetch the data in a number of tries, we set the `error` flag to `1`
+in the returned JSON string. This number of retries is set in the `tesla_vehicle`
+`retry` section of the [config file](#configuration-file).
+
+This function is called in a separate process from the main REST server, using
+`Async::Event::Interval`. The Tesla API calls are made through `Tesla::Vehicle`.
+
+#### fetch($conf)
+
+Compiles the vehicle data to identify the actual state of the vehicle.
+
+Returns a JSON string of the vehicle data. See [here](#-main-page) for details
+of the actual return value.
+
+#### deviation($what, $coord)
+
+Verifies whether the vehicle is within the set range of the garage, as defined
+by the `ACCURACY`, `RANGE`, `LAT` and `LON` constants.
+
+Parameters:
+
+    $what
+
+Either `lat` for latitude or `lon` for longitude.
+
+    $coord
+
+A floating point number representing either `lat` or `lon`.
+
+To verify the vehicle's location in proximity to the garage, both `lat` and `lon`
+need to be checked.
+
+Returns `1` if vehicle is in the garage, and `0` if not.
+
+#### distance
+
+Calculates the distance the vehicle is from the garage. This is only used for
+debug output.
+
+Parameters:
+
+    $what
+
+Either `lat` for latitude or `lon` for longitude.
+
+    $coord
+
+A floating point number representing either `lat` or `lon`.
+
+Returns a floating point number representing the number of metres the vehicle is
+away from the garage.
+
+#### gear($gear)
+
+Converts the single alpha character of the transmission state to an integer
+value:
+
+    P => 0
+    R => 1
+    D => 2
+    N => 2
+
+Returns the integer associated with the character value.
+
+#### _default_data()
+
+Fetches and returns the default vehicle data from the
+[config file](#configuration-file).
+
+#### _default_garage_data()
+
+Fetches and returns the default garage data from the
+[config file](#configuration-file).
+
 ## Vehicle and LED States
 
 Vehicle state definitions can be found in the `inc/TeslaVehicle.h` file, in the
@@ -486,7 +673,6 @@ colours.
 ## OFFLINE
 
 This is the state if the vehicle is currently offline (ie. not awake).
-
 
 | LED State |
 |:----------|
