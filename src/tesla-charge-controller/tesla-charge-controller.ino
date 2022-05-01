@@ -10,6 +10,8 @@ CRGB leds[NUM_LEDS];
 VehicleData vehicleData;
 
 void setup() {
+    pinMode(WIFI_CONFIG_PIN, INPUT_PULLUP);
+
     Serial.begin(9600);
 
     while (! Serial) {
@@ -22,7 +24,29 @@ void setup() {
 
     ledReset();
 
-    wifiManager.autoConnect(apNameController);
+    if (CONFIG_RESET) {
+        // Give us time to re-upload the sketch with CONFIG_RESET disabled
+        spl(F("\nConfig was reset, waiting for sketch upload with reset disabled"));
+        delay(100000);
+    }
+
+    if (digitalRead(WIFI_CONFIG_PIN) == LOW) {
+        spl(F("Going into config mode"));
+
+        if (! wifiManager.startConfigPortal(apNameController)){
+            Serial.println(F("Failed to start the configuration portal"));
+            delay(3000);
+            ESP.restart();
+            delay(5000);
+        }
+        Serial.println(F("Connected to the configuration portal"));
+    }
+    else if (! wifiManager.autoConnect(apNameController)) {
+        spl(F("Failed to connect to wifi..."));
+        delay(3000);
+        ESP.restart();
+        delay(5000);
+    }
 
     vehicleData.state = UNKNOWN;
     vehicleData.charge = 0;

@@ -4,6 +4,7 @@
 #include "FastLED.h"
 
 #define LED_PIN             14  // Pin D5
+#define WIFI_CONFIG_PIN     13  // Pin D7
 #define NUM_LEDS            6   // LED strip length
 #define FETCH_BLINK_DELAY   250 // ms between blinks of fetching LED
 

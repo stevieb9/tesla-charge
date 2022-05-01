@@ -16,7 +16,7 @@
 #define REED_PIN        2   // Pin D4
 #define PIR_PIN         12  // Pin D6
 #define ALARM_PIN       13  // Pin D7
-#define CONFIG_PIN      14  // Pin D5
+#define WIFI_CONFIG_PIN 14  // Pin D5
 #define SDA_PIN         4   // Pin D2
 #define SCL_PIN         5   // Pin D1
 

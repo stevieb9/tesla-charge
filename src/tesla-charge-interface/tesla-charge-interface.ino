@@ -26,7 +26,7 @@ VehicleData vehicleData;
 void setup() {
     pinMode(PIR_PIN, INPUT);
     pinMode(REED_PIN, INPUT_PULLUP);
-    pinMode(CONFIG_PIN, INPUT_PULLUP);
+    pinMode(WIFI_CONFIG_PIN, INPUT_PULLUP);
     pinMode(ALARM_PIN, OUTPUT);
 
     digitalWrite(ALARM_PIN, LOW);
@@ -84,7 +84,7 @@ void setup() {
         delay(100000);
     }
 
-    if (digitalRead(CONFIG_PIN) == LOW) {
+    if (digitalRead(WIFI_CONFIG_PIN) == LOW) {
         spl(F("Going into config mode"));
 
         if (! wifiManager.startConfigPortal(apNameInterface)){
