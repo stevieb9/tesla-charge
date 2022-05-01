@@ -308,14 +308,14 @@ Currently, these are:
 | ALARM_PIN       | 13       | D7        | A15            | Alarm buzzer          |  
 | REED_PIN        | 2        | D4        | A16            | Magnetic sensor       |  
 | PIR_PIN         | 12       | D6        | A17            | Motion sensor         |
-| WIFI_CONFIG_PIN | 14       | D5        | J13            | AP config mode switch |
+| WIFI_CONFIG_PIN | 14       | D5        | 19             | AP config mode switch |
 
 #### Controller Microcontroller
 
 | Name            | GPIO Pin | Board Pin | Protoboard Pin | Description          |
-|:----------------|----------|-----------|---------------|-----------------------|
-| LED_PIN         | 14       | D5        | N/A           | LED strip data pin    |  
-| WIFI_CONFIG_PIN | 13       | D7        | J14           | AP config mode switch |
+|:----------------|----------|-----------|----------------|-----------------------|
+| LED_PIN         | 14       | D5        | N/A            | LED strip data pin    |  
+| WIFI_CONFIG_PIN | 13       | D7        | 20             | AP config mode switch |
 
 ### Security
 
