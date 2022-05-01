@@ -60,8 +60,6 @@ void setup() {
 
     configRead();
 
-    spl(currentTime = alarmOnTime);
-
     wifiManager.setConfigPortalTimeout(180);
 
     if (CONFIG_RESET) {
@@ -125,7 +123,6 @@ void loop() {
             car.load(fetchData());
         }
 
-
         switch (car.state()) {
             case HOME:
                 displayCharge(car.charge(), true);
@@ -158,7 +155,6 @@ void loop() {
     }
 
     esp_now_send(MacController, (uint8_t *) &vehicleData, sizeof(vehicleData));
-    spl(millis());
 }
 
 void configWrite () {
@@ -340,7 +336,7 @@ void saveConfig () {
 
 void configModeCheck () {
     if (digitalRead(CONFIG_PIN) == LOW) {
-        spl(F("Going into config mode");
+        spl(F("Going into config mode"));
 
         if (! wifiManager.startConfigPortal(apNameInterface)){
             Serial.println(F("Failed to start the configuration portal"));
