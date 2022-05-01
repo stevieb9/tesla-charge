@@ -14,18 +14,16 @@ certain battery level.
 The other two are related to a garage door management system, as well as a
 garage door prototype.
 
-* [Vehicle and LED States](#vehicle-and-led-states)
-    + [LED State Quick Table](#led-state-quick-table)
-    + [UNKNOWN](#unknown)
-    + [ERROR](#error)
-    + [FETCHING](#fetching)
-    + [RAINBOW](#rainbow)
-    + [OFFLINE](#offline)
-    + [HOME](#home-display-charge-level)
-    + [HOME_CHARGING](#home_charging)
-    + [AWAY_CHARGING](#away_charging)
-    + [AWAY_PARKED](#away_parked)
-    + [AWAY_DRIVING](#away_driving)
+* [Installation](#installation)
+* [Configuration](#configuration)
+  + [Network Port](#network-port)
+  + [WiFi SSID and Password](#wifi-ssid-and-password)
+  + [HTTP API URL](#http-api-url)
+  + [HTTP API Token](#http-api-token)
+  + [ESP-NOW MAC Addresses](#esp-now-mac-addresses)
+  + [GPIO Pins](#gpio-pins)
+  + [App Security](#security)
+  + [Configuration File](#configuration-file)
 * [System Information](#system-information)
     + [Hardware Used](#hardware-used)
     + [Perl HTTP API Server](#perl-http-api-server)
@@ -36,23 +34,207 @@ garage door prototype.
     + [Files - Application](#files---application)
     + [Files - Sketches](#files---sketches)
     + [Files - Headers](#files---headers)
-* [Installation](#installation) 
-* [Configuration](#configuration)
-    + [Network Port](#network-port)
-    + [WiFi SSID and Password](#wifi-ssid-and-password)
-    + [HTTP API URL](#http-api-url)
-    + [HTTP API Token](#http-api-token)
-    + [ESP-NOW MAC Addresses](#esp-now-mac-addresses)
-    + [GPIO Pins](#gpio-pins)
-    + [App Security](#security)
-    + [Configuration File](#configuration-file)
-* [Run the HTTP API Service](#run-the-http-api-service)
+* [Running the HTTP API Service](#run-the-http-api-service)
     + [Run from crontab](#run-from-crontab)
     + [All logging enabled](#all-logging-enabled)
     + [Hide access logs](#hide-access-logs)
     + [With an SSL certificate](#with-ssl-enabled)
     + [Reload the application if any file changes](#reload-the-application-if-any-file-changes)
     + [Reload the application if the application file changes](#reload-the-application-if-the-application-file-changes)
+* [Vehicle and LED States](#vehicle-and-led-states)
+  + [LED State Quick Table](#led-state-quick-table)
+  + [UNKNOWN](#unknown)
+  + [ERROR](#error)
+  + [FETCHING](#fetching)
+  + [RAINBOW](#rainbow)
+  + [OFFLINE](#offline)
+  + [HOME](#home-display-charge-level)
+  + [HOME_CHARGING](#home_charging)
+  + [AWAY_CHARGING](#away_charging)
+  + [AWAY_PARKED](#away_parked)
+  + [AWAY_DRIVING](#away_driving)
+
+## Installation
+
+- `cd /path/to/application`
+
+If on Ubuntu, some packages are required:
+
+- `sudo apt-get install libssl-dev`
+- `sudo apt-get install zlib1g-dev`
+
+Install the dependencies:
+
+- `cpanm --installdeps .`
+
+If things fail:
+
+- `sudo apt-get install libnet-ssleay-perl`
+- `sudo apt-get install libcrypt-ssleay-perl`
+
+Copy and edit the configuration file:
+
+- `cp config.json-dist config.json`
+
+Proceed through the [configuration](#configuration) section of this document.
+
+## Configuration
+
+There are several things that need to be verified and/or modified.
+
+### Network Port
+
+By default, the Perl HTTP API server runs on port `55556`. You can edit this in
+the `app.psgi` file, or run `plackup` with the `-p PORTNUM` option to change it.
+
+### Header File Paths
+
+The way Arduino sketches are built, we can't use relative paths when including
+header files in the sketches. At the top of each `.ino` sketch file, replace the
+absolute path of the includes to reflect the real location of the headers on
+your system.
+
+### WiFi SSID and Password
+
+We use `WiFiManager` to manage the WiFi credentials. If a known network isn't
+available to automatically log into, the controllers will start up in Access
+Point mode. Simply connect to the AP (`TeslaInterface` and `TeslaController`),
+and using a web browser, connect to `http://192.168.4.1`.
+
+You can enter in the  WiFi details there.
+
+You can manually access the configuration screen by setting the
+`WIFI_CONFIG_PIN` to `LOW` and rebooting the unit. Don't forget to put the pin
+back to `HIGH` before saving settings.
+
+One last way to access the configuration mode Access Point captive portal is to
+set `CONFIG_RESET` to `1` in the `TeslaChargeCommon.h` file, and compiling then
+installing the new sketch. Make your changes, save them, then the
+microcontroller will sleep so that you can flip the variable back to `0` and
+re-upload the newly compiled sketch.
+
+### HTTP API URL
+
+This is configured in the WiFi configuration captive portal, along with the
+WiFi credentials. It is available only on the
+[Interface Controller](#microcontroller---interface). See
+[WiFi Configuration](#wifi-ssid-and-password) for how to change or set it.
+
+It's size is set to 64 chars, and can be configured in the
+[TeslaChargeInterface header file](#teslachargeinterfaceh) header file.
+
+Example:
+
+    API URL: https://www.mywebsite.com:55556/path/to/app
+
+### HTTP API Token
+
+This is set in the WiFi configuration captive portal along with the WiFi
+credentials, and the API URL. See the [auth security](#api-token-security)
+section of this document for generating a token, which you'd then paste into
+the `API Token` section of the captive portal. It is available only on the
+[Interface Controller](#microcontroller---interface). See
+[WiFi Configuration](#wifi-ssid-and-password) for how to change or set it.
+
+### ESP-NOW MAC Addresses
+
+Both the interface microcontroller and controller microcontroller MAC addresses
+are stored in the `inc/TeslaChargeCommon.h` header file. These allow the
+microcontrollers to communicate with one another.
+
+Upon bootup, the controller and interface software will display the current MAC
+address of the device on the serial console.
+
+### GPIO Pins
+
+The GPIO pin definitions used by each microcontroller can be found in their
+respective header file in `inc/`.
+
+Currently, these are:
+
+#### Interface Microcontroller
+
+| Name            | GPIO Pin | Board Pin | Protoboard Pin | Description           |
+|:----------------|----------|-----------|----------------|-----------------------|
+| SCL_PIN         | 5        | D1        | A13            | I2C SDA (OLED)        |  
+| SDA_PIN         | 4        | D2        | A14            | I2C SDA (OLED)        |  
+| ALARM_PIN       | 13       | D7        | A15            | Alarm buzzer          |  
+| REED_PIN        | 2        | D4        | A16            | Magnetic sensor       |  
+| PIR_PIN         | 12       | D6        | A17            | Motion sensor         |
+| WIFI_CONFIG_PIN | 14       | D5        | 19             | AP config mode switch |
+
+#### Controller Microcontroller
+
+| Name            | GPIO Pin | Board Pin | Protoboard Pin | Description          |
+|:----------------|----------|-----------|----------------|-----------------------|
+| LED_PIN         | 14       | D5        | N/A            | LED strip data pin    |  
+| WIFI_CONFIG_PIN | 13       | D7        | 20             | AP config mode switch |
+
+### Security
+
+#### IP Security
+
+To enable IP security, set `secure_ip` to `1` in the `system` section of the
+configuration file, and add the allowed IP addresses to the `allowed_ips`
+array in the same section of the file.
+
+#### API Token Security
+
+To enable an authentication token, set `secure_auth` to `1` in the `system`
+section of the configuration file, then generate a token by executing the
+`scripts/token_generator.pl` script. Follow the prompts on the command line. It
+will ask for a token name, then it will generate JSON that you must paste into
+the `tokens` section of the configuration file. Here's an example output:
+
+    "vps": "YzU0MWNhMmRmYzI4MGFmOWJmYjAxZmMzMzQ0ZjZkOWNhNTY3ZTIyMTcwOTI5MWRhMWE3NmM5MmVlYzRmMGZkMw"
+
+### Configuration File
+
+Initially, copy the `config.json-dist` file to `config.json` in the root
+directory.
+
+All values below are default.
+
+    {
+        "system": {
+            "secure_ip":    0,          # Refuse access based on IP
+            "secure_auth":  0,          # Allow only authorized users
+            "allowed_ips": [            # IP addresses authorized, comma separated
+            ]
+        },
+        "tesla_vehicle": {
+            "debug":        0,          # Display debug output in app.psgi
+            "debug_return": 1,          # Return the below debug data to interface microcontroller
+            "retry":        3,          # app.psgi will retry Tesla API this many times
+            "rainbow":      0,          # Force enable "rainbow" mode
+            "alarm":        1,          # Toggle the audible alarm
+            "debug_data": {
+                "online":   0,          # Bool - Vehicle awake
+                "charge":   0,          # 0-100 - Set the battery level
+                "charging": 0,          # Bool - Vehicle charging
+                "garage":   0,          # Bool - Car in garage
+                "gear":     0,          # 0-2  - Car gear (0 - P, 1 - R, 2 - N & D)
+                "error":    0,          # Bool - Simulate API fetch error
+                "rainbow":  0,          # Bool - Rainbow mode
+                "fetching": 0,          # Bool - Fetching data
+                "alarm":    0           # Bool - Audible alarm enabled
+            }
+        },
+        "garage": {
+            "debug":            0,      # Bool - Display debug output in app.psgi
+            "debug_return":     0,      # Bool - Return the below debug data instead of live data
+            "app_enabled":      1,      # Bool - Mobile app allowed to make changes
+            "relay_enabled":    1,      # Bool - Garage door opener relay enabled
+            "auto_close_enabled": 1,    # Bool - Allow garage door auto-close
+            "debug_data": {
+                "garage_door_state":    -1, # -1 - Uninit, 0 - Closed, 1 - Open, 2 - Closing, 3 - Opening
+                "tesla_in_garage":      -1, # -1 - Uninit, 0 - Away, 1 - In garage
+                "activity":              0  # Bool - Pending garage door action
+            }
+        },
+        "tokens": {                     # API tokens (format: "name": "token_string")
+        }
+    }
 
 ## System Information
 
@@ -200,188 +382,6 @@ sketch.
 
 Used by the [Interface Microcontroller](#microcontroller---interface) sketch
 for the custom fonts displayed on the OLED display device.
-
-## Installation
-
-  - `cd /path/to/application`
-
-If on Ubuntu, some packages are required:
-
-  - `sudo apt-get install libssl-dev`
-  - `sudo apt-get install zlib1g-dev`
-
-Install the dependencies:
-
-  - `cpanm --installdeps .`
-
-If things fail:
-
-  - `sudo apt-get install libnet-ssleay-perl`
-  - `sudo apt-get install libcrypt-ssleay-perl`
-
-Copy and edit the configuration file:
-
-  - `cp config.json-dist config.json`
-
-Proceed through the [configuration](#configuration) section of this document.
-
-## Configuration
-
-There are several things that need to be verified and/or modified.
-
-### Network Port
-
-By default, the Perl HTTP API server runs on port `55556`. You can edit this in
-the `app.psgi` file, or run `plackup` with the `-p PORTNUM` option to change it.
-
-### Header File Paths
-
-The way Arduino sketches are built, we can't use relative paths when including
-header files in the sketches. At the top of each `.ino` sketch file, replace the
-absolute path of the includes to reflect the real location of the headers on
-your system.
-
-### WiFi SSID and Password
-
-We use `WiFiManager` to manage the WiFi credentials. If a known network isn't
-available to automatically log into, the controllers will start up in Access
-Point mode. Simply connect to the AP (`TeslaInterface` and `TeslaController`),
-and using a web browser, connect to `http://192.168.4.1`. 
-
-You can enter in the  WiFi details there. 
-
-You can manually access the configuration screen by setting the
-`WIFI_CONFIG_PIN` to `LOW` and rebooting the unit. Don't forget to put the pin
-back to `HIGH` before saving settings.
-
-One last way to access the configuration mode Access Point captive portal is to
-set `CONFIG_RESET` to `1` in the `TeslaChargeCommon.h` file, and compiling then
-installing the new sketch. Make your changes, save them, then the
-microcontroller will sleep so that you can flip the variable back to `0` and
-re-upload the newly compiled sketch.
-
-### HTTP API URL
-
-This is configured in the WiFi configuration captive portal, along with the
-WiFi credentials. It is available only on the 
-[Interface Controller](#microcontroller---interface). See
-[WiFi Configuration](#wifi-ssid-and-password) for how to change or set it.
-
-It's size is set to 64 chars, and can be configured in the
-[TeslaChargeInterface header file](#teslachargeinterfaceh) header file.
-
-Example:
-
-    API URL: https://www.mywebsite.com:55556/path/to/app
-
-### HTTP API Token
-
-This is set in the WiFi configuration captive portal along with the WiFi
-credentials, and the API URL. See the [auth security](#api-token-security)
-section of this document for generating a token, which you'd then paste into
-the `API Token` section of the captive portal. It is available only on the
-[Interface Controller](#microcontroller---interface). See
-[WiFi Configuration](#wifi-ssid-and-password) for how to change or set it.
-
-### ESP-NOW MAC Addresses
-
-Both the interface microcontroller and controller microcontroller MAC addresses
-are stored in the `inc/TeslaChargeCommon.h` header file. These allow the
-microcontrollers to communicate with one another.
-
-Upon bootup, the controller and interface software will display the current MAC
-address of the device on the serial console.
-
-### GPIO Pins
-
-The GPIO pin definitions used by each microcontroller can be found in their
-respective header file in `inc/`.
-
-Currently, these are:
-
-#### Interface Microcontroller
-
-| Name            | GPIO Pin | Board Pin | Protoboard Pin | Description           |
-|:----------------|----------|-----------|----------------|-----------------------|
-| SCL_PIN         | 5        | D1        | A13            | I2C SDA (OLED)        |  
-| SDA_PIN         | 4        | D2        | A14            | I2C SDA (OLED)        |  
-| ALARM_PIN       | 13       | D7        | A15            | Alarm buzzer          |  
-| REED_PIN        | 2        | D4        | A16            | Magnetic sensor       |  
-| PIR_PIN         | 12       | D6        | A17            | Motion sensor         |
-| WIFI_CONFIG_PIN | 14       | D5        | 19             | AP config mode switch |
-
-#### Controller Microcontroller
-
-| Name            | GPIO Pin | Board Pin | Protoboard Pin | Description          |
-|:----------------|----------|-----------|----------------|-----------------------|
-| LED_PIN         | 14       | D5        | N/A            | LED strip data pin    |  
-| WIFI_CONFIG_PIN | 13       | D7        | 20             | AP config mode switch |
-
-### Security
-
-#### IP Security
-
-To enable IP security, set `secure_ip` to `1` in the `system` section of the
-configuration file, and add the allowed IP addresses to the `allowed_ips`
-array in the same section of the file.
-
-#### API Token Security
-
-To enable an authentication token, set `secure_auth` to `1` in the `system`
-section of the configuration file, then generate a token by executing the
-`scripts/token_generator.pl` script. Follow the prompts on the command line. It
-will ask for a token name, then it will generate JSON that you must paste into
-the `tokens` section of the configuration file. Here's an example output:
-
-    "vps": "YzU0MWNhMmRmYzI4MGFmOWJmYjAxZmMzMzQ0ZjZkOWNhNTY3ZTIyMTcwOTI5MWRhMWE3NmM5MmVlYzRmMGZkMw"
-
-### Configuration File
-
-Initially, copy the `config.json-dist` file to `config.json` in the root
-directory.
-
-All values below are default.
-
-    {
-        "system": {
-            "secure_ip":    0,          # Refuse access based on IP
-            "secure_auth":  0,          # Allow only authorized users
-            "allowed_ips": [            # IP addresses authorized, comma separated
-            ]
-        },
-        "tesla_vehicle": {
-            "debug":        0,          # Display debug output in app.psgi
-            "debug_return": 1,          # Return the below debug data to interface microcontroller
-            "retry":        3,          # app.psgi will retry Tesla API this many times
-            "rainbow":      0,          # Force enable "rainbow" mode
-            "alarm":        1,          # Toggle the audible alarm
-            "debug_data": {
-                "online":   0,          # Bool - Vehicle awake
-                "charge":   0,          # 0-100 - Set the battery level
-                "charging": 0,          # Bool - Vehicle charging
-                "garage":   0,          # Bool - Car in garage
-                "gear":     0,          # 0-2  - Car gear (0 - P, 1 - R, 2 - N & D)
-                "error":    0,          # Bool - Simulate API fetch error
-                "rainbow":  0,          # Bool - Rainbow mode
-                "fetching": 0,          # Bool - Fetching data
-                "alarm":    0           # Bool - Audible alarm enabled
-            }
-        },
-        "garage": {
-            "debug":            0,      # Bool - Display debug output in app.psgi
-            "debug_return":     0,      # Bool - Return the below debug data instead of live data
-            "app_enabled":      1,      # Bool - Mobile app allowed to make changes
-            "relay_enabled":    1,      # Bool - Garage door opener relay enabled
-            "auto_close_enabled": 1,    # Bool - Allow garage door auto-close
-            "debug_data": {
-                "garage_door_state":    -1, # -1 - Uninit, 0 - Closed, 1 - Open, 2 - Closing, 3 - Opening
-                "tesla_in_garage":      -1, # -1 - Uninit, 0 - Away, 1 - In garage
-                "activity":              0  # Bool - Pending garage door action
-            }
-        },
-        "tokens": {                     # API tokens (format: "name": "token_string")
-        }
-    }
 
 ## Run the HTTP API Service
 
