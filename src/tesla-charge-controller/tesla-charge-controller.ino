@@ -106,12 +106,12 @@ void drawLED(uint8_t led, CRGB colour) {
 
 void ledReset () {
     ledSet(
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Black
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black
     );
 }
 
@@ -180,12 +180,12 @@ void fetching () {
         }
         else {
             ledSet(
-                    CRGB::Black,
-                    CRGB::Black,
-                    CRGB::Black,
-                    CRGB::Black,
-                    CRGB::Black,
-                    CRGB::Black
+                CRGB::Black,
+                CRGB::Black,
+                CRGB::Black,
+                CRGB::Black,
+                CRGB::Black,
+                CRGB::Black
             );
 
             fetchBlinkStatus = false;
@@ -260,34 +260,34 @@ void home_charging () {
 
 void away_charging () {
     ledSet(
-            CRGB::White,
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Purple
+        CRGB::White,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Purple
     );
 }
 
 void away_parked () {
     ledSet(
-            CRGB::White,
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Red
+        CRGB::White,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Red
     );
 }
 
 void away_driving() {
     ledSet(
-            CRGB::White,
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Black,
-            CRGB::Green
+        CRGB::White,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Black,
+        CRGB::Green
     );
 }
 
