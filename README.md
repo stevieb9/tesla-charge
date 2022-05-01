@@ -121,7 +121,7 @@ WiFi credentials. It is available only on the
 [WiFi Configuration](#wifi-ssid-and-password) for how to change or set it.
 
 It's size is set to 64 chars, and can be configured in the
-[TeslaChargeInterface header file](#teslachargeinterfaceh) header file.
+[TeslaChargeInterface header file](#teslachargeinterfaceh).
 
 Example:
 
@@ -167,7 +167,7 @@ Currently, these are:
 
 | Name            | GPIO Pin | Board Pin | Protoboard Pin | Description          |
 |:----------------|----------|-----------|----------------|-----------------------|
-| LED_PIN         | 14       | D5        | N/A            | LED strip data pin    |  
+| LED_PIN         | 14       | D5        | A26            | LED strip data pin    |  
 | WIFI_CONFIG_PIN | 13       | D7        | 20             | AP config mode switch |
 
 ### Security
@@ -221,11 +221,11 @@ All values below are default.
             }
         },
         "garage": {
-            "debug":            0,      # Bool - Display debug output in app.psgi
-            "debug_return":     0,      # Bool - Return the below debug data instead of live data
-            "app_enabled":      1,      # Bool - Mobile app allowed to make changes
-            "relay_enabled":    1,      # Bool - Garage door opener relay enabled
-            "auto_close_enabled": 1,    # Bool - Allow garage door auto-close
+            "debug":              0, # Bool - Display debug output in app.psgi
+            "debug_return":       0, # Bool - Return the below debug data instead of live data
+            "app_enabled":        1, # Bool - Mobile app allowed to make changes
+            "relay_enabled":      1, # Bool - Garage door opener relay enabled
+            "auto_close_enabled": 1, # Bool - Allow garage door auto-close
             "debug_data": {
                 "garage_door_state":    -1, # -1 - Uninit, 0 - Closed, 1 - Open, 2 - Closing, 3 - Opening
                 "tesla_in_garage":      -1, # -1 - Uninit, 0 - Away, 1 - In garage
@@ -245,15 +245,15 @@ ESP8266-based Wemos D1 units (these show up as "Lolin(WEMOS) D1 R2 & mini" as
 the Board type in the Arduino IDE). For the garage door  prototype, an Arduino
 Uno was used.
 
-The Perl backend API software can be run by any computer that is reachable via
-wifi to the micro-controllers (I used to use a Raspberry Pi 3, but then
-decided to have it run on an external VPS).
-
 ### Perl HTTP API Server
 
-This software is responsible for collecting and aggregating from the Tesla API,
-as well as various microcontrollers. It responds to REST API calls, and for the
-most part, all return values are JSON.
+The Perl backend API software can be run by any computer that is accessible
+over the network or Internet. I used to use a Raspberry Pi 3, but then decided
+to have it run on an external VPS.
+
+This software is responsible for collecting and aggregating data from the Tesla
+API, as well as the various microcontrollers. It responds to REST API calls, and
+for the most part, all return values are JSON encoded.
 
 ### Microcontroller - Interface
 
@@ -264,20 +264,21 @@ This device:
 - Communicates with the external Perl HTTP API server
 - Fetches  configuration and Tesla vehicle state information as JSON data
 - Sounds the audible alarm if enabled
-- Draws the OLED screen, 
+- Draws the OLED screen
 - Manages the "rainbow mode" magnetic reed sensor
 - Manages the motion PIR sensor
 - Sends the required data to the [Controller Microcontroller](#microcontroller---controller).
+- Manages the API URL and authorization token
 
 This microcontroller's sketch is in 
 `src/tesla-charge-interface/tesla-charge-interface.ino`.
 
-It's header file is `inc/TeslaChargeInterface.h`.
+Its header file is `inc/TeslaChargeInterface.h`.
 
 It uses a `TeslaVehicle` object and specific enum variables found in
 `inc/TeslaVehicle.h`.
 
-It also uses a shared header in `inc/TeslaChargeCommon.h`.
+It also uses the shared header in `inc/TeslaChargeCommon.h`.
 
 ### Microcontroller - Controller
 
@@ -291,9 +292,9 @@ This device:
 This microcontroller's sketch is in
 `src/tesla-charge-controller/tesla-charge-controller.ino`.
 
-It's header file is `inc/TeslaChargeController.h`.
+Its header file is `inc/TeslaChargeController.h`.
 
-It also uses a shared header in `inc/TeslaChargeCommon.h`.
+It also uses the shared header in `inc/TeslaChargeCommon.h`.
 
 ### Microcontroller - Garage
 
@@ -347,7 +348,9 @@ Used by the [Garage Door Prototype Microcontroller](#microcontroller---garage).
 
 ### Files - Headers
 
-All headers can be found under the `inc/` directory.
+All headers can be found under the `inc/` directory. Aside from the
+[Tesla Vehicle class](#teslavehicleh), they contain user definable variables
+such as GPIO pin configurations, timing configurations etc.
 
 #### TeslaChargeInterface.h 
 
