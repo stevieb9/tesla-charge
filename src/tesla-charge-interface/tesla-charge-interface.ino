@@ -10,7 +10,6 @@ String apiTokenString = "";
 
 uint8_t lastCharge = CHARGE_MAX;
 
-unsigned long alarmOnTime;
 unsigned long alarmOffTime;
 unsigned long dataRefreshTime;
 
@@ -39,7 +38,6 @@ void setup() {
     }
 
     dataRefreshTime   = millis();
-    alarmOnTime       = millis();
     alarmOffTime      = millis();
 
     oled.init();
@@ -199,17 +197,12 @@ void alarm (bool state) {
         unsigned long currentTime   = millis();
 
         if (state) {
-            if (alarmState) {
-                if (currentTime - alarmOnTime >= ALARM_ON_TIME) {
-                    spl(currentTime - alarmOnTime);
-                    digitalWrite(ALARM_PIN, LOW);
-                    alarmOffTime = currentTime;
-                    //alarmOnTime = currentTime;
-                }
-            } else {
+            if (! alarmState) {
                 if (currentTime - alarmOffTime >= ALARM_OFF_TIME) {
                     digitalWrite(ALARM_PIN, HIGH);
-                    alarmOnTime = currentTime;
+                    delay(ALARM_ON_TIME);
+                    digitalWrite(ALARM_PIN, LOW);
+                    alarmOffTime = millis();
                 }
             }
         } else {
