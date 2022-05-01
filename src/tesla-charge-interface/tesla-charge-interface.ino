@@ -103,10 +103,13 @@ void setup() {
 void loop() {
     ArduinoOTA.handle();
 
-    bool magnet = digitalRead(REED_PIN);
+    bool rainbowMagnet = ! digitalRead(REED_PIN);
     bool motion = digitalRead(PIR_PIN);
 
-    if (motion || DEBUG_MOTION || DEBUG_DEVEL) {
+    if (rainbowMagnet) {
+        vehicleData.state = RAINBOW;
+    }
+    else if (motion || DEBUG_MOTION || DEBUG_DEVEL) {
         unsigned long currentTime = millis();
 
         if (currentTime - dataRefreshTime >= DATA_DELAY) {
