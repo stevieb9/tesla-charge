@@ -64,18 +64,6 @@ void setup() {
 
     wifiManager.setConfigPortalTimeout(180);
 
-    if (digitalRead(CONFIG_PIN) == LOW) {
-        spl(F("Going into config mode");
-
-        if (! wifiManager.startConfigPortal(apNameInterface)){
-            Serial.println(F("Failed to start the configuration portal"));
-            delay(3000);
-            ESP.restart();
-            delay(5000);
-        }
-        Serial.println(F("Connected to the configuration portal"));
-    }
-
     if (CONFIG_RESET) {
         wifiManager.resetSettings();
     }
@@ -117,6 +105,7 @@ void setup() {
 
 void loop() {
     ArduinoOTA.handle();
+    configModeCheck();
 
     bool rainbowMagnet = ! digitalRead(REED_PIN);
     bool motion = digitalRead(PIR_PIN);
@@ -347,4 +336,18 @@ void configRead () {
 
 void saveConfig () {
     configSaveNeeded = true;
+}
+
+void configModeCheck () {
+    if (digitalRead(CONFIG_PIN) == LOW) {
+        spl(F("Going into config mode");
+
+        if (! wifiManager.startConfigPortal(apNameInterface)){
+            Serial.println(F("Failed to start the configuration portal"));
+            delay(3000);
+            ESP.restart();
+            delay(5000);
+        }
+        Serial.println(F("Connected to the configuration portal"));
+    }
 }
