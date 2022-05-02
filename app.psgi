@@ -29,17 +29,21 @@ use constant {
     DATA_EXPIRY     => 10, # Seconds
 };
 
+# Configuration stores
 my $system_conf;
 my $tesla_conf;
 my $garage_conf;
 my $tokens;
 
+# Debug flags
 my $tesla_debug = 0;
 my $garage_debug = 0;
 
-my $car = Tesla::Vehicle->new(api_cache_persist => 1);
-
+# Initial config file load
 config_load();
+
+# Tesla vehicle API
+my $car = Tesla::Vehicle->new(api_cache_persist => 1);
 
 # Tesla data
 tie my $tesla_data, 'IPC::Shareable', {key => 'tesla_charge', create => 1};
@@ -48,9 +52,11 @@ $tesla_data = '';
 # Garage data
 my $garage_data = _default_garage_data();
 
+# Tesla API external process
 my $tesla_event = Async::Event::Interval->new(0, \&update);
 $tesla_event->start;
 
+# Tesla API data timeout marker
 my $last_conn_time = time;
 
 hook before => sub {
