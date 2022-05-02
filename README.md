@@ -198,11 +198,10 @@ Currently, these are (note the 'Protoboard pin' is custom to my setup only):
 #### IP Security
 
 To enable IP security, set `secure_ip` to `1` in the `system` section of the
-configuration file, and add the allowed IP addresses to the `allowed_ips`
+configuration file, and add the allowed IP address blocks to the `allowed_ips`
 array in the same section of the file.
 
-Currently, only individual IP addresses can be added. Eventually, I'll add the
-ability to enter full prefixes/netblocks.
+The IP address entries must have a prefix attached. Example: `192.168.1.0/24`.
 
 #### API Token Security
 
@@ -225,9 +224,11 @@ All values below are default.
 
     {
         "system": {
-            "secure_ip":    0,          # Refuse access based on IP
+            "secure_ip":    0,          # Allow access based on IP
             "secure_auth":  0,          # Allow only authorized tokens
-            "allowed_ips": [            # IP addresses authorized, comma separated
+            "allowed_ips": [            # IP address blocks authorized
+                "192.168.1.0/24",       # Example - prefix is required
+                "127.0.0.2/32"          # Example
             ]
         },
         "tesla_vehicle": {

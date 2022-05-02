@@ -8,6 +8,7 @@ use Async::Event::Interval;
 use Dancer2;
 use Data::Dumper;
 use FindBin;
+use Net::Subnet;
 use IPC::Shareable;
 use Tesla::Vehicle;
 
@@ -149,11 +150,27 @@ sub security {
 
     if ($system_conf->{secure_ip}) {
         my $allowed_ips = $system_conf->{allowed_ips};
-        my $requester_ip = request->address;
+        my $ip_config_error;
 
-        print "Failed to authenticate IP address\n";
+        for (@$allowed_ips) {
+            if ($_ !~ /\/\d{1,3}$/) {
+                print "Entry '$_' doesn't have a prefix attached. Please fix it\n";
+                $secure = 0;
+                $ip_config_error = 1;
+            }
+        }
 
-        $secure = 0 if ! grep { $requester_ip eq $_ } @$allowed_ips;
+        if (! $ip_config_error) {
+            my $is_allowed_ips = subnet_matcher(@{$system_conf->{allowed_ips}});;
+            my $requester_ip = request->address;
+
+            print "$requester_ip\n";
+
+            if (!$is_allowed_ips->($requester_ip)) {
+                print "Failed to authenticate IP address '$requester_ip'\n";
+                $secure = 0;
+            }
+        }
     }
 
     if ($system_conf->{secure_auth}) {
