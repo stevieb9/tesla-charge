@@ -261,7 +261,8 @@ All values below are default.
                 "activity":              0  # Bool - Pending garage door action
             }
         },
-        "tokens": {                     # API tokens (format: "name": "token_string")
+        "tokens": {                     # API tokens (example below)
+            "maezi": "MzM3MWFlZDMyODViMDJmZGIxZjgwMzE3MmNkYWRhMzlmNjEyZTRhZDFkMjhmMTA5OGZiM2Y3ZWQ0YzkzYTEwYw"
         }
     }
 
