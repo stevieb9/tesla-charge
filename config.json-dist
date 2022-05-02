@@ -11,6 +11,8 @@
         "retry":        3,
         "rainbow":      0,
         "alarm":        1,
+        "latitude":     "00.00000",
+        "longitude":    "-000.0000",
         "debug_data": {
             "online":   0,
             "charge":   0,

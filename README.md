@@ -168,6 +168,12 @@ microcontrollers to communicate with one another.
 Upon bootup, the controller and interface software will display the current MAC
 address of the device on the serial console.
 
+### Vehicle Location
+
+In the [config file](#configuration-file), under the `tesla_vehicle` section,
+insert the coordinates of your garage. See the config file link above for an
+example. This is how we identify whether the car is in the garage or not.
+
 ### GPIO Pins
 
 The GPIO pin definitions used by each microcontroller can be found in their
@@ -237,6 +243,8 @@ All values below are default.
             "retry":        3,          # app.psgi will retry Tesla API this many times
             "rainbow":      0,          # Force enable "rainbow" mode
             "alarm":        1,          # Toggle the audible alarm
+            "latitude":     "xx.xxxxx", # Vehicle latitude (5 decimal points)
+            "longitude":    "-xxx.xxxx",# Vehicle longitude (4 decimal points)
             "debug_data": {
                 "online":   0,          # Bool - Vehicle awake
                 "charge":   0,          # 0-100 - Current battery level percent

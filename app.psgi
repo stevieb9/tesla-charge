@@ -21,8 +21,6 @@ set port => 55556;
 use constant {
     ACCURACY        => 1e4,
     RANGE           => 1.2,
-    LAT             => 50.25892,
-    LON             => -119.3166,
     GARAGE_OPEN     => 1,
     GARAGE_CLOSED   => 0,
     CONFIG_JSON     => "$FindBin::Bin/config.json",
@@ -39,8 +37,11 @@ my $tokens;
 my $tesla_debug = 0;
 my $garage_debug = 0;
 
-# Initial config file load
 config_load();
+
+# Vehicle location
+my $latitude  = $tesla_conf->{latitude} || 0;
+my $longitude = $tesla_conf->{longitude} || 0;
 
 # Tesla vehicle API
 my $car = Tesla::Vehicle->new(api_cache_persist => 1);
@@ -302,8 +303,8 @@ sub deviation {
     my ($what, $coord) = @_;
 
     $what eq 'lat'
-        ? return abs(ACCURACY * (LAT - $coord)) < 1
-        : return abs(ACCURACY * (LON - $coord)) < 1;
+        ? return abs(ACCURACY * ($latitude - $coord)) < 1
+        : return abs(ACCURACY * ($longitude - $coord)) < 1;
 }
 sub distance {
     die "Need lat|lon and coord" if @_ != 2;
@@ -311,8 +312,8 @@ sub distance {
     my ($what, $coord) = @_;
 
     $what eq 'lat'
-        ? return abs(ACCURACY * (LAT - $coord))
-        : return abs(ACCURACY * (LON - $coord));
+        ? return abs(ACCURACY * ($latitude - $coord))
+        : return abs(ACCURACY * ($longitude - $coord));
 }
 sub gear {
     my ($gear) = @_;
