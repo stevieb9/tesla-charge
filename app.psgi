@@ -164,12 +164,12 @@ sub security {
     }
 
     if ($system_conf->{secure_auth}) {
-        my $user_token;
+        my $user_token = '';
 
         if (body_parameters->get('token')) {
             $user_token = body_parameters->get('token');
         }
-        else {
+        if (ref from_json(request->body) eq 'HASH') {
             $user_token = from_json(request->body)->{token};
         }
 
