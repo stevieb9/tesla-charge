@@ -427,6 +427,12 @@ for the custom fonts displayed on the OLED display device.
 
 ## Run the HTTP API Service
 
+For every request made to the REST API service, a pre-hook is called before the
+client is directed to the route they requested. This pre-hook reads in the
+[configuration file](#configuration-file), and updates any configuration data
+that has changed. This means that the application never needs a restart while
+fiddling with changes in the config file.
+
 ### Run from crontab
 
     @reboot sleep 10; cd /path/to/tesla-charge; /path/to/perl app.psgi > /tmp/tesla_web.log 2>&1
