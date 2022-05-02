@@ -7,4 +7,5 @@ requires 'IPC::Shareable', '1.12';
 requires 'JSON', '0';
 requires 'MOME::Base64', '0';
 requires 'Net::SSLeay', '0';
+requires 'Net::Subnet', '0';
 requires 'Tesla::Vehicle', '0.07';
