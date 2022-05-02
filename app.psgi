@@ -31,12 +31,12 @@ use constant {
 my $system_conf;
 my $tesla_conf;
 my $garage_conf;
-my $tokens;
 
 # Debug flags
 my $tesla_debug = 0;
 my $garage_debug = 0;
 
+# Initial load of configuration file
 config_load();
 
 # Vehicle location
@@ -164,18 +164,20 @@ sub security {
     }
 
     if ($system_conf->{secure_auth}) {
-        my $user_token = '';
+        my $token = '';
 
         if (body_parameters->get('token')) {
-            $user_token = body_parameters->get('token');
+            $token = body_parameters->get('token');
         }
         if (ref from_json(request->body) eq 'HASH') {
-            $user_token = from_json(request->body)->{token};
+            $token = from_json(request->body)->{token};
         }
 
-        if (! defined $user_token || ! grep { $user_token eq $_ } values %$tokens) {
+        my $saved_tokens = $system_conf->{tokens};
+
+        if (! defined $token || ! grep { $token eq $_ } values %$saved_tokens) {
             my $ip = request->address;
-            print "Failed to authenticate token: '$user_token' from IP $ip\n";
+            print "Failed to authenticate token: '$token' from IP $ip\n";
             $secure = 0;
         }
     }
@@ -196,7 +198,6 @@ sub config_load {
     $system_conf = $conf->{system};
     $tesla_conf  = $conf->{tesla_vehicle};
     $garage_conf = $conf->{garage};
-    $tokens      = $conf->{tokens};
 
     $tesla_debug = 1 if $tesla_conf->{debug};
     $garage_debug = 1 if $garage_conf->{debug};

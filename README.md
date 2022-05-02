@@ -226,7 +226,8 @@ You can configure and add as many tokens as you wish.
 Initially, copy the `config.json-dist` file to `config.json` in the root
 directory.
 
-All values below are default.
+All values below are default. `allowed_ips` and `tokens` sections are exanples
+and do not appear in the distribution config file.
 
     {
         "system": {
@@ -235,7 +236,10 @@ All values below are default.
             "allowed_ips": [            # IP address blocks authorized
                 "192.168.1.0/24",       # Example - prefix is required
                 "127.0.0.2/32"          # Example
-            ]
+            ],
+            "tokens": {                 # API tokens (example below)
+                "maezi": "MzM3MWFlZDMyODViMDJmZGIxZjgwMzE3MmNkYWRhMzlmNjEyZTRhZDFkMjhmMTA5OGZiM2Y3ZWQ0YzkzYTEwYw"
+            }
         },
         "tesla_vehicle": {
             "debug":        0,          # Display debug output in app.psgi
@@ -268,9 +272,6 @@ All values below are default.
                 "tesla_in_garage":      -1, # -1 - Uninit, 0 - Away, 1 - In garage
                 "activity":              0  # Bool - Pending garage door action
             }
-        },
-        "tokens": {                     # API tokens (example below)
-            "maezi": "MzM3MWFlZDMyODViMDJmZGIxZjgwMzE3MmNkYWRhMzlmNjEyZTRhZDFkMjhmMTA5OGZiM2Y3ZWQ0YzkzYTEwYw"
         }
     }
 

@@ -3,7 +3,9 @@
         "secure_ip":    0,
         "secure_auth":  0,
         "allowed_ips": [
-        ]
+        ],
+        "tokens": {
+        }
     },
     "tesla_vehicle": {
         "debug":        0,
@@ -36,7 +38,5 @@
             "tesla_in_garage":      -1,
             "activity":             0
         }
-    }
-    "tokens": {
     }
 }

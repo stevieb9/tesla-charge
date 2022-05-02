@@ -16,6 +16,7 @@ Revision history for tesla-charge
     - IP access now based on IP prefixes
     - config_load() and security() checks now done in a before hook instead of
       each individual route
+    - Moved config file tokens to system config section
 
 1.01 2022-04-08
     - Separated code into two separate controllers (Controller - controls the
