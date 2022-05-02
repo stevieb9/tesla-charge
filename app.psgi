@@ -125,6 +125,11 @@ any ['get', 'post'] => '/garage_door_state' => sub {
     return if ! security();
     return int $garage_data->{garage_door_state};
 };
+any ['get', 'post'] => '/garage_door_operate' => sub {
+    # Trigger the garage door to operate (app/web)
+    return if ! security();
+    $garage_data->{activity} = 1;
+};
 post '/garage_update' => sub {
     # Update garage data (microcontroller JSON)
     return if ! security();
@@ -135,11 +140,6 @@ post '/garage_update' => sub {
     $garage_data->{activity} = $data->{activity};
 
     return;
-};
-any ['get', 'post'] => '/garage_door_operate' => sub {
-    # Trigger the garage door to operate (app/web)
-    return if ! security();
-    $garage_data->{activity} = 1;
 };
 
 dance;
