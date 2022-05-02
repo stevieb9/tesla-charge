@@ -169,7 +169,7 @@ sub security {
         if (body_parameters->get('token')) {
             $token = body_parameters->get('token');
         }
-        if (ref from_json(request->body) eq 'HASH') {
+        elsif (from_json(request->body)) {
             $token = from_json(request->body)->{token};
         }
 
