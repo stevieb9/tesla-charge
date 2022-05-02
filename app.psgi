@@ -53,11 +53,12 @@ $tesla_event->start;
 
 my $last_conn_time = time;
 
-any ['get', 'post'] => '/' => sub {
+hook before => sub {
     config_load();
+    halt("Unauthorized") if ! security();
+};
 
-    return if ! security();
-
+any ['get', 'post'] => '/' => sub {
     content_type 'application/json';
 
     return debug_data() if $tesla_conf->{debug_return};
@@ -74,23 +75,15 @@ any ['get', 'post'] => '/' => sub {
     return encode_json _default_data();
 };
 any ['get', 'post'] => '/debug' => sub {
-    return if ! security();
-
     content_type 'application/json';
-    config_load();
     return debug_data();
 };
 any ['get', 'post'] => '/debug_garage' => sub {
-    return if ! security();
-
     content_type 'application/json';
-    config_load();
     return debug_garage_data();
 };
 any ['get', 'post'] => '/wake' => sub {
     # Wake up the Tesla
-    return if ! security();
-
     my $awoke_ok = eval {
         $car->wake;
         1;
@@ -104,16 +97,11 @@ any ['get', 'post'] => '/wake' => sub {
 };
 any ['get', 'post'] => '/garage' => sub {
     # Main garage page (web)
-    return if ! security();
     return template 'garage';
 };
 any ['get', 'post'] => '/garage_data' => sub {
     # Get garage data (microcontroller)
-    return if ! security();
-
     content_type 'application/json';
-
-    config_load();
 
     $garage_data->{relay_enabled} = $garage_conf->{relay_enabled};
     $garage_data->{app_enabled} = $garage_conf->{app_enabled};
@@ -123,17 +111,14 @@ any ['get', 'post'] => '/garage_data' => sub {
 };
 any ['get', 'post'] => '/garage_door_state' => sub {
     # Get garage door state
-    return if ! security();
     return int $garage_data->{garage_door_state};
 };
 any ['get', 'post'] => '/garage_door_operate' => sub {
     # Trigger the garage door to operate (app/web)
-    return if ! security();
     $garage_data->{activity} = 1;
 };
 post '/garage_update' => sub {
     # Update garage data (microcontroller JSON)
-    return if ! security();
 
     my $data = decode_json request->body;
 
@@ -163,8 +148,6 @@ sub security {
         if (! $ip_config_error) {
             my $is_allowed_ips = subnet_matcher(@{$system_conf->{allowed_ips}});;
             my $requester_ip = request->address;
-
-            print "$requester_ip\n";
 
             if (!$is_allowed_ips->($requester_ip)) {
                 print "Failed to authenticate IP address '$requester_ip'\n";
