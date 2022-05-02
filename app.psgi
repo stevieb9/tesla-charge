@@ -167,7 +167,8 @@ sub security {
         }
 
         if (! defined $user_token || ! grep { $user_token eq $_ } values %$tokens) {
-            print "Failed to authenticate token: '$user_token'\n";
+            my $ip = request->address;
+            print "Failed to authenticate token: '$user_token' from IP $ip\n";
             $secure = 0;
         }
     }
