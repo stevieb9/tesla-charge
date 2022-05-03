@@ -578,7 +578,9 @@ in the returned JSON string. This number of retries is set in the `tesla_vehicle
 `retry` section of the [config file](#configuration-file).
 
 This function is called in a separate process from the main REST server, using
-`Async::Event::Interval`. The Tesla API calls are made through `Tesla::Vehicle`.
+[Async::Event::Interval](https://metacpan.org/pod/Async::Event::Interval). The
+Tesla API calls are made through
+[Tesla::Vehicle](https://metacpan.org/pod/Tesla::Vehicle).
 
 #### fetch($conf)
 
