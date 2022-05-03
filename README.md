@@ -29,6 +29,7 @@ garage door prototype.
   + [HTTP API URL](#http-api-url)
   + [HTTP API Token](#http-api-token)
   + [ESP-NOW MAC Addresses](#esp-now-mac-addresses)
+  + [Garage Location Coordinates](#garage-location-coordinates)
   + [GPIO Pins](#gpio-pins)
   + [App Security](#security)
   + [Configuration File](#configuration-file)
@@ -168,7 +169,7 @@ microcontrollers to communicate with one another.
 Upon bootup, the controller and interface software will display the current MAC
 address of the device on the serial console.
 
-### Vehicle Location
+### Garage Location Coordinates
 
 In the [config file](#configuration-file), under the `tesla_vehicle` section,
 insert the coordinates of your garage. See the config file link above for an
@@ -238,7 +239,7 @@ and do not appear in the distribution config file.
                 "127.0.0.2/32"          # Example
             ],
             "tokens": {                 # API tokens (example below)
-                "maezi": "MzM3MWFlZDMyODViMDJmZGIxZjgwMzE3MmNkYWRhMzlmNjEyZTRhZDFkMjhmMTA5OGZiM2Y3ZWQ0YzkzYTEwYw"
+                "vps": "MzM3MWFlZDMyODViMDJmZGIxZjgwMzE3MmNkYWRhMzlmNjEyZTRhZDFkMjhmMTA5OGZiM2Y3ZWQ0YzkzYTEwYw"
             }
         },
         "tesla_vehicle": {
