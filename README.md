@@ -85,7 +85,7 @@ If things fail:
 
 Copy and edit the configuration file:
 
-- `cp config.json-dist config.json`
+- `cp config/config.json-dist config/config.json`
 
 Proceed through the [configuration](#configuration) section of this document.
 
@@ -93,8 +93,8 @@ Proceed through the [configuration](#configuration) section of this document.
 
 There are several things that need to be verified and/or modified.
 
-First things first, copy the `config.json-dist` file to `config.json` in the
-root directory of the repository.
+First things first, copy the `config/config.json-dist` file to
+`config/config.json` in the root directory of the repository.
 
 ### Network Port
 
@@ -224,8 +224,8 @@ You can configure and add as many tokens as you wish.
 
 ### Configuration File
 
-Initially, copy the `config.json-dist` file to `config.json` in the root
-directory.
+Initially, copy the `config/config.json-dist` file to `config/config.json` in
+the root directory.
 
 All values below are default. `allowed_ips` and `tokens` sections are exanples
 and do not appear in the distribution config file.
