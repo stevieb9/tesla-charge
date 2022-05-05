@@ -23,7 +23,7 @@ use constant {
     RANGE           => 1.2,
     GARAGE_OPEN     => 1,
     GARAGE_CLOSED   => 0,
-    CONFIG_JSON     => "$FindBin::Bin/config.json",
+    CONFIG_JSON     => "$FindBin::Bin/../config/config.json",
     DATA_EXPIRY     => 10, # Seconds
 };
 
