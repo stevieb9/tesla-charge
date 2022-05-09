@@ -65,6 +65,7 @@ hook before => sub {
 
     if (! security()) {
         my $struct = _default_data();
+        $struct->{fetching} = 0;
         $struct->{error} = 1;
         halt(encode_json($struct));
     }
