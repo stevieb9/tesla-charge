@@ -66,6 +66,7 @@ garage door prototype.
   + [AWAY_CHARGING](#away_charging)
   + [AWAY_PARKED](#away_parked)
   + [AWAY_DRIVING](#away_driving)
+* [Caveats](#caveats)
 
 ## Installation
 
@@ -914,3 +915,10 @@ The vehicle is currenty away from home and is in a gear other than park.
 | Off       |
 | Off       |
 | **Green** |
+
+## Caveats
+
+For each start and stop of the application, we seem to leak two shared memory
+segments. This is an issue regarding running multiple layers of a stack whereby
+`Async::Event::Interval` and/or `IPC::Shareable` are not processing their
+cleanup handlers properly. This won't be an issue in normal operation.
