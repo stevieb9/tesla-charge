@@ -1,0 +1,92 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+
+use Daemon::Control;
+use JSON;
+
+use constant {
+    APP_PATH        => '/Users/steve/repos/tesla-charge',
+    CONFIG_JSON     => 'config/config.json',
+    WEBAPP          => 'bin/app.psgi',
+};
+
+my $conf = config_load();
+my $debug = 0;
+
+exit Daemon::Control->new(
+    name        => "Tesla Charge REST API",
+    program     => plackup_path(),
+    program_args => _webserver_args(),
+    pid_file    => '/tmp/tesla-charge.pid',
+    stderr_file => $conf->{stderr},
+    stdout_file => $conf->{stdout},
+    fork        => 2,
+)->run;
+
+sub _webserver_args {
+    my @args;
+
+    # Set the port
+    if ($conf->{port}) {
+        push @args, ('--port', $conf->{port});
+    }
+
+    # Enable SSL
+    if ($conf->{ssl}) {
+        push @args, '--enable-ssl';
+        push @args, ('--ssl-key-file', $conf->{ssl_key_file});
+        push @args, ('--ssl-cert-file', $conf->{ssl_cert_file});
+    }
+
+    # Redirect logs
+    if ($conf->{access_log}) {
+        push @args, ('--access-log', $conf->{access_log});
+    }
+
+    # Reload on file change
+    if (scalar @{ $conf->{reload_files} }) {
+        push @args, ('-R', join ',', @{ $conf->{reload_files} });
+    }
+
+    # The actual app
+    push @args, "${\APP_PATH}/${\WEBAPP}";
+
+    return \@args;
+}
+sub config_load {
+    my $global_conf;
+
+    {
+        local $/;
+        my $file = "${\APP_PATH}/${\CONFIG_JSON}";
+        open my $fh, '<', $file or die "Can't open config JSON file: $!";
+        $global_conf = <$fh>;
+    }
+
+    $global_conf = decode_json $global_conf;
+
+    $conf = $global_conf->{webserver};
+
+    $debug = 1 if $conf->{debug};
+
+    return $conf;
+}
+sub plackup_path {
+    my $program_name = "plackup";
+    my $program_path;
+
+    for my $path (split /:/, $ENV{PATH}) {
+        if ( -f "$path/$program_name" && -x _ ) {
+            $program_path = "$path/$program_name";
+            last;
+        }
+    }
+
+    if (! $program_path) {
+        die "'plackup' command not found in PATH. Exiting...";
+    }
+
+    return $program_path;
+}

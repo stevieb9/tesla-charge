@@ -24,6 +24,7 @@ garage door prototype.
 
 * [Installation](#installation)
 * [Configuration](#configuration)
+  + [Webserver Configuration](#webserver-configuration)
   + [Network Port](#network-port)
   + [WiFi SSID and Password](#wifi-ssid-and-password)
   + [HTTP API URL](#http-api-url)
@@ -44,6 +45,7 @@ garage door prototype.
     + [Files - Sketches](#files---sketches)
     + [Files - Headers](#files---headers)
 * [Running the HTTP API Service](#run-the-http-api-service)
+    + [Daemon mode](#daemon-mode)
     + [Run from crontab](#run-from-crontab)
     + [All logging enabled](#all-logging-enabled)
     + [Hide access logs](#hide-access-logs)
@@ -85,7 +87,7 @@ If things fail:
 
 Copy and edit the configuration file:
 
-- `cp config.json-dist config.json`
+- `cp config/config.json-dist config/config.json`
 
 Proceed through the [configuration](#configuration) section of this document.
 
@@ -93,13 +95,86 @@ Proceed through the [configuration](#configuration) section of this document.
 
 There are several things that need to be verified and/or modified.
 
-First things first, copy the `config.json-dist` file to `config.json` in the
-root directory of the repository.
+First things first, copy the `config/config.json-dist` file to
+`config/config.json` in the root directory of the repository.
 
-### Network Port
+### Webserver configuration 
+
+If you are running in [Daemon mode](#daemon-mode), you can use the `webserver`
+section in the [config file](#configuration-file) to configure how the web
+service behaves.
+
+The daemon mode configuration elements are described with examples below.
+
+#### port
+
+An integer representing the port to run the webservice on.
+
+    "port": 55556
+
+#### debug
+
+Set to `1` to enable debug output, and `0` to disable it.
+
+    "debug": 0
+
+#### access_log
+
+Leave blank to write web service access entries to `STDOUT` (will be redirected
+to whatever `stderr` points to). If set to `/dev/null`, these logs will be
+discarded entirely. Otherwise, enter the path and filename of a file you'd
+like these entries saved to.
+
+    "access_log": "/dev/null"
+
+#### stdout
+
+The web service will write its standard output to this file (leave blank to have
+entries written to the console).
+
+    "stdout": "/tmp/tesla-charge.out"
+
+The web service will write its error output to this file (leave blank to have
+entries written to the console).
+
+    "stderr": "/tmp/tesla-charge.err"
+       
+#### ssl
+
+`1` to enable SSL (HTTPS), `0` to disable it. If set, both `ssl_key_file` and
+`ssl_cert_file` must point to legitimate and valid files.
+
+    "ssl" : 1
+
+#### ssl_key_file
+
+The path and name of the SSL private key file. Can be left blank if `ssl` is set
+to false.
+
+    "ssl_key_file": "/etc/letsencrypt/live/tesla.hellbent.app/privkey.pem"
+
+#### ssl_cert_file
+
+The path and name of the SSL certificate file. Can be left blank if `ssl` is set
+to false.
+
+    "ssl_cert_file": "/etc/letsencrypt/live/tesla.hellbent.app/fullchain.pem"
+
+#### reload_files
+
+A list of files that the web service will monitor, and if they change, will
+automatically restart itself.
+
+        "reload_files": [
+            "/Users/steve/repos/tesla-charge/bin/app.psgi"
+        ]
+
+### Network port
 
 By default, the Perl HTTP API server runs on port `55556`. You can edit this in
-the `app.psgi` file, or run `plackup` with the `-p PORTNUM` option to change it.
+the `webserver` section of the [config file](#configuration-file) if using 
+[daemon mode](#daemon-mode), or run `plackup` with the `-p PORTNUM` option to
+change it.
 
 ### Header File Paths
 
@@ -224,8 +299,8 @@ You can configure and add as many tokens as you wish.
 
 ### Configuration File
 
-Initially, copy the `config.json-dist` file to `config.json` in the root
-directory.
+Initially, copy the `config/config.json-dist` file to `config/config.json` in
+the root directory.
 
 All values below are default. `allowed_ips` and `tokens` sections are exanples
 and do not appear in the distribution config file.
@@ -273,7 +348,19 @@ and do not appear in the distribution config file.
                 "tesla_in_garage":      -1, # -1 - Uninit, 0 - Away, 1 - In garage
                 "activity":              0  # Bool - Pending garage door action
             }
-        }
+        },
+        "webserver": {
+            "debug": 0,                         # Enable webapp debug output
+            "port": 55556,                      # Port plackup runs on
+            "access_log": "",                   # Alternate access log location ('/dev/null' to disable logs)
+            "stdout": "/tmp/tesla-charge.out",  # Webserver STDOUT location (leave blank for console output)
+            "stderr": "/tmp/tesla-charge.err",  # Webserver STDERR location (leave blank for console output)
+            "ssl" : 0,                          # Enable SSL (ie. HTTPS) (needs ssl_key_file and ssl_cert_file)
+            "ssl_key_file": "",                 # Path to the SSL key file
+            "ssl_cert_file": "",                # Path to the SSL cert file
+            "reload_files": [                   # List of files to auto-reload on if changed 
+            ]
+        } 
     }
 
 ## System Information
@@ -434,9 +521,34 @@ client is directed to the route they requested. This pre-hook reads in the
 that has changed. This means that the application never needs a restart while
 fiddling with changes in the config file.
 
-### Run from crontab
+### Daemon mode
 
-    @reboot sleep 10; cd /path/to/tesla-charge; /path/to/perl app.psgi > /tmp/tesla_web.log 2>&1
+We have a wrapper script, `bin/tesla-charge`, that allows the web application
+to run in daemon mode. Basic commands are:
+
+#### start
+
+Starts the application using the configuration from the `webserver` section of
+the [config file](#configuration-file). See that link for information on what
+tweaks can be made to the operation of the program.
+
+    bin/tesla-charge start
+
+#### stop
+
+Stops the application and cleans up after it.
+
+    bin/tesla-charge stop
+
+#### restart
+
+Restarts the application.
+
+    bin/tesla-charge restart
+
+#### Run from crontab
+
+    @reboot sleep 10; /Users/steve/repos/tesla-charge/bin/tesla-charge start 
 
 ### All logging enabled 
 
