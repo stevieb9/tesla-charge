@@ -62,7 +62,12 @@ my $last_conn_time = time;
 
 hook before => sub {
     config_load();
-    halt("Unauthorized") if ! security();
+
+    if (! security()) {
+        my $struct = _default_data();
+        $struct->{error} = 1;
+        halt(encode_json($struct));
+    }
 };
 
 any ['get', 'post'] => '/' => sub {
@@ -156,7 +161,7 @@ sub security {
             my $is_allowed_ips = subnet_matcher(@{$system_conf->{allowed_ips}});;
             my $requester_ip = request->address;
 
-            if (!$is_allowed_ips->($requester_ip)) {
+            if (! $is_allowed_ips->($requester_ip)) {
                 print "Failed to authenticate IP address '$requester_ip'\n";
                 $secure = 0;
             }
