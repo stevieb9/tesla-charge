@@ -38,5 +38,17 @@
             "tesla_in_garage":      -1,
             "activity":             0
         }
+    },
+    "webserver": {
+        "debug": 0,
+        "port": 55556,
+        "access_log": "",
+        "stdout": "/tmp/tesla-charge.out",
+        "stderr": "/tmp/tesla-charge.err",
+        "ssl" : 0,
+        "ssl_key_file": "",
+        "ssl_cert_file": "",
+        "reload_files": [
+        ]
     }
 }

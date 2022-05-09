@@ -17,6 +17,8 @@ Revision history for tesla-charge
     - config_load() and security() checks now done in a before hook instead of
       each individual route
     - Moved config file tokens to system config section
+    - Created bin/ and config/ and moved relevant files to those new dirs
+    - Added new bin/tesla-charge binary, allows running the service as a daemon
 
 1.01 2022-04-08
     - Separated code into two separate controllers (Controller - controls the

@@ -1,4 +1,5 @@
 requires 'Async::Event::Interval', '1.12';
+requires 'Daemon::Control', '0';
 requires 'Digest::SHA', '0';
 requires 'Dancer2', '0';
 requires 'Data::Dumper', '0';
