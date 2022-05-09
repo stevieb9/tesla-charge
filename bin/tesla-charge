@@ -7,10 +7,18 @@ use Daemon::Control;
 use JSON;
 
 use constant {
-    APP_PATH        => '/Users/steve/repos/tesla-charge',
+    APP_PATH        => $ENV{TESLA_CHARGE_PATH},
     CONFIG_JSON     => 'config/config.json',
     WEBAPP          => 'bin/app.psgi',
 };
+
+if (! $ENV{TESLA_CHARGE_PATH}) {
+    die "TESLA_CHARGE_PATH env var must be set to the application's path";
+}
+
+if (! -x "$ENV{TESLA_CHARGE_PATH}/bin/tesla-charge") {
+    die "TESLA_CHARGE_PATH env var is not set correctly";
+}
 
 my $conf = config_load();
 my $debug = 0;

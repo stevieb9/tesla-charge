@@ -524,7 +524,14 @@ fiddling with changes in the config file.
 ### Daemon mode
 
 We have a wrapper script, `bin/tesla-charge`, that allows the web application
-to run in daemon mode. Basic commands are:
+to run in daemon mode. 
+
+First, you need to set the `TESLA_CHARGE_PATH` environment variable to the root
+path of the tesla-charge directory. Example:
+
+    export TESLA_CHARGE_PATH=/Users/steve/repos/tesla-charge
+
+Basic commands for the daemon are:
 
 #### start
 
