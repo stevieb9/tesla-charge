@@ -11,6 +11,7 @@ use FindBin;
 use Net::Subnet;
 use IPC::Shareable;
 use Tesla::Vehicle;
+use Time::Piece qw(localtime);
 
 our $VERSION = '1.02';
 
@@ -152,7 +153,10 @@ sub security {
 
         for (@$allowed_ips) {
             if ($_ !~ /\/\d{1,3}$/) {
-                print "Entry '$_' doesn't have a prefix attached. Please fix it\n";
+                print(
+                    sprintf "%s %s\n", localtime->strftime('%F %T') .
+                    ": Entry '$_' doesn't have a prefix attached. Please fix it\n"
+                );
                 $secure = 0;
                 $ip_config_error = 1;
             }
@@ -163,7 +167,10 @@ sub security {
             my $requester_ip = request->address;
 
             if (! $is_allowed_ips->($requester_ip)) {
-                print "Failed to authenticate IP address '$requester_ip'\n";
+                print(
+                    sprintf "%s %s\n", localtime->strftime('%F %T') .
+                    ": Failed to authenticate IP address '$requester_ip'\n"
+                );
                 $secure = 0;
             }
         }
@@ -183,7 +190,11 @@ sub security {
 
         if (! defined $token || ! grep { $token eq $_ } values %$saved_tokens) {
             my $ip = request->address;
-            print "Failed to authenticate token: '$token' from IP $ip\n";
+                print(
+                    sprintf "%s %s\n", localtime->strftime('%F %T') .
+                    ": Failed to authenticate token: '$token' from IP $ip\n"
+                );
+
             $secure = 0;
         }
     }
@@ -277,7 +288,11 @@ sub fetch {
         $charging = $charging eq 'Disconnected' ? 0 : 1;
 
         if (! defined $gear || $gear eq 'U') {
-            print "Error: Corrupt JSON data from Tesla API.\n";
+            print(
+                sprintf "%s %s\n", localtime->strftime('%F %T') .
+                ": Error: Corrupt JSON data from Tesla API.\n"
+            );
+
             $struct->{error} = 1;
             return $struct;
         }

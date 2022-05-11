@@ -20,6 +20,7 @@ Revision history for tesla-charge
     - Created bin/ and config/ and moved relevant files to those new dirs
     - Added new bin/tesla-charge binary, allows running the service as a daemon
     - On failed security check, set error and halt with the standard JSON string
+    - Auth and API errors printed to STDOUT now have a timestamp
 
 1.01 2022-04-08
     - Separated code into two separate controllers (Controller - controls the
