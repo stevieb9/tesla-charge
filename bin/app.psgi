@@ -187,7 +187,7 @@ sub security {
 
         if (! $is_allowed_ips->($requester_ip)) {
             print(
-                sprintf "%s %s\n", localtime->strftime('%F %T') .
+                sprintf "%s" , localtime->strftime('%F %T') .
                 ": Failed to authenticate IP address '$requester_ip'\n"
             );
             $secure = 0;
