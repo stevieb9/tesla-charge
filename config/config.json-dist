@@ -1,8 +1,8 @@
 {
     "system": {
-        "secure_ip":    0,
+        "secure_host":    0,
         "secure_auth":  0,
-        "allowed_ips": [
+        "allowed_hosts": [
         ],
         "tokens": {
         }

@@ -278,13 +278,19 @@ Currently, these are (note the 'Protoboard pin' is custom to my setup only):
 
 ### Security
 
-#### IP Security
+#### Host Security
 
-To enable IP security, set `secure_ip` to `1` in the `system` section of the
-configuration file, and add the allowed IP address blocks to the `allowed_ips`
-array in the same section of the file.
+To enable host/IP security, set `secure_host` to `1` in the `system` section of
+the configuration file, and add the allowed IP addresses, address blocks or DNS
+hostnames to the `allowed_hosts` array in the same section of the file.
 
-The IP address entries must have a prefix attached. Example: `192.168.1.0/24`.
+The following are all valid entries:
+
+    192.168.0.0/24
+    www.example.com
+    206.49.222.17
+    localhost
+    10.10.5.27/29
 
 #### API Token Security
 
@@ -303,16 +309,17 @@ You can configure and add as many tokens as you wish.
 Initially, copy the `config/config.json-dist` file to `config/config.json` in
 the root directory.
 
-All values below are default. `allowed_ips` and `tokens` sections are exanples
+All values below are default. `allowed_hosts` and `tokens` sections are exanples
 and do not appear in the distribution config file.
 
     {
         "system": {
-            "secure_ip":    0,          # Allow access based on IP
+            "secure_host":  0,          # Allow access based on IP/DNS hostname
             "secure_auth":  0,          # Allow only authorized tokens
-            "allowed_ips": [            # IP address blocks authorized
-                "192.168.1.0/24",       # Example - prefix is required
-                "127.0.0.2/32"          # Example
+            "allowed_hosts": [          # IP addresses, address blocks or hosts allowed
+                "host.example.com",     # Example
+                "192.168.1.17/24",      # Example
+                "127.0.0.1"             # Example
             ],
             "tokens": {                 # API tokens (example below)
                 "vps": "MzM3MWFlZDMyODViMDJmZGIxZjgwMzE3MmNkYWRhMzlmNjEyZTRhZDFkMjhmMTA5OGZiM2Y3ZWQ0YzkzYTEwYw"
@@ -667,7 +674,7 @@ required.
 
 #### security()
 
-Checks the configuration file to see if either `secure_ip` or `secure_auth` are
+Checks the configuration file to see if either `secure_host` or `secure_auth` are
 enabled, and if so, verifies the caller's IP address and/or the supplied token
 to the data provided in the [config file](#configuration-file).
 

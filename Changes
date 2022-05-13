@@ -21,6 +21,8 @@ Revision history for tesla-charge
     - Added new bin/tesla-charge binary, allows running the service as a daemon
     - On failed security check, set error and halt with the standard JSON string
     - Auth and API errors printed to STDOUT now have a timestamp
+    - Changed from IP based auth to host based; We now allow DNS names and we
+      resolve them internally, and allow leaving off the IP prefix
 
 1.01 2022-04-08
     - Separated code into two separate controllers (Controller - controls the

@@ -147,32 +147,50 @@ dance;
 sub security {
     my $secure = 1;
 
-    if ($system_conf->{secure_ip}) {
-        my $allowed_ips = $system_conf->{allowed_ips};
-        my $ip_config_error;
+    if ($system_conf->{secure_host}) {
+        my $allowed_hosts = $system_conf->{allowed_hosts};
+        my @allowed_ips;
 
-        for (@$allowed_ips) {
-            if ($_ !~ /\/\d{1,3}$/) {
-                print(
-                    sprintf "%s %s\n", localtime->strftime('%F %T') .
-                    ": Entry '$_' doesn't have a prefix attached. Please fix it\n"
-                );
-                $secure = 0;
-                $ip_config_error = 1;
+        for my $host (@$allowed_hosts) {
+            if ($host =~ /[[:alpha:]]/) {
+                # DNS A record
+                my $packed_ip = gethostbyname($host);
+
+                if (! defined $packed_ip) {
+                    warn "'$host' doesn't resolve to an IP address, skipping\n";
+                    next;
+                }
+
+                my @ip_sections = map { hex($_) } map { /(..)/g } unpack("H*", $packed_ip);
+                my $ip = join '.', @ip_sections;
+
+                push @allowed_ips, "$ip/32";
+                next;
             }
+            if ($host !~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(?:\/\d{1,2})?$/) {
+                # Invalid IP
+                warn "'$host' is an incorrectly formatted IP address, skipping\n";
+                next;
+            }
+            if ($host !~ /\/\d{1,2}$/) {
+                # No prefix, add it
+                $host = "$host/32";
+                push @allowed_ips, $host;
+                next;
+            }
+
+            push @allowed_ips, $host;
         }
 
-        if (! $ip_config_error) {
-            my $is_allowed_ips = subnet_matcher(@{$system_conf->{allowed_ips}});;
-            my $requester_ip = request->address;
+        my $is_allowed_ips = subnet_matcher(@allowed_ips);
+        my $requester_ip = request->address;
 
-            if (! $is_allowed_ips->($requester_ip)) {
-                print(
-                    sprintf "%s %s\n", localtime->strftime('%F %T') .
-                    ": Failed to authenticate IP address '$requester_ip'\n"
-                );
-                $secure = 0;
-            }
+        if (! $is_allowed_ips->($requester_ip)) {
+            print(
+                sprintf "%s %s\n", localtime->strftime('%F %T') .
+                ": Failed to authenticate IP address '$requester_ip'\n"
+            );
+            $secure = 0;
         }
     }
 
