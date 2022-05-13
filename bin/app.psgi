@@ -157,7 +157,7 @@ sub security {
                 my $packed_ip = gethostbyname($host);
 
                 if (! defined $packed_ip) {
-                    warn "'$host' doesn't resolve to an IP address, skipping\n";
+                    print "'$host' doesn't resolve to an IP address, skipping\n";
                     next;
                 }
 
@@ -169,7 +169,7 @@ sub security {
             }
             if ($host !~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(?:\/\d{1,2})?$/) {
                 # Invalid IP
-                warn "'$host' is an incorrectly formatted IP address, skipping\n";
+                print "'$host' is an incorrectly formatted IP address, skipping\n";
                 next;
             }
             if ($host !~ /\/\d{1,2}$/) {
