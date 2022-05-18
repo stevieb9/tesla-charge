@@ -27,7 +27,4 @@
 
 #define DATA_DELAY      500  // Wait between API calls (milliseconds)
 
-char apiURL[64];             // Maximum length of the API URL
-char apiToken[86];           // Maximum length of API token (don't change this!)
-
 #endif

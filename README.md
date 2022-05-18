@@ -216,7 +216,7 @@ data uploader in the Arduino IDE as opposed to using the method described in
 the [WiFi config](#wifi-ssid-and-password) section.
 
 It's size is set to 64 chars, and can be configured in the
-[TeslaChargeInterface header file](#teslachargeinterfaceh).
+[TeslaChargeCommon header file](#teslachargecommonh).
 
 Example:
 

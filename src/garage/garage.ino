@@ -1,4 +1,5 @@
-#include "../../inc/Garage.h"
+#include "/Users/steve/repos/tesla-charge/inc/Garage.h"
+#include "/Users/steve/repos/tesla-charge/inc/TeslaChargeCommon.h"
 
 char*           urlTesla;
 char*           urlGarage;
@@ -20,7 +21,8 @@ enum            operation {NONE, OPERATE_DOOR};
 garageData garageStruct;
 
 HTTPClient http;
-WiFiClient wifi;
+BearSSL::WiFiClientSecure wifi;
+WiFiManager wifiManager;
 
 void setup() {
     pinMode(DOOR_RELAY_PIN, OUTPUT);
@@ -37,8 +39,58 @@ void setup() {
     while (! Serial) {
         continue;
     }
+    configRead();
 
-    wifiSetup();
+    wifiManager.setConfigPortalTimeout(180);
+
+    if (CONFIG_RESET) {
+        wifiManager.resetSettings();
+    }
+
+    // To allow connecting to HTTPS
+    wifi.setInsecure();
+
+    wifiManager.setSaveConfigCallback(saveConfig);
+
+    WiFiManagerParameter custom_api_token("api_token", "API Token", apiToken, sizeof(apiToken));
+    WiFiManagerParameter custom_api_url("api_url", "API URL", apiURL, sizeof(apiURL));
+
+    wifiManager.addParameter(&custom_api_token);
+    wifiManager.addParameter(&custom_api_url);
+
+    // Manage the wifi connection, including checking config or switch to see if
+    // we should be in AP config mode
+
+    if (CONFIG_RESET) {
+        // Give us time to re-upload the sketch with CONFIG_RESET disabled
+        spl(F("\nConfig was reset, waiting for sketch upload with reset disabled"));
+        delay(100000);
+    }
+
+    if (digitalRead(WIFI_CONFIG_PIN) == LOW) {
+        spl(F("Going into config mode"));
+
+        if (! wifiManager.startConfigPortal(apNameInterface)){
+            Serial.println(F("Failed to start the configuration portal"));
+            delay(3000);
+            ESP.restart();
+            delay(5000);
+        }
+        Serial.println(F("Connected to the configuration portal"));
+    }
+    else if (! wifiManager.autoConnect(apNameInterface)) {
+        spl(F("Failed to connect to wifi..."));
+        delay(3000);
+        ESP.restart();
+        delay(5000);
+    }
+
+    strcpy(apiURL, custom_api_url.getValue());
+    strcpy(apiToken, custom_api_token.getValue());
+
+    apiTokenString = String("{\"token\":\"") + String(apiToken) + String("\"}");
+
+    configWrite();
 
     if (DEBUG_TESLA_URL) {
         urlTesla  = URL_DEBUG_TESLA;
@@ -341,37 +393,38 @@ void updateData (uint8_t doorState) {
     http.end();
 }
 
-void readEEPROM(int startAdr, int maxLength, char* dest) {
-    EEPROM.begin(512);
-    delay(10);
-    for (int i = 0; i < maxLength; i++) {
-        dest[i] = char(EEPROM.read(startAdr + i));
+void configRead () {
+    if (SPIFFS.begin()) {
+        Serial.println(F("Mounted file system"));
+        if (SPIFFS.exists("/config.json")) {
+            Serial.println(F("Reading config file"));
+            File configFile = SPIFFS.open("/config.json", "r");
+            if (configFile) {
+                Serial.println(F("Opened config file"));
+
+                StaticJsonDocument<256> json;
+
+                DeserializationError error = deserializeJson(json, configFile);
+
+                if (! error) {
+                    strcpy(apiURL, json["api_url"]);
+                    strcpy(apiToken, json["api_token"]);
+
+                    sp(F("JSON url: "));
+                    sp(apiURL);
+                    sp(F(" Token: "));
+                    spl(apiToken);
+                } else {
+                    Serial.println(F("Failed to load json config"));
+                }
+                configFile.close();
+            }
+        }
+    } else {
+        Serial.println(F("Failed to mount FS"));
     }
-    EEPROM.end();
-}
+};
 
-void wifiSetup () {
-
-    Serial.print(F("MAC Address: "));
-    Serial.println(WiFi.macAddress());
-
-    char ssid[16];
-    char ssidPassword[16];
-
-    readEEPROM(0,  16, ssid);
-    readEEPROM(16, 16, ssidPassword);
-
-    WiFi.begin(ssid, ssidPassword);
-
-    while (WiFi.status() != WL_CONNECTED) {
-        Serial.println(F("RSSI: ") + (String) WiFi.RSSI());
-        delay(500);
-    }
-
-    Serial.println(F("Wifi Connected"));
-
-    Serial.print(F("IP address:\t"));
-    Serial.println(WiFi.localIP());
-
-    delay(1000);
+void saveConfig () {
+    configSaveNeeded = true;
 }

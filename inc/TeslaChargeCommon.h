@@ -32,4 +32,7 @@ typedef struct VehicleData {
     uint8_t charge;
 } VehicleData;
 
+char apiURL[64];             // Maximum length of the API URL
+char apiToken[86];           // Maximum length of API token (don't change this!)
+
 #endif
