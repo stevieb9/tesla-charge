@@ -30,7 +30,7 @@
 #define DOOR_CLOSED_PIN     14 // Pin D5
 #define DOOR_RELAY_PIN      12 // Pin D6
 #define DOOR_OPEN_LED       13 // Pin D7
-#define WIFI_CONFIG_PIN
+#define WIFI_CONFIG_PIN     5  // Pin D1
 
 class garageData {
     public :

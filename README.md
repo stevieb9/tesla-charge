@@ -500,8 +500,9 @@ Used by the [Controller Microcontroller](#microcontroller---controller) sketch.
 
 #### TeslaChargeCommon.h
 
-Shared by the [Interface Microcontroller](#microcontroller---interface) and
-[Controller Microcontroller](#microcontroller---controller) sketches.
+Shared by the [Interface Microcontroller](#microcontroller---interface),
+[Controller Microcontroller](#microcontroller---controller) and the
+[Garage Microcontroller](#microcontroller---garage) sketches.
 
 #### TeslaVehicle.h
 
