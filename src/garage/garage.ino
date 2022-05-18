@@ -54,9 +54,13 @@ void setup() {
 
     WiFiManagerParameter custom_api_token("api_token", "API Token", apiToken, sizeof(apiToken));
     WiFiManagerParameter custom_api_url("api_url", "API URL", apiURL, sizeof(apiURL));
+    WiFiManagerParameter custom_garage_url("garage_url", "Garage URL", garageURL, sizeof(garageURL));
+    WiFiManagerParameter custom_update_url("update_url", "Update URL", updateURL, sizeof(updateURL));
 
     wifiManager.addParameter(&custom_api_token);
     wifiManager.addParameter(&custom_api_url);
+    wifiManager.addParameter(&custom_garage_url);
+    wifiManager.addParameter(&custom_update_url);
 
     // Manage the wifi connection, including checking config or switch to see if
     // we should be in AP config mode
@@ -70,7 +74,7 @@ void setup() {
     if (digitalRead(WIFI_CONFIG_PIN) == LOW) {
         spl(F("Going into config mode"));
 
-        if (! wifiManager.startConfigPortal(apNameInterface)){
+        if (! wifiManager.startConfigPortal(apNameGarage)){
             Serial.println(F("Failed to start the configuration portal"));
             delay(3000);
             ESP.restart();
@@ -86,26 +90,17 @@ void setup() {
     }
 
     strcpy(apiURL, custom_api_url.getValue());
+    strcpy(garageURL, custom_garage_url.getValue());
+    strcpy(updateURL, custom_update_url.getValue());
     strcpy(apiToken, custom_api_token.getValue());
 
     apiTokenString = String("{\"token\":\"") + String(apiToken) + String("\"}");
 
     configWrite();
 
-    if (DEBUG_TESLA_URL) {
-        urlTesla  = URL_DEBUG_TESLA;
-    } else {
-        urlTesla  = URL_TESLA;
-    }
-
-    if (DEBUG_GARAGE_URL) {
-        urlGarage = URL_DEBUG_GARAGE;
-        urlUpdate = URL_UPDATE;
-    }
-    else {
-        urlGarage = URL_GARAGE;
-        urlUpdate = URL_UPDATE;
-    }
+    urlTesla  = apiURL;
+    urlGarage = URL_GARAGE;
+    urlUpdate = URL_UPDATE;
 
     ArduinoOTA.begin();
 }
@@ -402,7 +397,7 @@ void configRead () {
             if (configFile) {
                 Serial.println(F("Opened config file"));
 
-                StaticJsonDocument<256> json;
+                StaticJsonDocument<384> json;
 
                 DeserializationError error = deserializeJson(json, configFile);
 
@@ -424,6 +419,32 @@ void configRead () {
         Serial.println(F("Failed to mount FS"));
     }
 };
+
+void configWrite () {
+    if (configSaveNeeded) {
+        Serial.println(F("Saving config"));
+
+        File configFile = SPIFFS.open("/config.json", "w");
+
+        if (! configFile) {
+            Serial.println(F("failed to open config file for writing"));
+            return;
+        }
+
+        StaticJsonDocument<384> json;
+
+        json["api_url"] = apiURL;
+        json["garage_url"] = garageURL;
+        json["update_url"] = updateURL;
+        json["api_token"] = apiToken;
+
+        if (serializeJson(json, configFile) == 0) {
+            Serial.println(F("Failed to write to file"));
+        }
+
+        configFile.close();
+    }
+}
 
 void saveConfig () {
     configSaveNeeded = true;

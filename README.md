@@ -188,8 +188,8 @@ your system.
 
 We use `WiFiManager` to manage the WiFi credentials. If a known network isn't
 available to automatically log into, the controllers will start up in Access
-Point mode. Simply connect to the AP (`TeslaInterface` and `TeslaController`),
-and using a web browser, connect to `http://192.168.4.1`.
+Point mode. Simply connect to the AP (`TeslaInterface`, `TeslaController` and
+`TeslaGarage`), and using a web browser, connect to `http://192.168.4.1`.
 
 You can enter in the  WiFi details there.
 
@@ -206,14 +206,16 @@ re-upload the newly compiled sketch.
 ### HTTP API URL
 
 This is configured in the WiFi configuration captive portal, along with the
-WiFi credentials. It is available only on the
-[Interface Controller](#microcontroller---interface). See
+WiFi credentials. It is available on the
+[Interface Controller](#microcontroller---interface) and
+[Garage Controller](#microcontroller---garage). See
 [WiFi Configuration](#wifi-ssid-and-password) for how to change or set it.
 
-In the `src/tesla-charge-interface/data` directory, there is a `config.json`
-file that you can populate with the URL and access token, then use the sketch
-data uploader in the Arduino IDE as opposed to using the method described in
-the [WiFi config](#wifi-ssid-and-password) section.
+In the `src/tesla-charge-interface/data` and `src/tesla-charge-garage/data`
+directories, there is a `config.json` file that you can populate with the URL
+and access token, then use the sketch data uploader in the Arduino IDE as
+opposed to using the method described in the 
+[WiFi config](#wifi-ssid-and-password) section.
 
 It's size is set to 64 chars, and can be configured in the
 [TeslaChargeCommon header file](#teslachargecommonh).
@@ -227,14 +229,15 @@ Example:
 This is set in the WiFi configuration captive portal along with the WiFi
 credentials, and the API URL. See the [auth security](#api-token-security)
 section of this document for generating a token, which you'd then paste into
-the `API Token` section of the captive portal. It is available only on the
-[Interface Controller](#microcontroller---interface). See
+the `API Token` section of the captive portal. It is available on the
+[Interface Controller](#microcontroller---interface) and
+[Garage Controller](#microcontroller---garage). See
 [WiFi Configuration](#wifi-ssid-and-password) for how to change or set it.
 
-In the `src/tesla-charge-interface/data` directory, there is a `config.json`
-file that you can populate with the URL and access token, then use the sketch
-data uploader in the Arduino IDE as opposed to using the method described in
-the [WiFi config](#wifi-ssid-and-password) section.
+In the `src/tesla-charge-interface/data` and `src/tesla-charge-garage/data` 
+directory, there is a `config.json` file that you can populate with the URL and
+access token, then use the sketch data uploader in the Arduino IDE as opposed to
+using the method described in the [WiFi config](#wifi-ssid-and-password) section.
 
 ### ESP-NOW MAC Addresses
 

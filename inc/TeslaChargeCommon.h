@@ -26,6 +26,7 @@ uint8_t MacController[] = {0x5C, 0xCF, 0x7F, 0xCC, 0xA1, 0x8E};
 
 const char* apNameInterface = "TeslaInterface";
 const char* apNameController = "TeslaController";
+const char* apNameGarage = "TeslaGarage";
 
 typedef struct VehicleData {
     uint8_t state;
