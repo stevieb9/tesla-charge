@@ -279,6 +279,16 @@ Currently, these are (note the 'Protoboard pin' is custom to my setup only):
 | LED_PIN         | 14       | D5        | A26            | LED strip data pin    |  
 | WIFI_CONFIG_PIN | 13       | D7        | 20             | AP config mode switch |
 
+#### Garage Microcontroller
+
+| Name            | GPIO Pin | Board Pin | Protoboard Pin | Description                 |
+|:----------------|----------|-----------|----------------|-----------------------------|
+| DOOR_OPEN_PIN   | 4        | D2        | N/A            | Door open magnetic sensor   |  
+| DOOR_CLOSED_PIN | 14       | D5        | N/A            | Door closed magnetic sensor | 
+| DOOR_RELAY_PIN  | 12       | D6        | N/A            | Garage door opener relay    |
+| DOOR_OPEN_LED   | 13       | D7        | N/A            | LED to indicate door open   |
+| WIFI_CONFIG_PIN | 5        | D1        | N/A            | AP config mode switch       |
+
 ### Security
 
 #### Host Security
