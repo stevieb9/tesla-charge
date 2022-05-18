@@ -307,7 +307,7 @@ sub fetch {
 
         if (! defined $gear || $gear eq 'U') {
             print(
-                sprintf "%s %s\n", localtime->strftime('%F %T') .
+                sprintf "%s\n", localtime->strftime('%F %T') .
                 ": Error: Corrupt JSON data from Tesla API.\n"
             );
 
