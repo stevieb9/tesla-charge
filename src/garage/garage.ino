@@ -155,7 +155,7 @@ bool doorAutoCloseCondition () {
         teslaFetching   = teslaData[7];
 
         if (attempts == TESLA_API_RETRIES) {
-            continue;
+            break;
         }
 
         attempts++;
