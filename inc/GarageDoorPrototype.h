@@ -1,6 +1,9 @@
 #ifndef TESLA_CHARGE_GARAGE_DOOR_PROTOTYPE_H
 #define TESLA_CHARGE_GARAGE_DOOR_PROTOTYPE_H
 
+#include <Arduino.h>
+#include <AccelStepper.h>
+
 #define STEPPER_FULLSTEP 4
 
 #define STEPPER_PIN_IN1 8

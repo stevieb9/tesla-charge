@@ -1,5 +1,4 @@
-#include <AccelStepper.h>
-#include "../../inc/GarageDoorPrototype.h"
+#include "/Users/steve/repos/tesla-charge/inc/GarageDoorPrototype.h"
 
 AccelStepper doorOpener (
         STEPPER_FULLSTEP,
