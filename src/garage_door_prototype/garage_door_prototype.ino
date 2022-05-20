@@ -3,10 +3,10 @@
 
 AccelStepper doorOpener (
         STEPPER_FULLSTEP,
-        PIN_IN1,
-        PIN_IN3,
-        PIN_IN2,
-        PIN_IN4
+        STEPPER_PIN_IN1,
+        STEPPER_PIN_IN3,
+        STEPPER_PIN_IN2,
+        STEPPER_PIN_IN4
 );
 
 bool doorClosed = true;
