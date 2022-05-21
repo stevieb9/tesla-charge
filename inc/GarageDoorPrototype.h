@@ -6,10 +6,10 @@
 
 #define STEPPER_FULLSTEP 4
 
-#define STEPPER_PIN_IN1 8
-#define STEPPER_PIN_IN2 9
-#define STEPPER_PIN_IN3 10
-#define STEPPER_PIN_IN4 11
+#define STEPPER_PIN_IN1 2   // D4
+#define STEPPER_PIN_IN2 12  // D6
+#define STEPPER_PIN_IN3 13  // D7
+#define STEPPER_PIN_IN4 14  // D5
 
 #define PIN_ACTIVATE    7
 #define PIN_RESET       6
