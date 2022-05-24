@@ -1,12 +1,9 @@
 #include "/Users/steve/repos/tesla-charge/inc/Garage.h"
 #include "/Users/steve/repos/tesla-charge/inc/TeslaChargeCommon.h"
 
-char*           urlTesla;
-char*           urlGarage;
-char*           urlUpdate;
-
 bool            gotData = false;
 bool            doorAutoCloseAuthorized = false;
+bool            configSaveNeeded = false;
 
 int8_t*         teslaData;
 uint8_t         lastDoorPosition = -1;
@@ -17,6 +14,8 @@ unsigned long   doorOpenTime = 0;
 enum            shiftState {P, R, D};
 enum            doorStatus {DOOR_CLOSED, DOOR_OPEN, DOOR_CLOSING, DOOR_OPENING};
 enum            operation {NONE, OPERATE_DOOR};
+
+String apiTokenString = "";
 
 garageData garageStruct;
 
@@ -82,7 +81,7 @@ void setup() {
         }
         Serial.println(F("Connected to the configuration portal"));
     }
-    else if (! wifiManager.autoConnect(apNameInterface)) {
+    else if (! wifiManager.autoConnect(apNameGarage)) {
         spl(F("Failed to connect to wifi..."));
         delay(3000);
         ESP.restart();
@@ -97,10 +96,6 @@ void setup() {
     apiTokenString = String("{\"token\":\"") + String(apiToken) + String("\"}");
 
     configWrite();
-
-    urlTesla  = apiURL;
-    urlGarage = URL_GARAGE;
-    urlUpdate = URL_UPDATE;
 
     ArduinoOTA.begin();
 }
@@ -285,7 +280,7 @@ void doorActivate () {
 
 int fetchGarageData () {
 
-    http.begin(wifi, urlGarage);
+    http.begin(wifi, garageURL);
     http.setTimeout(8000);
 
     int httpCode = http.GET();
@@ -321,7 +316,7 @@ int fetchGarageData () {
 
 uint8_t* fetchTeslaData () {
 
-    http.begin(wifi, urlTesla);
+    http.begin(wifi, apiURL);
     http.setTimeout(8000);
 
     static uint8_t teslaData[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -365,7 +360,7 @@ uint8_t* fetchTeslaData () {
 
 void updateData (uint8_t doorState) {
 
-    http.begin(wifi, urlUpdate);
+    http.begin(wifi, updateURL);
     http.setTimeout(8000);
     http.addHeader(F("Content-Type"), F("application/json"));
 
