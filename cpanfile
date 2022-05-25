@@ -6,7 +6,7 @@ requires 'Data::Dumper', '0';
 requires 'FindBin', '0';
 requires 'IPC::Shareable', '1.12';
 requires 'JSON', '0';
-requires 'MOME::Base64', '0';
+requires 'MIME::Base64', '0';
 requires 'Net::SSLeay', '0';
 requires 'Net::Subnet', '0';
 requires 'Tesla::Vehicle', '0.07';
