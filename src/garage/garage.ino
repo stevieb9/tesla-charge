@@ -374,10 +374,11 @@ void updateData (uint8_t doorState) {
 
     DynamicJsonDocument jsonDoc(128);
 
+    jsonDoc[F("token")] = apiToken;
     jsonDoc[F("door_state")] = doorState;
     jsonDoc[F("activity")] = garageStruct.activity;
 
-    char jsonData[192];
+    char jsonData[384];
     serializeJson(jsonDoc, jsonData);
 
     int httpCode = http.POST(jsonData);

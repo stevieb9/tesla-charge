@@ -206,10 +206,19 @@ sub security {
 
         my $saved_tokens = $system_conf->{tokens};
 
-        if (! defined $token || ! grep { $token eq $_ } values %$saved_tokens) {
+        if (! defined $token) {
+            my $ip = request->address;
+            print(
+                sprintf "%s\n", localtime->strftime('%F %T') .
+                    ": API token required but not sent in from IP $ip\n"
+            );
+
+            $secure = 0;
+        }
+        elsif (! grep { $token eq $_ } values %$saved_tokens) {
             my $ip = request->address;
                 print(
-                    sprintf "%s %s\n", localtime->strftime('%F %T') .
+                    sprintf "%s\n", localtime->strftime('%F %T') .
                     ": Failed to authenticate token: '$token' from IP $ip\n"
                 );
 
