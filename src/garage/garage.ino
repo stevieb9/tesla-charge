@@ -252,12 +252,9 @@ void pendingOperations () {
         }
 
         if (activity == OPERATE_DOOR) {
-            spl(F("Manually operating garage door"));
+            spl(F("Manually operating garage door via app"));
             doorOperate();
         }
-    }
-    else {
-        spl(F("App is disabled; can't perform action"));
     }
 
     updateData(doorState());
