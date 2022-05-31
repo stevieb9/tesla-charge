@@ -220,6 +220,11 @@ opposed to using the method described in the
 It's size is set to 64 chars, and can be configured in the
 [TeslaChargeCommon header file](#teslachargecommonh).
 
+The [Garage Controller](#microcontroller---garage) has two additional parameters
+that need to be set through the WiFi configuration captive portal,
+`Garage Update URL` and the `Garage Data URL`. These are the `/garage_update`
+and `/garage_data` API routes respectively.
+
 Example:
 
     API URL: https://www.mywebsite.com:55556/path/to/app
@@ -451,6 +456,9 @@ Board used: WeMOS D1 R2
 This device monitors the garage door for its open and close state and has the
 ability to open or close on demand, or auto close. It uses magnetic sensors
 to determine the position of the door.
+
+See [WiFi Configuration](#wifi-ssid-and-password) and [API URL](#http-api-url)
+sections for configuration of API communication configuration.
 
 Its configuration and command information is polled from the 
 [API Server](#perl-http-api-server).
