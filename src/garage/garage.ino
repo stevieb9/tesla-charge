@@ -372,7 +372,7 @@ void updateData (uint8_t doorState) {
     http.setTimeout(8000);
     http.addHeader(F("Content-Type"), F("application/json"));
 
-    DynamicJsonDocument jsonDoc(128);
+    DynamicJsonDocument jsonDoc(384);
 
     jsonDoc[F("token")] = apiToken;
     jsonDoc[F("door_state")] = doorState;
