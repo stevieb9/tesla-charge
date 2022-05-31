@@ -49,6 +49,7 @@ void setup() {
     // To allow connecting to HTTPS
     wifi.setInsecure();
 
+    wifiManager.setBreakAfterConfig(true);
     wifiManager.setSaveConfigCallback(saveConfig);
 
     WiFiManagerParameter custom_api_token("api_token", "API Token", apiToken, sizeof(apiToken));
@@ -94,6 +95,11 @@ void setup() {
     strcpy(apiToken, custom_api_token.getValue());
 
     apiTokenString = String("{\"token\":\"") + String(apiToken) + String("\"}");
+
+    s(F("Token: "));
+    spl(apiToken);
+    s(F("Token string: "));
+    spl(apiTokenString);
 
     configWrite();
 
@@ -283,7 +289,9 @@ int fetchGarageData () {
     http.begin(wifi, garageURL);
     http.setTimeout(8000);
 
-    int httpCode = http.GET();
+    http.addHeader("Content-Type", "application/json");
+
+    int httpCode = http.POST(apiTokenString);
 
     if (httpCode < 0) {
         s(F("HTTP Error Code: "));
@@ -398,12 +406,18 @@ void configRead () {
 
                 if (! error) {
                     strcpy(apiURL, json["api_url"]);
+                    strcpy(garageURL, json["garage_url"]);
+                    strcpy(updateURL, json["update_url"]);
                     strcpy(apiToken, json["api_token"]);
 
-                    sp(F("JSON url: "));
-                    sp(apiURL);
-                    sp(F(" Token: "));
+                    s(F("API url: "));
+                    spl(apiURL);
+                    s(F("Token: "));
                     spl(apiToken);
+                    s(F("JSON url: "));
+                    spl(apiURL);
+                    s(F("JSON url: "));
+                    spl(apiURL);
                 } else {
                     Serial.println(F("Failed to load json config"));
                 }

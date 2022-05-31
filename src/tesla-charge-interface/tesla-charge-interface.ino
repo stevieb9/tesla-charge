@@ -67,6 +67,7 @@ void setup() {
     // To allow connecting to HTTPS
     wifi.setInsecure();
 
+    wifiManager.setBreakAfterConfig(true);
     wifiManager.setSaveConfigCallback(saveConfig);
 
     WiFiManagerParameter custom_api_token("api_token", "API Token", apiToken, sizeof(apiToken));
