@@ -122,6 +122,7 @@ void loop() {
 
         autoCloseDoor();
         pendingOperations();
+        uint8_t doorPosition = doorState(); // Update the API if needed
 
         lastLoopCycleTime = millis();
     }
@@ -256,8 +257,6 @@ void pendingOperations () {
             doorOperate();
         }
     }
-
-    updateData(doorState());
 }
 
 void doorOperate () {
