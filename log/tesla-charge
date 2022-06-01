@@ -1,0 +1,13 @@
+/var/log/tesla-charge/tesla-charge.out /var/log/tesla-charge/tesla-charge.err {
+    rotate 7
+    daily
+    size 20M
+    compress
+    missingok
+    notifempty
+    nomail
+    postrotate
+        /home/steve/perl5/perlbrew/perls/perl-5.32.0/bin/perl /home/steve/repos/tesla-charge/bin/tesla-charge stop
+        /home/steve/perl5/perlbrew/perls/perl-5.32.0/bin/perl /home/steve/repos/tesla-charge/bin/tesla-charge start
+    endscript
+}

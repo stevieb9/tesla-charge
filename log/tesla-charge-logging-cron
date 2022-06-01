@@ -1,0 +1,1 @@
+*/30 * * * * bash -c 'source $HOME/.bash_profile; /usr/sbin/logrotate -s /tmp/tesla-charge-status.tmp /home/steve/repos/tesla-charge/log/tesla-charge' > /tmp/tesla-cron.log 2>&1

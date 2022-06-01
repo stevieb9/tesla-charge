@@ -33,6 +33,7 @@ garage door prototype.
   + [Garage Location Coordinates](#garage-location-coordinates)
   + [GPIO Pins](#gpio-pins)
   + [App Security](#security)
+  + [Logging](#logging)
   + [Configuration File](#configuration-file)
 * [System Information](#system-information)
     + [Hardware Used](#hardware-used)
@@ -99,7 +100,7 @@ There are several things that need to be verified and/or modified.
 First things first, copy the `config/config.json-dist` file to
 `config/config.json` in the root directory of the repository.
 
-### Webserver configuration 
+### Webserver configuration
 
 If you are running in [Daemon mode](#daemon-mode), you can use the `webserver`
 section in the [config file](#configuration-file) to configure how the web
@@ -139,7 +140,7 @@ The web service will write its error output to this file (leave blank to have
 entries written to the console).
 
     "stderr": "/tmp/tesla-charge.err"
-       
+
 #### ssl
 
 `1` to enable SSL (HTTPS), `0` to disable it. If set, both `ssl_key_file` and
@@ -173,7 +174,7 @@ automatically restart itself.
 ### Network port
 
 By default, the Perl HTTP API server runs on port `55556`. You can edit this in
-the `webserver` section of the [config file](#configuration-file) if using 
+the `webserver` section of the [config file](#configuration-file) if using
 [daemon mode](#daemon-mode), or run `plackup` with the `-p PORTNUM` option to
 change it.
 
@@ -214,7 +215,7 @@ WiFi credentials. It is available on the
 In the `src/tesla-charge-interface/data` and `src/tesla-charge-garage/data`
 directories, there is a `config.json` file that you can populate with the URL
 and access token, then use the sketch data uploader in the Arduino IDE as
-opposed to using the method described in the 
+opposed to using the method described in the
 [WiFi config](#wifi-ssid-and-password) section.
 
 It's size is set to 64 chars, and can be configured in the
@@ -239,7 +240,7 @@ the `API Token` section of the captive portal. It is available on the
 [Garage Controller](#microcontroller---garage). See
 [WiFi Configuration](#wifi-ssid-and-password) for how to change or set it.
 
-In the `src/tesla-charge-interface/data` and `src/tesla-charge-garage/data` 
+In the `src/tesla-charge-interface/data` and `src/tesla-charge-garage/data`
 directory, there is a `config.json` file that you can populate with the URL and
 access token, then use the sketch data uploader in the Arduino IDE as opposed to
 using the method described in the [WiFi config](#wifi-ssid-and-password) section.
@@ -270,10 +271,10 @@ Currently, these are (note the 'Protoboard pin' is custom to my setup only):
 
 | Name            | GPIO Pin | Board Pin | Protoboard Pin | Description           |
 |:----------------|----------|-----------|----------------|-----------------------|
-| SCL_PIN         | 5        | D1        | A13            | I2C SDA (OLED)        |  
-| SDA_PIN         | 4        | D2        | A14            | I2C SDA (OLED)        |  
-| ALARM_PIN       | 13       | D7        | A15            | Alarm buzzer          |  
-| REED_PIN        | 2        | D4        | A16            | Magnetic sensor       |  
+| SCL_PIN         | 5        | D1        | A13            | I2C SDA (OLED)        |
+| SDA_PIN         | 4        | D2        | A14            | I2C SDA (OLED)        |
+| ALARM_PIN       | 13       | D7        | A15            | Alarm buzzer          |
+| REED_PIN        | 2        | D4        | A16            | Magnetic sensor       |
 | PIR_PIN         | 12       | D6        | A17            | Motion sensor         |
 | WIFI_CONFIG_PIN | 14       | D5        | 19             | AP config mode switch |
 
@@ -281,15 +282,15 @@ Currently, these are (note the 'Protoboard pin' is custom to my setup only):
 
 | Name            | GPIO Pin | Board Pin | Protoboard Pin | Description          |
 |:----------------|----------|-----------|----------------|-----------------------|
-| LED_PIN         | 14       | D5        | A26            | LED strip data pin    |  
+| LED_PIN         | 14       | D5        | A26            | LED strip data pin    |
 | WIFI_CONFIG_PIN | 13       | D7        | 20             | AP config mode switch |
 
 #### Garage Microcontroller
 
 | Name            | GPIO Pin | Board Pin | Protoboard Pin | Description                 |
 |:----------------|----------|-----------|----------------|-----------------------------|
-| DOOR_OPEN_PIN   | 4        | D2        | N/A            | Door open magnetic sensor   |  
-| DOOR_CLOSED_PIN | 14       | D5        | N/A            | Door closed magnetic sensor | 
+| DOOR_OPEN_PIN   | 4        | D2        | N/A            | Door open magnetic sensor   |
+| DOOR_CLOSED_PIN | 14       | D5        | N/A            | Door closed magnetic sensor |
 | DOOR_RELAY_PIN  | 12       | D6        | N/A            | Garage door opener relay    |
 | DOOR_OPEN_LED   | 13       | D7        | N/A            | LED to indicate door open   |
 | WIFI_CONFIG_PIN | 5        | D1        | N/A            | AP config mode switch       |
@@ -321,6 +322,28 @@ the `tokens` section of the configuration file. Here's an example output:
     "vps": "YzU0MWNhMmRmYzI4MGFmOWJmYjAxZmMzMzQ0ZjZkOWNhNTY3ZTIyMTcwOTI5MWRhMWE3NmM5MmVlYzRmMGZkMw"
 
 You can configure and add as many tokens as you wish.
+
+### Logging
+
+The default logging directory is `/var/log/tesla-charge`, and we write to two files:
+`tesla-charge.out` and `tesla-charge.err`.
+
+Before running the software for the first time, you must create this directory,
+and update its permissions (if using the default logging facilities):
+
+    sudo mkdir /var/log/tesla-charge
+    chown -R steve:steve /var/log/tesla-charge
+
+### Log Rotation
+
+There's also a `logrotate` file for automating log file rotation, along with an
+example crontab entry for automating the log rotation.
+
+1) Edit and modify the `log/tesla-charge` logrorate configuration file with the
+specifics of your environment.
+
+2) Edit and modify the crontab entry in `log/tesla-charge-logging-cron` file,
+then copy and paste the entry into your `crontab -e`.
 
 ### Configuration File
 
@@ -379,14 +402,14 @@ and do not appear in the distribution config file.
             "debug": 0,                         # Enable webapp debug output
             "port": 55556,                      # Port plackup runs on
             "access_log": "",                   # Alternate access log location ('/dev/null' to disable logs)
-            "stdout": "/tmp/tesla-charge.out",  # Webserver STDOUT location (leave blank for console output)
-            "stderr": "/tmp/tesla-charge.err",  # Webserver STDERR location (leave blank for console output)
+            "stdout": "/var/log/tesla-charge/tesla-charge.out",  # Webserver STDOUT location (leave blank for console output)
+            "stderr": "/var/log/tesla-charge/tesla-charge.err",  # Webserver STDERR location (leave blank for console output)
             "ssl" : 0,                          # Enable SSL (ie. HTTPS) (needs ssl_key_file and ssl_cert_file)
             "ssl_key_file": "",                 # Path to the SSL key file
             "ssl_cert_file": "",                # Path to the SSL cert file
-            "reload_files": [                   # List of files to auto-reload on if changed 
+            "reload_files": [                   # List of files to auto-reload on if changed
             ]
-        } 
+        }
     }
 
 ## System Information
@@ -423,7 +446,7 @@ This device:
 - Sends the required data to the [Controller Microcontroller](#microcontroller---controller).
 - Manages the API URL and authorization token
 
-This microcontroller's sketch is in 
+This microcontroller's sketch is in
 `src/tesla-charge-interface/tesla-charge-interface.ino`.
 
 Its header file is `inc/TeslaChargeInterface.h`.
@@ -460,7 +483,7 @@ to determine the position of the door.
 See [WiFi Configuration](#wifi-ssid-and-password) and [API URL](#http-api-url)
 sections for configuration of API communication configuration.
 
-Its configuration and command information is polled from the 
+Its configuration and command information is polled from the
 [API Server](#perl-http-api-server).
 
 The sketch is in `src/garage/garage.ino` and its header file is
@@ -508,7 +531,7 @@ All headers can be found under the `inc/` directory. Aside from the
 [Tesla Vehicle class](#teslavehicleh), they contain user definable variables
 such as GPIO pin configurations, timing configurations etc.
 
-#### TeslaChargeInterface.h 
+#### TeslaChargeInterface.h
 
 Used by the [Interface Microcontroller](#microcontroller---interface) sketch.
 
@@ -554,7 +577,7 @@ fiddling with changes in the config file.
 ### Daemon mode
 
 We have a wrapper script, `bin/tesla-charge`, that allows the web application
-to run in daemon mode. 
+to run in daemon mode.
 
 First, you need to set the `TESLA_CHARGE_PATH` environment variable to the root
 path of the tesla-charge directory. Example:
@@ -585,9 +608,9 @@ Restarts the application.
 
 #### Run from crontab
 
-    @reboot sleep 10; /Users/steve/repos/tesla-charge/bin/tesla-charge start 
+    @reboot sleep 10; /Users/steve/repos/tesla-charge/bin/tesla-charge start
 
-### All logging enabled 
+### All logging enabled
 
     perl app.psgi
 
@@ -603,7 +626,7 @@ or...
 
     sudo plackup -p 443 --enable-ssl --ssl-key-file /etc/letsencrypt/live/tesla.hellbent.app/privkey.pem --ssl-cert-file /etc/letsencrypt/live/tesla.hellbent.app/fullchain.pem --access-log /dev/null app.psgi
 
-### Reload the application if any file changes 
+### Reload the application if any file changes
 
     plackup -R . app.psgi
 
