@@ -295,6 +295,17 @@ Currently, these are (note the 'Protoboard pin' is custom to my setup only):
 | DOOR_OPEN_LED   | 13       | D7        | N/A            | LED to indicate door open   |
 | WIFI_CONFIG_PIN | 5        | D1        | N/A            | AP config mode switch       |
 
+#### Garage Door Prototype Microcontroller
+
+| Name            | GPIO Pin | Board Pin | Protoboard Pin | Description                     |
+|:----------------|----------|-----------|----------------|---------------------------------|
+| RESET_PIN       | 5        | D1        | N/A            | Move stepper to closed position |
+| ACTIVATE_PIN    | 4        | D2        | N/A            | Activate stepper (open/close)   |
+| STEPPER_IN1_PIN | 2        | D4        | N/A            | Stepper driver IN1              |
+| STEPPER_IN2_PIN | 12       | D6        | N/A            | Stepper driver IN2 |
+| STEPPER_IN3_PIN | 13       | D7        | N/A            | Stepper driver IN3 |
+| STEPPER_IN4_PIN | 14       | D5        | N/A            | Stepper driver IN4 |
+
 ### Security
 
 #### Host Security

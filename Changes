@@ -23,6 +23,7 @@ Revision history for tesla-charge
     - Auth and API errors printed to STDOUT now have a timestamp
     - Changed from IP based auth to host based; We now allow DNS names and we
       resolve them internally, and allow leaving off the IP prefix
+    - Garage door prototype microcontroller now a Wemos D1 mini
 
 1.01 2022-04-08
     - Separated code into two separate controllers (Controller - controls the

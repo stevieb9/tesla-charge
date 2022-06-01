@@ -2,10 +2,10 @@
 
 AccelStepper doorOpener (
         STEPPER_FULLSTEP,
-        PIN_STEPPER_IN1,
-        PIN_STEPPER_IN3,
-        PIN_STEPPER_IN2,
-        PIN_STEPPER_IN4
+        STEPPER_IN1_PIN,
+        STEPPER_IN3_PIN,
+        STEPPER_IN2_PIN,
+        STEPPER_IN4_PIN
 );
 
 bool doorClosed = true;
@@ -14,8 +14,8 @@ bool doorOperating = false;
 unsigned long lastDoorActivateDebounceTime = 0;
 
 void setup() {
-    pinMode(PIN_ACTIVATE, INPUT);
-    pinMode(PIN_RESET, INPUT_PULLUP);
+    pinMode(ACTIVATE_PIN, INPUT);
+    pinMode(RESET_PIN, INPUT_PULLUP);
 
     Serial.begin(9600);
 
@@ -29,11 +29,11 @@ void setup() {
 }
 
 void loop() {
-    bool activatorState = digitalRead(PIN_ACTIVATE);
+    bool activatorState = digitalRead(ACTIVATE_PIN);
 
     bool doorOperate = false;
 
-    if (digitalRead(PIN_RESET) == LOW) {
+    if (digitalRead(RESET_PIN) == LOW) {
        doorOpener.moveTo(POSITION_CLOSED);
        doorOperating = true;
     }
