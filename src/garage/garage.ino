@@ -96,11 +96,6 @@ void setup() {
 
     apiTokenString = String("{\"token\":\"") + String(apiToken) + String("\"}");
 
-    s(F("Token: "));
-    spl(apiToken);
-    s(F("Token string: "));
-    spl(apiTokenString);
-
     configWrite();
 
     ArduinoOTA.begin();
@@ -205,11 +200,6 @@ uint8_t doorState () {
 
     if (doorState != lastDoorPosition) {
         updateData(doorState);
-
-        s(F("lastDoorPosition: "));
-        spl(lastDoorPosition);
-        s(F("doorState: "));
-        spl(doorState);
     }
 
     lastDoorPosition = doorState;
