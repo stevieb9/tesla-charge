@@ -7,7 +7,7 @@ use feature 'say';
 use WWW::Mechanize;
 
 #my $uri = 'http://localhost:55556';
-my $uri = 'https://tesla.hellbent.app:55556/garage_door_state';
+my $uri = 'https://tesla.hellbent.app:55556/garage_data';
 
 my $m = WWW::Mechanize->new;
 
