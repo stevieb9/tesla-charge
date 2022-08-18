@@ -17,8 +17,8 @@ It also includes four Arduino sketches for microcontrollers. The primary two
 ([Interface](#microcontroller---interface) and
 [Controller](#microcontroller---controller)) make up a device that attaches to
 the garage wall. It has an LED strip and OLED screen that displays charge
-information about the vehicle, with an audible alarm if the vehicle is below a
-certain battery level.
+information and other state data about the vehicle, with an audible alarm if the
+vehicle is below a certain battery level.
 
 The other two are related to a garage door management system, as well as a
 garage door prototype.
