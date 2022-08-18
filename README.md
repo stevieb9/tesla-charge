@@ -2,8 +2,9 @@
 
 This project is essentially a device that goes on your garage wall to inform
 you visually and audibly when your Tesla vehicle battery level is low so you
-don't forget to plug the charger in. It is activated only while it senses motion
-through its PIR motion sensor.
+don't forget to plug the charger in. It also indicates if the vehicle is away,
+and what state it is in if so (ie parked, driving, charging etc). It is
+activated only while it senses motion through its PIR motion sensor.
 
 It is also capable of acting as a garage door manager, with an auto-close
 feature.
