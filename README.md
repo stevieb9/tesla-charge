@@ -427,10 +427,8 @@ and do not appear in the distribution config file.
 
 ### Hardware Used
 
-For the core of the system, three of the micro-controllers used are
-ESP8266-based Wemos D1 units (these show up as "Lolin(WEMOS) D1 R2 & mini" as
-the Board type in the Arduino IDE). For the garage door  prototype, an Arduino
-Uno was used.
+All four controllers are ESP8266-based Wemos D1 units (these show up as
+"Lolin(WEMOS) D1 R2 & mini" as the Board type in the Arduino IDE). 
 
 ### Perl HTTP API Server
 
@@ -502,7 +500,7 @@ The sketch is in `src/garage/garage.ino` and its header file is
 
 ### Microcontroller - Garage Door Prototype
 
-Board used: Arduino Uno R3
+Board used: WeMOS D1 R2
 
 This microcontroller simulates a garage door using a timed stepper motor.
 
