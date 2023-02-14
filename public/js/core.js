@@ -34,19 +34,20 @@ function doAjaxState() {
             success: function (doorState) {
                 
                 console.log(parseInt(doorState));
+                var $garage_door = $('#garage-door');
 
                 if ($('#manual-mode').prop('value') === "On") {
-                    $('#garage-door').prop('disabled', false);
+                    $garage_door.prop('disabled', false);
                     if (parseInt(doorState) === 1) {
-                        $('#garage-door').prop('value', 'Close');
+                        $garage_door.prop('value', 'Close');
                     }
                     else {
-                        $('#garage-door').prop('value', 'Open');
+                        $garage_door.prop('value', 'Open');
                     }
                 }
                 else {
-                    $('#garage-door').prop('value', 'Unavailable');
-                    $('#garage-door').prop('disabled', true);
+                    $garage_door.prop('value', 'Unavailable');
+                    $garage_door.prop('disabled', true);
                 }
 
             },
@@ -54,25 +55,26 @@ function doAjaxState() {
                     setTimeout(doAjaxState, interval);
             }
     });
-};
+}
 
 function doAjaxManualMode() {
     $.ajax({
             type: 'GET',
             url: '/garage_door_manual',
             success: function (manualState) {
-                
+                var $garage_door = $('#garage-door');
+
                 if (parseInt(manualState) === 1) {
                     $('#manual-mode').prop('value', 'On');
-                    $('#garage-door').prop('disabled', false);
+                    $garage_door.prop('disabled', false);
                 }
                 else {
                     $('#manual-mode').prop('value', 'Off');
-                    $('#garage-door').prop('disabled', true);
+                    $garage_door.prop('disabled', true);
                 }
             },
             complete: function (data) {
                     setTimeout(doAjaxManualMode, interval);
             }
     });
-};
+}
