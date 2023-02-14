@@ -914,7 +914,9 @@ This is the state if the vehicle is currently offline (ie. not awake).
 ### HOME (Display charge level)
 
 The vehicle is at home and is online, but is not charging. In this state, the
-LEDs display the actual car charge level.
+LEDs display the actual car charge level. By default, the low battery alarm
+will sound if the charge level is less than `70%`. This default can be changed
+via the `ALARM_CHARGE` define in the `inc/TeslaChargeInterface.h` header file.
 
 
 | LED State                              |
