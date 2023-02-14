@@ -1,7 +1,7 @@
 {
     "system": {
-        "secure_host":    0,
         "secure_auth":  0,
+        "secure_host":    0,
         "allowed_hosts": [
         ],
         "tokens": {
