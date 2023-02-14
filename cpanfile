@@ -9,4 +9,4 @@ requires 'JSON', '0';
 requires 'MIME::Base64', '0';
 requires 'Net::SSLeay', '0';
 requires 'Net::Subnet', '0';
-requires 'Tesla::Vehicle', '0.07';
+requires 'Tesla::Vehicle', '0.08';
