@@ -12,7 +12,7 @@ my $uri = 'https://tesla.hellbent.app:55556/garage_data';
 my $m = WWW::Mechanize->new;
 
 my $content = {
-    token => 'NTE2M2Q3YmFmMGEzNjEzMGQyZmFmYmViNGE4OTZmNzkzMTE3NzI3MWMzMDhkZjliYWE3NTI1OTg1MDQwNjNlZg'
+    token => ''
 };
 
 my $ret = $m->post($uri, $content);
